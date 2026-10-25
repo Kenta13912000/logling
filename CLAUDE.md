@@ -270,14 +270,14 @@ DB・認証・デプロイ先はプロジェクトごとに ADR で決める。�
 
 ### コマンド
 
-| コマンド            | 用途                         |
-| ------------------- | ---------------------------- |
-| `npm run dev`       | 開発サーバー                 |
-| `npm run test`      | 単体テスト                   |
-| `npm run test:e2e`  | E2E テスト                   |
-| `npm run lint`      | 静的解析                     |
-| `npm run typecheck` | 型チェック（`tsc --noEmit`） |
-| `npm run build`     | 本番ビルド                   |
+| コマンド            | 用途                                         |
+| ------------------- | -------------------------------------------- |
+| `npm run dev`       | 開発サーバー                                 |
+| `npm run test`      | 単体テスト                                   |
+| `npm run test:e2e`  | E2E テスト                                   |
+| `npm run lint`      | 静的解析                                     |
+| `npm run typecheck` | 型チェック（`next typegen && tsc --noEmit`） |
+| `npm run build`     | 本番ビルド                                   |
 
 **完了条件**：`lint`・`typecheck`・`test` がすべて通ること。
 
