@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（diary-exp）</title>
+    <style>
+      :root {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --button-text: #ffffff;
+        --bar: #d97706;
+        --bar-track: #f6e7cf;
+        --error: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        min-height: 667px;
+        background: var(--bg);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .appbar {
+        padding: 12px 16px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid var(--border);
+      }
+      .content {
+        padding: 16px;
+      }
+      .status {
+        padding: 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-emoji {
+        font-size: 40px;
+        line-height: 1;
+      }
+      .status-name {
+        font-weight: 700;
+        font-size: 18px;
+        flex: 1;
+      }
+      .status-level {
+        font-weight: 700;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--bar-track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--bar);
+      }
+      .bar-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .hero {
+        text-align: center;
+        font-size: 96px;
+        line-height: 1;
+        margin: 32px 0 16px;
+      }
+      .speech {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin: 8px 0 12px;
+      }
+      .speech-emoji {
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      .bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 12px;
+      }
+      .center {
+        text-align: center;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        margin: 16px 0 6px;
+      }
+      .input,
+      .textarea {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
+      }
+      .textarea {
+        min-height: 160px;
+        resize: none;
+      }
+      .placeholder {
+        color: #a8927a;
+      }
+      .counter {
+        text-align: right;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .error {
+        color: var(--error);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: var(--button-text);
+        font: inherit;
+        font-weight: 700;
+      }
+      .date {
+        font-weight: 700;
+      }
+      .entry {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .note {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 12px;
+      }
+      .toast {
+        position: absolute;
+        top: 56px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text);
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgb(63 45 28 / 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+      }
+      .dialog-emoji {
+        font-size: 48px;
+        line-height: 1;
+      }
+      .dialog-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 12px 0 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（diary-exp）</h1>
+    <p class="lead">
+      スマホ（幅 375px）での見た目。経験値の数（1 件で 10、レベル 2 まで
+      30）は仮の値で、⑤
+      設計で決める。ボタンなどは見た目だけで、押しても動かない。
+    </p>
+
+    <div class="screens">
+      <!-- 画面 1 -->
+      <section class="screen">
+        <h2>画面 1：名前を付ける</h2>
+        <p>初めて開いたとき（AC-1〜AC-4）。エラー表示の例つき</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="content">
+            <div class="hero" aria-hidden="true">🐣</div>
+            <p class="center">はじめまして！<br />名前をつけてくれる？</p>
+            <label for="name">名前（10 文字まで）</label>
+            <input id="name" class="input" type="text" value="" />
+            <p class="error">⚠ 名前を入れてね</p>
+            <button class="button" type="button">この名前にする</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2 -->
+      <section class="screen">
+        <h2>画面 2：今日の日記を書く</h2>
+        <p>今日はまだ書いていないとき（AC-5〜AC-8, AC-10）</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 1</span>
+            </div>
+            <div class="bar"><span style="width: 33%"></span></div>
+            <div class="bar-text">
+              <span>あと 20 でレベルアップ</span><span>10 / 30</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">10月28日（水）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日はどんな一日だった？きかせて！</div>
+            </div>
+            <div class="textarea">
+              <span class="placeholder"
+                >今日あったこと、思ったことを書いてみよう</span
+              >
+            </div>
+            <div class="counter">0 / 2000</div>
+            <button class="button" type="button">日記をのこす</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 3 -->
+      <section class="screen">
+        <h2>画面 3：保存してレベルが上がったとき</h2>
+        <p>
+          上に「+10 けいけんち！」が 2〜3
+          秒出て、レベルが上がったときだけ中央のお知らせが出る（AC-9,
+          AC-11〜AC-13）
+        </p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 2</span>
+            </div>
+            <div class="bar"><span style="width: 0%"></span></div>
+            <div class="bar-text">
+              <span>あと 40 でレベルアップ</span><span>0 / 40</span>
+            </div>
+          </div>
+          <div class="toast">✨ +10 けいけんち！</div>
+          <div class="overlay">
+            <div class="dialog" role="dialog" aria-labelledby="levelup-title">
+              <div class="dialog-emoji" aria-hidden="true">🎉</div>
+              <p id="levelup-title" class="dialog-title">
+                ぴよ が レベル 2 になった！
+              </p>
+              <p>これからもよろしくね</p>
+              <button class="button" type="button">とじる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 4 -->
+      <section class="screen">
+        <h2>画面 4：今日の日記を書いたあと</h2>
+        <p>入力欄の代わりに今日の日記を表示する（AC-14, AC-15）</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 2</span>
+            </div>
+            <div class="bar"><span style="width: 0%"></span></div>
+            <div class="bar-text">
+              <span>あと 40 でレベルアップ</span><span>0 / 40</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">10月28日（水）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日も書いてくれてありがとう！また明日ね</div>
+            </div>
+            <div class="entry">
+              今日は久しぶりに晴れた。<br />帰りに公園を歩いた。
+            </div>
+            <p class="note">次の日記は、明日の朝 4 時から書けるよ</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
