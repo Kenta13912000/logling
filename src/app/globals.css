@@ -5,6 +5,18 @@
   --foreground: #171717;
 }
 
+/* Palette from docs/aidlc/diary-exp/mockup.md */
+@theme {
+  --color-cream: #fff8ec;
+  --color-ink: #3f2d1c;
+  --color-ink-muted: #7a6450;
+  --color-line: #ecdcc4;
+  --color-ember: #c2410c;
+  --color-honey: #d97706;
+  --color-honey-track: #f6e7cf;
+  --color-alert: #b42318;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
