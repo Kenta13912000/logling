@@ -59,6 +59,7 @@ describe("初めて開いたとき", () => {
 
     await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
     await user.click(screen.getByRole("button", { name: "この名前にする" }));
+    await user.click(screen.getByRole("button", { name: "これにする" }));
 
     expect(screen.getByText("Lv. 1")).toBeInTheDocument();
     expect(screen.getByText("2026年10月28日（水）")).toBeInTheDocument();
@@ -236,6 +237,7 @@ describe("外部への送信", () => {
 
     await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
     await user.click(screen.getByRole("button", { name: "この名前にする" }));
+    await user.click(screen.getByRole("button", { name: "これにする" }));
     await writeDiary("晴れた。");
 
     expect(fetchSpy).not.toHaveBeenCalled();
