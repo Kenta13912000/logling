@@ -13,19 +13,31 @@
 | アプローチ     | 日記を書くたびにキャラクターが育ち、続ける理由をつくる |
 | 公開先         | Vercel（準備中）                                       |
 
-現在は初期構築が終わった段階です。機能は [ロードマップ](docs/aidlc/roadmap.md) に沿って 1 つずつ開発していきます。
+機能は [ロードマップ](docs/aidlc/roadmap.md) に沿って 1 つずつ開発しています。
+
+## できること
+
+最初の機能「日記で経験値（`diary-exp`）」ができています。
+
+- キャラクター（🐣）に名前を付ける（決める前に確認あり）
+- 1 日 1 件の日記を書くと、キャラクターに経験値が 10 入り、たまるとレベルが上がる
+- 1 日は朝 4 時で区切る（夜ふかしして書いた日記は前の日の日記になる）
+- データはブラウザの中（localStorage）だけに保存し、外部には送らない。ログインは不要
+- スマホの画面幅で使えるように作っている
+
+要件の詳細は [要件定義：日記で経験値](docs/requirements/diary-exp.md) にあります。
 
 ## 技術スタック
 
-| 分類           | 採用                                       |
-| -------------- | ------------------------------------------ |
-| フレームワーク | Next.js 16（App Router）/ React 19         |
-| 言語           | TypeScript（strict）                       |
-| スタイル       | Tailwind CSS v4                            |
-| 単体テスト     | Vitest + Testing Library                   |
-| E2E テスト     | Playwright                                 |
-| 静的解析・整形 | ESLint + Prettier                          |
-| CI             | GitHub Actions（lint・型チェック・テスト） |
+| 分類           | 採用                                               |
+| -------------- | -------------------------------------------------- |
+| フレームワーク | Next.js 16（App Router）/ React 19                 |
+| 言語           | TypeScript（strict）                               |
+| スタイル       | Tailwind CSS v4                                    |
+| 単体テスト     | Vitest + Testing Library                           |
+| E2E テスト     | Playwright                                         |
+| 静的解析・整形 | ESLint + Prettier                                  |
+| CI             | GitHub Actions（lint・型チェック・テスト・ビルド） |
 
 選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md) にまとめています。
 
@@ -62,7 +74,7 @@ npx playwright install chromium
 | `npm run format`       | 整形                                         |
 | `npm run format:check` | 整形のチェック                               |
 
-`lint`・`typecheck`・`test` がすべて通ることを完了条件とし、push と PR ごとに CI で確認しています。
+`lint`・`typecheck`・`test` がすべて通ることを完了条件とし、push と PR ごとに CI で確認しています（CI では本番ビルドも確認します）。
 
 ## ディレクトリ構成
 
