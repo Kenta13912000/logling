@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, useState, type SubmitEvent } from "react";
 
 import { formatDiaryDate } from "@/lib/diary-date";
 import { countCharacters } from "@/lib/text";
@@ -24,7 +24,7 @@ export function DiaryEditor({ date, onSave }: Props) {
   const [error, setError] = useState<string | null>(null);
   const length = countCharacters(value.trim());
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const result = validateBody(value);
     if (!result.ok) {
