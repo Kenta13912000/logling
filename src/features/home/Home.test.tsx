@@ -140,6 +140,63 @@ describe("日記を保存したとき", () => {
   });
 });
 
+describe("名前の保存に失敗したとき", () => {
+  test("AC-24: メッセージが出て、確認の画面のまま、もう一度「これにする」を押せる", async () => {
+    const user = userEvent.setup();
+    const setItem = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        throw new DOMException("full", "QuotaExceededError");
+      });
+    render(<Home />);
+
+    await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
+    await user.click(screen.getByRole("button", { name: "この名前にする" }));
+    await user.click(screen.getByRole("button", { name: "これにする" }));
+
+    expect(screen.getByText(/保存できなかった/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "これにする" }),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+
+    setItem.mockRestore();
+    await user.click(screen.getByRole("button", { name: "これにする" }));
+
+    expect(screen.getByText("Lv. 1")).toBeInTheDocument();
+    expect(screen.queryByText(/保存できなかった/)).not.toBeInTheDocument();
+  });
+});
+
+describe("別のタブで保存されたとき", () => {
+  test("AC-25: 別のタブで今日の日記が保存されたら、入力欄の代わりにその日記が表示される", () => {
+    store(piyo(0));
+    render(<Home />);
+    expect(
+      screen.getByRole("textbox", { name: "今日の日記" }),
+    ).toBeInTheDocument();
+
+    // Another tab writes today's entry, then the browser fires "storage".
+    act(() => {
+      store({
+        ...piyo(10),
+        entries: [
+          {
+            date: "2026-10-28",
+            body: "別のタブで書いた。",
+            createdAt: "2026-10-28T12:00:00.000Z",
+          },
+        ],
+      });
+      window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
+    });
+
+    expect(screen.getByText("別のタブで書いた。")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.getByText("10 / 30")).toBeInTheDocument();
+  });
+});
+
 describe("開き直したとき", () => {
   test("AC-16: 保存した名前・レベル・経験値と、今日の日記が表示される", async () => {
     store(piyo(0));

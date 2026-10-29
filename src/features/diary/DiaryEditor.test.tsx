@@ -67,6 +67,17 @@ test("AC-8: 2001 文字で保存するとメッセージと文字数が出て、
   expect(onSave).not.toHaveBeenCalled();
 });
 
+test("AC-8: 2000 文字を超えると、文字数の表示が注意の色になる", async () => {
+  const { user, textarea } = setup();
+
+  await user.click(textarea);
+  await user.paste("あ".repeat(2000));
+  expect(screen.getByText("2000 / 2000")).not.toHaveClass("text-alert");
+
+  await user.paste("あ");
+  expect(screen.getByText("2001 / 2000")).toHaveClass("text-alert");
+});
+
 test("AC-8: 2000 文字ちょうどは保存できる", async () => {
   const { user, onSave, textarea, button } = setup();
 
