@@ -51,6 +51,7 @@ DB・認証・デプロイの詳細設定は、必要になった機能の ⑤ �
 ## 結果・影響
 
 - `npm run lint`・`npm run typecheck`・`npm run test` を完了条件とし、CI で push と PR ごとに自動で確認する
+- CI では本番ビルド（`npm run build`）も確認する（`diary-exp` の ⑧ で追加。サーバーでの事前描画でビルドが止まる問題を、手元の確認に頼らず検出するため）
 - E2E テスト（`npm run test:e2e`）は CI に含めない。必要になった時点で追加を検討する
 - Next.js は破壊的変更が多いため、実装時は `node_modules/next/dist/docs/` の公式ドキュメントを確認する（AGENTS.md）
 
@@ -58,3 +59,4 @@ DB・認証・デプロイの詳細設定は、必要になった機能の ⑤ �
 
 - 初期構築の各ゲートで判断した点：Tailwind と AGENTS.md は残す／Next.js のテレメトリは無効化／コミットのメールアドレスは GitHub の noreply を使う（ポートフォリオとして公開するため）
 - この ADR へのゲートでの判断：指摘なしで承認
+- `diary-exp` の ⑧ で更新：CI に本番ビルドを追加（Bolt-3 でビルドが止まる問題が CI では見つからなかったため）
