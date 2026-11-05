@@ -22,6 +22,7 @@ logling を、採用担当者や日記を続けたい人が URL を開くだけ�
 - Hobby は無料で、「個人的な、商用でない利用に限る」。個人のポートフォリオは当てはまる
 - 月あたりの上限：通信量 100GB、CDN へのリクエスト 100 万回、1 日の公開回数 100 回。logling の規模では十分
 - Deployment Protection の **Standard Protection** は無料プランでも使え、本番の URL 以外（PR ごとの確認用の URL など）を Vercel にログインした本人だけに見せられる
+- 本番の公開が成功したときだけ、本番の URL が新しい公開に向く（「When a production deployment succeeds, Vercel updates your production domains to point to the new deployment」）。ビルドに失敗しても、前の公開がそのまま残る（release の AC-5。2026-11-05 に追記）
 - Node.js は 26.x（標準）・24.x・22.x が使える。`package.json` の `engines.node` が「以上」の指定（例：`>=22.0.0`）だと最新の 26.x が使われるため、手元・CI と合わせて `^24.22.1` を指定する
 
 ## 検討した他の案
@@ -44,6 +45,7 @@ logling を、採用担当者や日記を続けたい人が URL を開くだけ�
 
 - Vercel Hobby Plan：https://vercel.com/docs/plans/hobby（2026-09-14 更新）
 - Vercel Deployment Protection：https://vercel.com/docs/deployment-protection（2026-09-15 更新）
+- Vercel Environments：https://vercel.com/docs/deployments/environments（2026-09-17 更新）
 - Vercel Supported Node.js versions：https://vercel.com/docs/functions/runtimes/node-js/node-js-versions（2026-02-27 更新）
 - Netlify Pricing：https://www.netlify.com/pricing/ ／ Credit-based pricing plans：https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/
 - Cloudflare Workers の Next.js・OpenNext のガイド：https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/ ／ https://developers.cloudflare.com/workers/framework-guides/web-apps/opennext/
