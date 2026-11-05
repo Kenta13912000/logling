@@ -105,6 +105,22 @@ Vercel の無料プラン（Hobby）を使う。選んだ理由と、公式の�
 - 取り込んだあとの確認結果は、Bolt-3（リポジトリの公開）の前に報告する。問題があれば、`fix/` のブランチで直す
 - `Strict-Transport-Security`（HTTPS の強制）は、公開版の応答に Vercel が付けているかを確かめる。付いていなければ、Bolt-1 の設定に加えるかを相談する
 
+#### 取り込む前の確認結果（2026-11-05、本番 https://logling.vercel.app は `main` の `diary-exp` の状態）
+
+| 確かめたこと                          | 結果                                                                                                                 | AC           |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Vercel での公開                       | 登録（Hobby・チーム名 Kenta13912000）、logling だけを許可、標準の設定で公開できた                                    | ―            |
+| Deployment Protection                 | Vercel Authentication が有効で、Standard Protection になっている                                                     | AC-7（設定） |
+| Web Analytics・Speed Insights         | 有効にしていない                                                                                                     | AC-9（設定） |
+| `http://logling.vercel.app`           | 308 で `https://logling.vercel.app/` に切り替わる                                                                    | AC-3         |
+| HTTPS の強制                          | Vercel が `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` を付けている。追加の設定はしない | ―            |
+| 公開版での E2E（`diary-exp` の 5 件） | すべて成功                                                                                                           | AC-1, AC-2   |
+| 公開版での E2E（AC-8・AC-9）          | 成功。外部への通信がなく、日記の本文も送られていない                                                                 | AC-8, AC-9   |
+| 公開版での E2E（AC-10）               | 失敗（想定どおり。セキュリティの設定はまだ `main` に入っていない）。取り込んだあとに確かめる                         | AC-10        |
+| 実物のスマホ                          | 名前 → 確認 → 日記 → 経験値まで、問題なく使えた                                                                      | AC-2         |
+
+- PR ごとの確認用の URL（AC-6・AC-7）と、確認用の URL でのセキュリティの設定・Node 24 でのビルドは、PR を作ってから、取り込む前に確かめる
+
 ## U-3：公開の仕上げ（`README.md`・GitHub の設定）
 
 - 含む Story：S-5
@@ -152,3 +168,5 @@ Bolt は 3 つで小さめ。ルールどおり、この機能は 1 ブランチ
 - Bolt-2 ⑤ 設計へのゲートでの判断：指摘なしで承認（ADR-0003 も承認。Node は 24 のまま）
 - Bolt-2 ⑦ で見つかったこと：`npm audit` で開発用ツール（ESLint が使う `minimatch`）に中程度の脆弱性 17 件（GHSA-g3hv-75wg-m249）。本番用のパッケージは 0 件で、悪用の経路もないため、記録して ESLint 側の対応を待つ。リポジトリの公開後に Dependabot を有効にする（⑧ の差分レポートに残す）
 - Bolt-2 ⑦ の途中で中断：リポジトリの中の変更（`engines.node`）はコミット・push 済み。Vercel の画面での操作（登録 → logling だけを許可 → 取り込んで公開）から再開する
+- Bolt-2 ⑦ で再開：Vercel で公開し、本番の URL は https://logling.vercel.app になった。チーム名は実名を出さないよう GitHub のユーザー名にした
+- Bolt-2 ⑦ 実装へのゲートでの判断：指摘なしで承認（AC-4・AC-6・AC-7・AC-10 は PR を作ってから確かめる）
