@@ -4,6 +4,8 @@
 
 日記を書くとキャラクターが成長する、続けたくなる日記アプリです。
 
+**試してみる：https://logling.vercel.app**（インストールもログインも不要。日記はブラウザの中だけに保存され、外部には送られません）
+
 ## 概要
 
 | 項目           | 内容                                                   |
@@ -11,7 +13,7 @@
 | 対象ユーザー   | 毎日日記を書きたいけれど、書くのを続けられない人       |
 | 解決したいこと | 日記が続かないこと                                     |
 | アプローチ     | 日記を書くたびにキャラクターが育ち、続ける理由をつくる |
-| 公開先         | Vercel（準備中）                                       |
+| 公開先         | https://logling.vercel.app                             |
 
 機能は [ロードマップ](docs/aidlc/roadmap.md) に沿って 1 つずつ開発しています。
 
@@ -38,8 +40,9 @@
 | E2E テスト     | Playwright                                         |
 | 静的解析・整形 | ESLint + Prettier                                  |
 | CI             | GitHub Actions（lint・型チェック・テスト・ビルド） |
+| 公開先         | Vercel（Hobby）                                    |
 
-選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md) にまとめています。
+選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md) と [ADR-0003：公開先に Vercel を使う](docs/adr/0003-hosting-vercel.md) にまとめています。
 
 ## 起動方法
 
