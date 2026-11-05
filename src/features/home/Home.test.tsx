@@ -43,6 +43,26 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe("diary-history", () => {
+  test("AC-1: キャラクターがいると、上の帯に「ふりかえる」のリンクがある", () => {
+    store(piyo(0));
+    render(<Home />);
+
+    expect(screen.getByRole("link", { name: /ふりかえる/ })).toHaveAttribute(
+      "href",
+      "/history",
+    );
+  });
+
+  test("AC-1: 名前を付ける前は「ふりかえる」のリンクを出さない", () => {
+    render(<Home />);
+
+    expect(
+      screen.queryByRole("link", { name: /ふりかえる/ }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("初めて開いたとき", () => {
   test("AC-1: アプリ名と名前の入力欄が表示される", () => {
     render(<Home />);

@@ -4,9 +4,17 @@ import {
   RECENT_DAYS,
   addDays,
   formatDiaryDate,
+  formatShortDiaryDate,
   getDiaryDate,
   isRecentDiaryDate,
 } from "./diary-date";
+
+describe("diary-history: formatShortDiaryDate", () => {
+  test("AC-2: 一覧では、年を省いた月・日と全角かっこの曜日で表示する", () => {
+    expect(formatShortDiaryDate("2026-11-07")).toBe("11月7日（土）");
+    expect(formatShortDiaryDate("2026-10-31")).toBe("10月31日（土）");
+  });
+});
 
 // Months are 0-based in the Date constructor: 9 = October.
 describe("getDiaryDate", () => {
