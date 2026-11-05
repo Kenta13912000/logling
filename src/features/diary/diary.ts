@@ -6,6 +6,8 @@ export type DiaryEntry = {
   body: string;
   /** When it was saved (ISO 8601). */
   createdAt: string;
+  /** Set only for entries written later for a missed day. */
+  writtenLater?: true;
 };
 
 export const BODY_MAX_LENGTH = 2000;

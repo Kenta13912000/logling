@@ -39,7 +39,9 @@ function isDiaryEntry(value: unknown): value is DiaryEntry {
     typeof value.date === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(value.date) &&
     typeof value.body === "string" &&
-    typeof value.createdAt === "string"
+    typeof value.createdAt === "string" &&
+    // Entries from diary-exp have no flag; they were written on the day.
+    (value.writtenLater === undefined || value.writtenLater === true)
   );
 }
 

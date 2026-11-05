@@ -12,6 +12,8 @@ export type LevelInfo = {
 };
 
 export const EXP_PER_ENTRY = 10;
+/** An entry written later for a missed day earns half. */
+export const EXP_PER_LATE_ENTRY = 5;
 
 export function expToNextLevel(level: number): number {
   return 20 + 10 * level;
@@ -40,4 +42,27 @@ export function gainExp(
   const next = { ...character, totalExp: character.totalExp + amount };
   const level = getLevelInfo(next.totalExp).level;
   return { character: next, leveledUp: level > before, level };
+}
+
+export function loseExp(
+  character: Character,
+  amount: number,
+): {
+  character: Character;
+  leveledDown: boolean;
+  levelBefore: number;
+  level: number;
+} {
+  const levelBefore = getLevelInfo(character.totalExp).level;
+  const next = {
+    ...character,
+    totalExp: Math.max(0, character.totalExp - amount),
+  };
+  const level = getLevelInfo(next.totalExp).level;
+  return {
+    character: next,
+    leveledDown: level < levelBefore,
+    levelBefore,
+    level,
+  };
 }
