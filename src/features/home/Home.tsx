@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import {
@@ -94,11 +95,20 @@ export function Home() {
 
   const characterName =
     state.status === "ok" ? (state.data.character?.name ?? "") : "";
+  const hasCharacter = state.status === "ok" && state.data.character !== null;
 
   return (
     <div className="mx-auto min-h-full w-full max-w-[480px] bg-cream text-ink">
-      <header className="border-b border-line px-4 py-3">
+      <header className="flex items-center justify-between border-b border-line px-4 py-3">
         <h1 className="font-bold tracking-wide">logling</h1>
+        {hasCharacter && (
+          <Link
+            href="/history"
+            className="flex min-h-11 items-center text-sm font-bold text-ember underline"
+          >
+            ふりかえる<span aria-hidden="true">&nbsp;›</span>
+          </Link>
+        )}
       </header>
       <main>
         {saveError && (

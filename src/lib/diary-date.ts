@@ -40,7 +40,13 @@ export function isRecentDiaryDate(date: string, today: string): boolean {
 
 /** "2026-10-28" -> "2026年10月28日（水）" */
 export function formatDiaryDate(date: string): string {
+  const [year] = date.split("-").map(Number);
+  return `${year}年${formatShortDiaryDate(date)}`;
+}
+
+/** "2026-11-07" -> "11月7日（土）" for lists where the year is obvious. */
+export function formatShortDiaryDate(date: string): string {
   const [year, month, day] = date.split("-").map(Number);
   const weekday = WEEKDAYS[new Date(year, month - 1, day).getDay()];
-  return `${year}年${month}月${day}日（${weekday}）`;
+  return `${month}月${day}日（${weekday}）`;
 }
