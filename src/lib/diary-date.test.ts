@@ -4,6 +4,7 @@ import {
   RECENT_DAYS,
   addDays,
   formatDiaryDate,
+  formatMonthDay,
   formatShortDiaryDate,
   getDiaryDate,
   isRecentDiaryDate,
@@ -13,6 +14,13 @@ describe("diary-history: formatShortDiaryDate", () => {
   test("AC-2: 一覧では、年を省いた月・日と全角かっこの曜日で表示する", () => {
     expect(formatShortDiaryDate("2026-11-07")).toBe("11月7日（土）");
     expect(formatShortDiaryDate("2026-10-31")).toBe("10月31日（土）");
+  });
+});
+
+describe("diary-history: formatMonthDay", () => {
+  test("AC-10: 確認の文では、月・日だけで表示する", () => {
+    expect(formatMonthDay("2026-11-07")).toBe("11月7日");
+    expect(formatMonthDay("2026-10-31")).toBe("10月31日");
   });
 });
 
