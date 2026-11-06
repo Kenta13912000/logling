@@ -61,6 +61,19 @@ describe("diary-history", () => {
       screen.queryByRole("link", { name: /ふりかえる/ }),
     ).not.toBeInTheDocument();
   });
+
+  test("AC-24: 名前を付けると、朝 4 時で区切ったその日が始めた日として保存される", async () => {
+    // 10/29 3:30 is still diary day 10/28.
+    setNow(2026, 9, 29, 3, 30);
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
+    await user.click(screen.getByRole("button", { name: "この名前にする" }));
+    await user.click(screen.getByRole("button", { name: "これにする" }));
+
+    expect(stored().character?.startDate).toBe("2026-10-28");
+  });
 });
 
 describe("初めて開いたとき", () => {
@@ -86,7 +99,10 @@ describe("初めて開いたとき", () => {
     expect(
       screen.getByRole("textbox", { name: "今日の日記" }),
     ).toBeInTheDocument();
-    expect(stored()).toEqual(piyo(0));
+    expect(stored()).toEqual({
+      ...piyo(0),
+      character: { name: "ぴよ", totalExp: 0, startDate: "2026-10-28" },
+    });
   });
 });
 

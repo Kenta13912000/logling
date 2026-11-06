@@ -69,6 +69,38 @@ test("AC-8: 2001 文字で保存すると、diary-exp と同じメッセージ�
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
+test("AC-14: 問いかけと入力欄の案内を渡すと、空の入力欄と一緒に表示される", () => {
+  render(
+    <EntryForm
+      label="11月6日の日記"
+      initialBody=""
+      prompt="11月6日は、どんな一日だった？"
+      placeholder="思い出せることを書いてみよう"
+      submitLabel="日記をのこす"
+      onSubmit={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  const textarea = screen.getByRole("textbox", { name: "11月6日の日記" });
+  expect(screen.getByText("11月6日は、どんな一日だった？")).toBeInTheDocument();
+  expect(textarea).toHaveValue("");
+  expect(textarea).toHaveAttribute(
+    "placeholder",
+    "思い出せることを書いてみよう",
+  );
+  expect(screen.getByText("0 / 2000")).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "日記をのこす" }),
+  ).toBeInTheDocument();
+});
+
+test("問いかけを渡さなければ、問いかけは出ない（書き直すとき）", () => {
+  setup();
+
+  expect(screen.queryByText(/どんな一日だった/)).not.toBeInTheDocument();
+});
+
 test("AC-9: 「やめる」を押すと、やめたことが伝わり、本文は渡されない", async () => {
   const { user, onSubmit, onCancel, textarea } = setup();
 

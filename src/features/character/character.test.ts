@@ -46,7 +46,18 @@ describe("diary-history", () => {
 
 describe("createCharacter", () => {
   test("AC-2: 経験値 0 のキャラクターができる", () => {
-    expect(createCharacter("ぴよ")).toEqual({ name: "ぴよ", totalExp: 0 });
+    expect(createCharacter("ぴよ", "2026-10-28")).toMatchObject({
+      name: "ぴよ",
+      totalExp: 0,
+    });
+  });
+
+  test("diary-history AC-24: 始めた日を持つ", () => {
+    expect(createCharacter("ぴよ", "2026-10-28")).toEqual({
+      name: "ぴよ",
+      totalExp: 0,
+      startDate: "2026-10-28",
+    });
   });
 });
 

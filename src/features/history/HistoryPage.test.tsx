@@ -25,6 +25,17 @@ const withEntries = (
   entries,
 });
 
+/** Same as withEntries, but the character records the day it was named. */
+const startedOn = (
+  startDate: string,
+  entries: SaveData["entries"],
+  totalExp = 30,
+): SaveData => ({
+  version: 1,
+  character: { name: "ぴよ", totalExp, startDate },
+  entries,
+});
+
 const entry = (
   date: string,
   body: string,
@@ -175,8 +186,9 @@ describe("Bolt-3：書き直しと削除", () => {
 
     expect(screen.getByText("今日は雨だった。")).toBeInTheDocument();
     expect(screen.queryByText("今日は晴れた。")).not.toBeInTheDocument();
+    // Saving also records the start date that was missing (AC-24).
     expect(stored()).toEqual(
-      withEntries([entry("2026-11-07", "今日は雨だった。")], 30),
+      startedOn("2026-11-07", [entry("2026-11-07", "今日は雨だった。")], 30),
     );
 
     unmount();
@@ -204,13 +216,15 @@ describe("Bolt-3：書き直しと削除", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByText("あとから書いた")).not.toBeInTheDocument();
     expect(card(/11月5日/)).toHaveTextContent("この日はまだ書いていないよ");
+    // The start date stays 11/5 even though the oldest entry is gone.
     expect(stored()).toEqual(
-      withEntries([entry("2026-11-07", "今日の日記")], 30),
+      startedOn("2026-11-05", [entry("2026-11-07", "今日の日記")], 30),
     );
 
     unmount();
     render(<HistoryPage />);
     expect(screen.queryByText("あとから書いた")).not.toBeInTheDocument();
+    expect(card(/11月5日/)).toHaveTextContent("この日はまだ書いていないよ");
   });
 
   test("AC-11, AC-21: 書き方の記録がない日記は 10 減り、レベルが下がるときは確認で伝わる", async () => {
@@ -332,6 +346,148 @@ describe("Bolt-3：書き直しと削除", () => {
     expect(
       screen.getByText(/この日記は、もう書き直したり消したりできないよ/),
     ).toBeInTheDocument();
+    expect(stored()).toEqual(data);
+  });
+});
+
+describe("Bolt-4：後から書く", () => {
+  const WRITE = "この日の日記を書く";
+
+  async function writeLater(dateText: RegExp, body: string) {
+    const user = userEvent.setup();
+    await user.click(
+      within(card(dateText)).getByRole("button", { name: WRITE }),
+    );
+    const textarea = screen.getByRole("textbox");
+    if (body !== "") {
+      await user.type(textarea, body);
+    }
+    await user.click(screen.getByRole("button", { name: "日記をのこす" }));
+    return textarea;
+  }
+
+  test("AC-15, AC-20: 後から書くと「あとから」の印付きで一覧に入り、経験値が 5 入り、開き直しても残る", async () => {
+    store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")], 30));
+    const { unmount } = render(<HistoryPage />);
+
+    await writeLater(/11月6日/, "思い出した。");
+
+    expect(card(/11月6日/)).toHaveTextContent("あとから");
+    expect(card(/11月6日/)).toHaveTextContent("思い出した。");
+    expect(screen.getByRole("status")).toHaveTextContent("✨ +5 経験値！");
+    const data = stored();
+    expect(data.character?.totalExp).toBe(35);
+    expect(data.entries.map((e) => e.date)).toEqual([
+      "2026-11-06",
+      "2026-11-07",
+    ]);
+    expect(data.entries[0]).toMatchObject({
+      date: "2026-11-06",
+      body: "思い出した。",
+      writtenLater: true,
+    });
+
+    unmount();
+    render(<HistoryPage />);
+    expect(card(/11月6日/)).toHaveTextContent("思い出した。");
+  });
+
+  test("AC-15: 後から書いた日記は、そのまま書き直したり消したりできる", async () => {
+    store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")]));
+    render(<HistoryPage />);
+
+    await writeLater(/11月6日/, "思い出した。");
+
+    const written = card(/11月6日/);
+    expect(
+      within(written).getByRole("button", { name: "書き直す" }),
+    ).toBeInTheDocument();
+    expect(
+      within(written).getByRole("button", { name: "消す" }),
+    ).toBeInTheDocument();
+  });
+
+  test("AC-16: 必要な経験値に達すると、レベルアップのお知らせが出る", async () => {
+    // 25 + 5 = 30 reaches Lv2.
+    store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")], 25));
+    render(<HistoryPage />);
+
+    await writeLater(/11月6日/, "思い出した。");
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "ぴよ が レベル 2 になった！",
+    );
+  });
+
+  test("AC-17: 空のままでは保存されず、diary-exp と同じメッセージが出る", async () => {
+    const data = startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")]);
+    store(data);
+    render(<HistoryPage />);
+
+    await writeLater(/11月6日/, "");
+
+    expect(
+      screen.getByText(/なにか書いてくれるとうれしいな/),
+    ).toBeInTheDocument();
+    expect(stored()).toEqual(data);
+  });
+
+  test("AC-22: 保存に失敗すると、メッセージが出て、書いた文章が残り、日記も経験値も変わらない", async () => {
+    const data = startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")]);
+    store(data);
+    failSaving();
+    render(<HistoryPage />);
+
+    const textarea = await writeLater(/11月6日/, "思い出した。");
+
+    expect(screen.getByText(/保存できなかった/)).toBeInTheDocument();
+    expect(textarea).toHaveValue("思い出した。");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(stored()).toEqual(data);
+  });
+
+  test("AC-14: 始めた日より前の日は、一覧に出ない", () => {
+    store(startedOn("2026-11-05", [entry("2026-11-07", "今日の日記")]));
+    render(<HistoryPage />);
+
+    expect(screen.getAllByRole("button", { name: WRITE })).toHaveLength(2);
+    expect(card(/11月6日/)).toBeInTheDocument();
+    expect(card(/11月5日/)).toBeInTheDocument();
+    expect(screen.queryByText(/11月4日/)).not.toBeInTheDocument();
+  });
+
+  test("AC-14, AC-24: 始めた日の記録がないデータは、一番古い日記の日より前の日が一覧に出ない", () => {
+    store(
+      withEntries([
+        entry("2026-11-03", "初めての日記"),
+        entry("2026-11-07", "今日の日記"),
+      ]),
+    );
+    render(<HistoryPage />);
+
+    expect(screen.getAllByRole("button", { name: WRITE })).toHaveLength(3);
+    expect(screen.queryByText(/11月2日/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/11月1日/)).not.toBeInTheDocument();
+  });
+
+  test("開いたまま朝 4 時を過ぎて 8 日以上前になった日には、書かずに伝える", async () => {
+    const data = startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")]);
+    store(data);
+    render(<HistoryPage />);
+    const user = userEvent.setup();
+
+    await user.click(
+      within(card(/11月1日/)).getByRole("button", { name: WRITE }),
+    );
+    // The diary day moves to 11/8, so 11/1 is now 8 days ago.
+    vi.setSystemTime(new Date(2026, 10, 8, 4, 30));
+    await user.type(screen.getByRole("textbox"), "思い出した。");
+    await user.click(screen.getByRole("button", { name: "日記をのこす" }));
+
+    expect(
+      screen.getByText(/この日には、もう後から書けないよ/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(stored()).toEqual(data);
   });
 });

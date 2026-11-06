@@ -91,6 +91,27 @@ describe("diary-history", () => {
     });
   });
 
+  test("AC-24: 始めた日の記録があるキャラクターを読める", () => {
+    const data = {
+      ...saved,
+      character: { name: "ぴよ", totalExp: 10, startDate: "2026-10-28" },
+    };
+    expect(parseSaveData(JSON.stringify(data))).toEqual({
+      status: "ok",
+      data,
+    });
+  });
+
+  test("AC-24: 始めた日がおかしな値のキャラクターは、壊れたデータとして扱う", () => {
+    for (const startDate of ["2026/10/28", "", 20261028, null]) {
+      const raw = JSON.stringify({
+        ...saved,
+        character: { name: "ぴよ", totalExp: 10, startDate },
+      });
+      expect(parseSaveData(raw)).toEqual({ status: "broken", raw });
+    }
+  });
+
   test("AC-21: 後から書いた印がおかしな値の日記は、壊れたデータとして扱う", () => {
     for (const writtenLater of [false, "true", 1]) {
       const raw = withEntries([

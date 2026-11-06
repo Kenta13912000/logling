@@ -8,6 +8,7 @@ import {
   deleteEntry,
   editEntry,
   expForEntry,
+  getStartDate,
   previewDelete,
   writeLaterEntry,
 } from "./history";
@@ -36,15 +37,36 @@ const ENTRIES: DiaryEntry[] = [
   entry("2026-11-07", "今日"),
 ];
 
+// No startDate: data from diary-exp. The oldest entry (10/30) is the start.
 const saveData = (totalExp: number, entries = ENTRIES): SaveData => ({
   version: 1,
   character: { name: "ぴよ", totalExp },
   entries,
 });
 
+const startedOn = (startDate: string, entries: DiaryEntry[]): SaveData => ({
+  version: 1,
+  character: { name: "ぴよ", totalExp: 75, startDate },
+  entries,
+});
+
+describe("getStartDate", () => {
+  test("AC-24: 始めた日の記録があれば、その日", () => {
+    expect(getStartDate(startedOn("2026-11-05", []))).toBe("2026-11-05");
+  });
+
+  test("AC-24: 記録がなければ（diary-exp のデータ）、一番古い日記の日", () => {
+    expect(getStartDate(saveData(75))).toBe("2026-10-30");
+  });
+
+  test("AC-24: 記録も日記もなければ、わからない（null）", () => {
+    expect(getStartDate(saveData(0, []))).toBeNull();
+  });
+});
+
 describe("buildHistory", () => {
   test("AC-2, AC-14, AC-18: 新しい順に、最近 7 日の日記・空いた日・読むだけの日記を並べる", () => {
-    const items = buildHistory(ENTRIES, TODAY);
+    const items = buildHistory(ENTRIES, TODAY, "2026-10-30");
 
     expect(
       items.map((item) =>
@@ -69,13 +91,18 @@ describe("buildHistory", () => {
     const items = buildHistory(
       ENTRIES.filter((e) => e.date !== TODAY),
       TODAY,
+      "2026-10-30",
     );
 
     expect(items[0]).toEqual({ kind: "missing", date: "2026-11-06" });
   });
 
   test("AC-18: 8 日以上前の空いた日は並べない", () => {
-    const items = buildHistory([entry("2026-10-20", "ずっと前")], TODAY);
+    const items = buildHistory(
+      [entry("2026-10-20", "ずっと前")],
+      TODAY,
+      "2026-10-20",
+    );
 
     expect(items.filter((item) => item.kind === "missing")).toHaveLength(6);
     expect(items.at(-1)).toMatchObject({
@@ -86,9 +113,23 @@ describe("buildHistory", () => {
   });
 
   test("AC-4: 日記がなければ、最近 6 日の空いた日だけになる", () => {
-    const items = buildHistory([], TODAY);
+    const items = buildHistory([], TODAY, "2026-10-01");
 
     expect(items.map((item) => item.kind)).toEqual(Array(6).fill("missing"));
+  });
+
+  test("AC-14: 始めた日より前の日は、空いた日として並べない", () => {
+    const items = buildHistory([entry(TODAY, "今日")], TODAY, "2026-11-05");
+
+    expect(
+      items.map((item) =>
+        item.kind === "missing" ? item.date : item.entry.date,
+      ),
+    ).toEqual(["2026-11-07", "2026-11-06", "2026-11-05"]);
+  });
+
+  test("AC-14: 始めた日がわからなければ、空いた日は並べない", () => {
+    expect(buildHistory([], TODAY, null)).toEqual([]);
   });
 });
 
@@ -242,5 +283,54 @@ describe("writeLaterEntry", () => {
         ok: false,
       });
     }
+  });
+
+  test("AC-14: 始めた日より前の日には後から書けず、始めた日には書ける", () => {
+    const data = startedOn("2026-11-05", [entry(TODAY, "今日")]);
+
+    expect(writeLaterEntry(data, "2026-11-04", "x", TODAY, NOW)).toEqual({
+      ok: false,
+    });
+    expect(writeLaterEntry(data, "2026-11-05", "x", TODAY, NOW).ok).toBe(true);
+  });
+
+  test("AC-14, AC-24: 記録がないデータは、一番古い日記の日より前に後から書けない", () => {
+    const data = saveData(75, [
+      entry("2026-11-04", "初日"),
+      entry(TODAY, "今日"),
+    ]);
+
+    expect(writeLaterEntry(data, "2026-11-03", "x", TODAY, NOW)).toEqual({
+      ok: false,
+    });
+  });
+});
+
+describe("始めた日の書き込み（AC-24）", () => {
+  const NOW = new Date("2026-11-07T12:34:00.000Z");
+  const legacy = () =>
+    saveData(75, [entry("2026-11-04", "初日"), entry(TODAY, "今日")]);
+
+  test("記録がないデータで一番古い日記を消しても、始めた日はずれない", () => {
+    const result = deleteEntry(legacy(), "2026-11-04", TODAY);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.character?.startDate).toBe("2026-11-04");
+  });
+
+  test("記録がないデータは、書き直しや後から書いたときにも始めた日が書き込まれる", () => {
+    const edited = editEntry(legacy(), TODAY, "書き直した", TODAY);
+    const written = writeLaterEntry(legacy(), "2026-11-05", "x", TODAY, NOW);
+
+    expect(edited.ok && edited.data.character?.startDate).toBe("2026-11-04");
+    expect(written.ok && written.data.character?.startDate).toBe("2026-11-04");
+  });
+
+  test("始めた日の記録があれば、そのまま変えない", () => {
+    const data = startedOn("2026-11-02", [entry("2026-11-04", "初日")]);
+    const result = deleteEntry(data, "2026-11-04", TODAY);
+
+    expect(result.ok && result.data.character?.startDate).toBe("2026-11-02");
   });
 });
