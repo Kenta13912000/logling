@@ -27,3 +27,12 @@ export function validateBody(input: string): BodyValidation {
   }
   return { ok: true, body };
 }
+
+/** Shared by every body input so the wording stays the same. */
+export function bodyErrorMessage(
+  result: Extract<BodyValidation, { ok: false }>,
+): string {
+  return result.reason === "empty"
+    ? "なにか書いてくれるとうれしいな"
+    : `${BODY_MAX_LENGTH} 文字までにしてね（いま ${result.length} 文字）`;
+}

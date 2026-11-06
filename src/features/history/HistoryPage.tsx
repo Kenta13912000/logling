@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
+import { SaveErrorNotice } from "@/features/home/SaveErrorNotice";
 import { useSaveData } from "@/features/home/useSaveData";
 import { useToday } from "@/features/home/useToday";
-import { RECENT_DAYS } from "@/lib/diary-date";
+import { RECENT_DAYS, getDiaryDate } from "@/lib/diary-date";
 
-import { buildHistory } from "./history";
+import { DeleteDialog } from "./DeleteDialog";
+import { buildHistory, deleteEntry, editEntry, previewDelete } from "./history";
 import { HistoryList } from "./HistoryList";
+
+type Notice = "saveFailed" | "tooOld" | null;
+
+/** Recomputed on save: the page may have stayed open past 4 AM. */
+const currentDiaryDate = () => getDiaryDate(new Date());
 
 function Guide({ emoji, message }: { emoji?: string; message: string }) {
   return (
@@ -30,10 +37,13 @@ function Guide({ emoji, message }: { emoji?: string; message: string }) {
 }
 
 export function HistoryPage() {
-  const { state } = useSaveData();
+  const { state, save } = useSaveData();
   const today = useToday();
+  const [notice, setNotice] = useState<Notice>(null);
+  const [deletingDate, setDeletingDate] = useState<string | null>(null);
 
   let content: ReactNode = null;
+  let dialog: ReactNode = null;
 
   if (state.status === "broken") {
     content = <Guide message="データを読み込めなかったみたい…" />;
@@ -50,15 +60,59 @@ export function HistoryPage() {
         />
       );
     } else {
+      const data = state.data;
+
+      const handleSaveEdit = (date: string, body: string): boolean => {
+        const result = editEntry(data, date, body, currentDiaryDate());
+        if (!result.ok) {
+          // Close the form: the entry has become read-only.
+          setNotice("tooOld");
+          return true;
+        }
+        const saved = save(result.data);
+        setNotice(saved ? null : "saveFailed");
+        return saved;
+      };
+
       content = (
         <section className="flex flex-col gap-3 px-4 py-5">
           <h1 className="text-lg font-bold">ふりかえり</h1>
           <p className="text-sm text-ink-muted">
             {`最近 ${RECENT_DAYS} 日の日記は、書き直したり消したりできるよ`}
           </p>
-          <HistoryList items={buildHistory(entries, today)} />
+          <HistoryList
+            items={buildHistory(entries, today)}
+            onSaveEdit={handleSaveEdit}
+            onRequestDelete={setDeletingDate}
+          />
         </section>
       );
+
+      const preview =
+        deletingDate === null ? null : previewDelete(data, deletingDate);
+      if (deletingDate !== null && preview !== null) {
+        const handleConfirm = () => {
+          setDeletingDate(null);
+          const result = deleteEntry(data, deletingDate, currentDiaryDate());
+          if (!result.ok) {
+            setNotice("tooOld");
+            return;
+          }
+          setNotice(save(result.data) ? null : "saveFailed");
+        };
+
+        dialog = (
+          <DeleteDialog
+            date={deletingDate}
+            name={character.name}
+            lost={preview.lost}
+            levelBefore={preview.levelBefore}
+            levelAfter={preview.levelAfter}
+            onConfirm={handleConfirm}
+            onCancel={() => setDeletingDate(null)}
+          />
+        );
+      }
     }
   }
 
@@ -73,7 +127,16 @@ export function HistoryPage() {
         </Link>
         <span className="font-bold tracking-wide">logling</span>
       </header>
-      <main>{content}</main>
+      <main>
+        {notice === "saveFailed" && <SaveErrorNotice />}
+        {notice === "tooOld" && (
+          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
+            ⚠ この日記は、もう書き直したり消したりできないよ
+          </p>
+        )}
+        {content}
+      </main>
+      {dialog}
     </div>
   );
 }

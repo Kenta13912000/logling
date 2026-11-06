@@ -17,10 +17,9 @@ import { TodayEntry } from "@/features/diary/TodayEntry";
 import { getDiaryDate } from "@/lib/diary-date";
 
 import { BrokenDataNotice } from "./BrokenDataNotice";
+import { SaveErrorNotice } from "./SaveErrorNotice";
 import { useSaveData } from "./useSaveData";
 import { useToday } from "./useToday";
-
-const SAVE_ERROR = "保存できなかった…少し時間をおいて、もう一度ためしてね";
 
 export function Home() {
   const { state, save, reset } = useSaveData();
@@ -111,11 +110,7 @@ export function Home() {
         )}
       </header>
       <main>
-        {saveError && (
-          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
-            ⚠ {SAVE_ERROR}
-          </p>
-        )}
+        {saveError && <SaveErrorNotice />}
         {content}
       </main>
       {gainedExp !== null && (
