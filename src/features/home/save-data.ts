@@ -24,22 +24,29 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isDiaryDate(value: unknown): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 function isCharacter(value: unknown): value is Character {
   return (
     isRecord(value) &&
     typeof value.name === "string" &&
     Number.isInteger(value.totalExp) &&
-    (value.totalExp as number) >= 0
+    (value.totalExp as number) >= 0 &&
+    // Characters named in diary-exp have no start date.
+    (value.startDate === undefined || isDiaryDate(value.startDate))
   );
 }
 
 function isDiaryEntry(value: unknown): value is DiaryEntry {
   return (
     isRecord(value) &&
-    typeof value.date === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(value.date) &&
+    isDiaryDate(value.date) &&
     typeof value.body === "string" &&
-    typeof value.createdAt === "string"
+    typeof value.createdAt === "string" &&
+    // Entries from diary-exp have no flag; they were written on the day.
+    (value.writtenLater === undefined || value.writtenLater === true)
   );
 }
 

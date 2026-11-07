@@ -2,15 +2,62 @@ import { describe, expect, test } from "vitest";
 
 import {
   EXP_PER_ENTRY,
+  EXP_PER_LATE_ENTRY,
   createCharacter,
   expToNextLevel,
   gainExp,
   getLevelInfo,
+  loseExp,
 } from "./character";
+
+describe("diary-history", () => {
+  test("AC-15: 後から書いた日記の経験値は 5", () => {
+    expect(EXP_PER_LATE_ENTRY).toBe(5);
+  });
+
+  test("AC-12: 経験値を減らし、必要な量を下回ればレベルが下がる", () => {
+    // 75 = Lv3 (30 + 40 + 5), 65 = Lv2 (30 + 35).
+    const before = { name: "ぴよ", totalExp: 75 };
+    const result = loseExp(before, 10);
+
+    expect(result.character).toEqual({ name: "ぴよ", totalExp: 65 });
+    expect(result.levelBefore).toBe(3);
+    expect(result.level).toBe(2);
+    expect(result.leveledDown).toBe(true);
+    expect(before.totalExp).toBe(75);
+  });
+
+  test("AC-12: レベルの境目を下回らなければ、レベルは下がらない", () => {
+    const result = loseExp({ name: "ぴよ", totalExp: 80 }, 10);
+
+    expect(result.character.totalExp).toBe(70);
+    expect(result.leveledDown).toBe(false);
+    expect(result.level).toBe(3);
+  });
+
+  test("AC-12: 経験値は 0 より下にはならない", () => {
+    const result = loseExp({ name: "ぴよ", totalExp: 5 }, 10);
+
+    expect(result.character.totalExp).toBe(0);
+    expect(result.level).toBe(1);
+    expect(result.leveledDown).toBe(false);
+  });
+});
 
 describe("createCharacter", () => {
   test("AC-2: 経験値 0 のキャラクターができる", () => {
-    expect(createCharacter("ぴよ")).toEqual({ name: "ぴよ", totalExp: 0 });
+    expect(createCharacter("ぴよ", "2026-10-28")).toMatchObject({
+      name: "ぴよ",
+      totalExp: 0,
+    });
+  });
+
+  test("diary-history AC-24: 始めた日を持つ", () => {
+    expect(createCharacter("ぴよ", "2026-10-28")).toEqual({
+      name: "ぴよ",
+      totalExp: 0,
+      startDate: "2026-10-28",
+    });
   });
 });
 

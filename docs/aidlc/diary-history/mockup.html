@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（diary-history）</title>
+    <style>
+      :root {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --button-text: #ffffff;
+        --bar: #d97706;
+        --bar-track: #f6e7cf;
+        --error: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        min-height: 667px;
+        background: var(--bg);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .appbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .appbar-title {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .appbar-link {
+        color: var(--button);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .content {
+        padding: 16px;
+      }
+      .status {
+        padding: 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-emoji {
+        font-size: 40px;
+        line-height: 1;
+      }
+      .status-name {
+        font-weight: 700;
+        font-size: 18px;
+        flex: 1;
+      }
+      .status-level {
+        font-weight: 700;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--bar-track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--bar);
+      }
+      .bar-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .page-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+      .page-lead {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .card.empty {
+        background: transparent;
+        border-style: dashed;
+        border-color: #d8c4a6;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .date {
+        font-weight: 700;
+        flex: 1;
+      }
+      .badge {
+        font-size: 12px;
+        border: 1px solid var(--bar);
+        color: #92400e;
+        border-radius: 999px;
+        padding: 0 8px;
+      }
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .small-button {
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font: inherit;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .small-button.primary {
+        background: var(--button);
+        border-color: var(--button);
+        color: var(--button-text);
+      }
+      .small-button.danger {
+        color: var(--error);
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .divider {
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 4px 0 12px;
+      }
+      .textarea {
+        width: 100%;
+        min-height: 140px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
+      }
+      .counter {
+        text-align: right;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .speech {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin: 4px 0 10px;
+      }
+      .speech-emoji {
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      .bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 12px;
+      }
+      .hero {
+        text-align: center;
+        font-size: 72px;
+        line-height: 1;
+        margin: 48px 0 16px;
+      }
+      .center {
+        text-align: center;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: var(--button-text);
+        font: inherit;
+        font-weight: 700;
+      }
+      .button.secondary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .button.danger {
+        background: var(--error);
+      }
+      .toast {
+        position: absolute;
+        top: 56px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text);
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgb(63 45 28 / 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+      }
+      .dialog-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .warn {
+        color: var(--error);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（diary-history）</h1>
+    <p class="lead">
+      スマホ（幅 375px）での見た目。例として、今日を
+      2026年11月7日（土）とする。ボタンなどは見た目だけで、押しても動かない。
+    </p>
+
+    <div class="screens">
+      <!-- 画面 1：ホーム -->
+      <section class="screen">
+        <h2>画面 1：ホーム（「ふりかえる」のリンク）</h2>
+        <p>
+          上の帯の右に「ふりかえる」を置く（AC-1）。名前を付けたあとのどの画面でも出す
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 3</span>
+            </div>
+            <div class="bar"><span style="width: 10%"></span></div>
+            <div class="bar-text">
+              <span>あと 45 でレベルアップ</span><span>5 / 50</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月7日（土）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日も書いてくれてありがとう！また明日ね</div>
+            </div>
+            <div class="card">今日は久しぶりに晴れた。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2：振り返りの一覧 -->
+      <section class="screen">
+        <h2>画面 2：ふりかえり（一覧）</h2>
+        <p>
+          新しい順（AC-2）。最近 7 日は「書き直す」「消す」（AC-6,
+          AC-10）、空いた日は「書く」（AC-14）、後から書いた日記に「あとから」（AC-3）、8
+          日以上前は読むだけ（AC-18）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="content">
+            <p class="page-title">ふりかえり</p>
+            <p class="page-lead">
+              最近 7 日の日記は、書き直したり消したりできるよ
+            </p>
+
+            <div class="card">
+              <div class="card-head">
+                <span class="date">11月7日（土）</span>
+              </div>
+              今日は久しぶりに晴れた。
+              <div class="card-actions">
+                <button class="small-button" type="button">書き直す</button>
+                <button class="small-button danger" type="button">消す</button>
+              </div>
+            </div>
+
+            <div class="card empty">
+              <div class="card-head">
+                <span class="date">11月6日（金）</span>
+              </div>
+              <span class="muted"
+                >この日はまだ書いていないよ（あとから書くと +5 経験値）</span
+              >
+              <div class="card-actions">
+                <button class="small-button primary" type="button">
+                  この日の日記を書く
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <span class="date">11月5日（木）</span
+                ><span class="badge">あとから</span>
+              </div>
+              仕事が忙しくて、帰ってすぐ寝た。
+              <div class="card-actions">
+                <button class="small-button" type="button">書き直す</button>
+                <button class="small-button danger" type="button">消す</button>
+              </div>
+            </div>
+
+            <div class="divider">
+              ― ここから下は 8 日以上前の日記（読むだけ） ―
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <span class="date">10月31日（土）</span>
+              </div>
+              ハロウィンで、駅前がにぎやかだった。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 3：書き直す -->
+      <section class="screen">
+        <h2>画面 3：書き直す</h2>
+        <p>
+          カードの中が入力欄に変わる（AC-6〜AC-9）。保存しても経験値は変わらない
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="content">
+            <p class="page-title">ふりかえり</p>
+            <div class="card">
+              <div class="card-head">
+                <span class="date">11月7日（土）</span>
+              </div>
+              <div class="textarea">
+                今日は久しぶりに晴れた。帰りに公園を歩いた。
+              </div>
+              <div class="counter">22 / 2000</div>
+              <div class="card-actions">
+                <button class="small-button primary" type="button">
+                  保存する
+                </button>
+                <button class="small-button" type="button">やめる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 4：後から書く -->
+      <section class="screen">
+        <h2>画面 4：後から書く</h2>
+        <p>
+          空いた日のカードの中が入力欄に変わる（AC-14〜AC-17）。保存すると「+5
+          経験値！」
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="toast">✨ +5 経験値！</div>
+          <div class="content">
+            <p class="page-title">ふりかえり</p>
+            <div class="card">
+              <div class="card-head">
+                <span class="date">11月6日（金）</span>
+              </div>
+              <div class="speech">
+                <span class="speech-emoji" aria-hidden="true">🐣</span>
+                <div class="bubble">11月6日は、どんな一日だった？</div>
+              </div>
+              <div class="textarea">
+                <span class="muted">思い出せることを書いてみよう</span>
+              </div>
+              <div class="counter">0 / 2000</div>
+              <div class="card-actions">
+                <button class="small-button primary" type="button">
+                  日記をのこす
+                </button>
+                <button class="small-button" type="button">やめる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 5：消す前の確認 -->
+      <section class="screen">
+        <h2>画面 5：消す前の確認</h2>
+        <p>
+          減る経験値と、下がる場合は下がった後のレベルを伝える（AC-10〜AC-12）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="overlay">
+            <div class="dialog" role="dialog" aria-labelledby="delete-title">
+              <p id="delete-title" class="dialog-title">
+                11月7日の日記を消す？
+              </p>
+              <p>消すと経験値が 10 減るよ。</p>
+              <p class="warn">ぴよ のレベルが 3 から 2 に下がるよ。</p>
+              <p class="muted">消した日記は元に戻せないよ</p>
+              <button class="button danger" type="button">消す</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 6：日記がないとき -->
+      <section class="screen">
+        <h2>画面 6：日記がまだないとき</h2>
+        <p>
+          日記が 1
+          件もないとき（AC-4）。名前をまだ付けていないときは「ホームで名前を付けてね」になる（AC-5）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="content">
+            <div class="hero" aria-hidden="true">🐣</div>
+            <p class="center">
+              まだ日記がないよ。<br />ホームで今日の日記を書いてみよう
+            </p>
+            <button class="button" type="button">ホームへ</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

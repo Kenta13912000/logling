@@ -6,6 +6,8 @@ export type DiaryEntry = {
   body: string;
   /** When it was saved (ISO 8601). */
   createdAt: string;
+  /** Set only for entries written later for a missed day. */
+  writtenLater?: true;
 };
 
 export const BODY_MAX_LENGTH = 2000;
@@ -24,4 +26,13 @@ export function validateBody(input: string): BodyValidation {
     return { ok: false, reason: "tooLong", length };
   }
   return { ok: true, body };
+}
+
+/** Shared by every body input so the wording stays the same. */
+export function bodyErrorMessage(
+  result: Extract<BodyValidation, { ok: false }>,
+): string {
+  return result.reason === "empty"
+    ? "なにか書いてくれるとうれしいな"
+    : `${BODY_MAX_LENGTH} 文字までにしてね（いま ${result.length} 文字）`;
 }

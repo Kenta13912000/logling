@@ -3,13 +3,7 @@ import { useId, useState, type SubmitEvent } from "react";
 import { formatDiaryDate } from "@/lib/diary-date";
 import { countCharacters } from "@/lib/text";
 
-import { BODY_MAX_LENGTH, validateBody, type BodyValidation } from "./diary";
-
-function errorMessage(result: Extract<BodyValidation, { ok: false }>): string {
-  return result.reason === "empty"
-    ? "なにか書いてくれるとうれしいな"
-    : `${BODY_MAX_LENGTH} 文字までにしてね（いま ${result.length} 文字）`;
-}
+import { BODY_MAX_LENGTH, bodyErrorMessage, validateBody } from "./diary";
 
 type Props = {
   /** Diary date, e.g. "2026-10-28". */
@@ -28,7 +22,7 @@ export function DiaryEditor({ date, onSave }: Props) {
     event.preventDefault();
     const result = validateBody(value);
     if (!result.ok) {
-      setError(errorMessage(result));
+      setError(bodyErrorMessage(result));
       return;
     }
     setError(null);

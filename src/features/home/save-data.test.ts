@@ -63,6 +63,70 @@ describe("parseSaveData", () => {
   });
 });
 
+describe("diary-history", () => {
+  const withEntries = (entries: unknown[]) =>
+    JSON.stringify({ ...saved, entries });
+
+  test("AC-21: 後から書いた印のない日記（diary-exp の日記）は、そのまま読める", () => {
+    const raw = withEntries([
+      {
+        date: "2026-10-28",
+        body: "晴れた。",
+        createdAt: "2026-10-28T12:00:00.000Z",
+      },
+    ]);
+    expect(parseSaveData(raw).status).toBe("ok");
+  });
+
+  test("AC-15: 後から書いた印（writtenLater: true）の日記を読める", () => {
+    const entry = {
+      date: "2026-10-27",
+      body: "あとから書いた。",
+      createdAt: "2026-10-28T12:00:00.000Z",
+      writtenLater: true,
+    };
+    expect(parseSaveData(withEntries([entry]))).toEqual({
+      status: "ok",
+      data: { ...saved, entries: [entry] },
+    });
+  });
+
+  test("AC-24: 始めた日の記録があるキャラクターを読める", () => {
+    const data = {
+      ...saved,
+      character: { name: "ぴよ", totalExp: 10, startDate: "2026-10-28" },
+    };
+    expect(parseSaveData(JSON.stringify(data))).toEqual({
+      status: "ok",
+      data,
+    });
+  });
+
+  test("AC-24: 始めた日がおかしな値のキャラクターは、壊れたデータとして扱う", () => {
+    for (const startDate of ["2026/10/28", "", 20261028, null]) {
+      const raw = JSON.stringify({
+        ...saved,
+        character: { name: "ぴよ", totalExp: 10, startDate },
+      });
+      expect(parseSaveData(raw)).toEqual({ status: "broken", raw });
+    }
+  });
+
+  test("AC-21: 後から書いた印がおかしな値の日記は、壊れたデータとして扱う", () => {
+    for (const writtenLater of [false, "true", 1]) {
+      const raw = withEntries([
+        {
+          date: "2026-10-27",
+          body: "あとから書いた。",
+          createdAt: "2026-10-28T12:00:00.000Z",
+          writtenLater,
+        },
+      ]);
+      expect(parseSaveData(raw)).toEqual({ status: "broken", raw });
+    }
+  });
+});
+
 describe("loadSaveData / writeSaveData", () => {
   test("AC-16: 書き込んだデータを読み直せる", () => {
     expect(writeSaveData(localStorage, saved)).toBe(true);

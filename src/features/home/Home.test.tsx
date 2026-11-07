@@ -43,6 +43,39 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe("diary-history", () => {
+  test("AC-1: キャラクターがいると、上の帯に「ふりかえる」のリンクがある", () => {
+    store(piyo(0));
+    render(<Home />);
+
+    expect(screen.getByRole("link", { name: /ふりかえる/ })).toHaveAttribute(
+      "href",
+      "/history",
+    );
+  });
+
+  test("AC-1: 名前を付ける前は「ふりかえる」のリンクを出さない", () => {
+    render(<Home />);
+
+    expect(
+      screen.queryByRole("link", { name: /ふりかえる/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("AC-24: 名前を付けると、朝 4 時で区切ったその日が始めた日として保存される", async () => {
+    // 10/29 3:30 is still diary day 10/28.
+    setNow(2026, 9, 29, 3, 30);
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
+    await user.click(screen.getByRole("button", { name: "この名前にする" }));
+    await user.click(screen.getByRole("button", { name: "これにする" }));
+
+    expect(stored().character?.startDate).toBe("2026-10-28");
+  });
+});
+
 describe("初めて開いたとき", () => {
   test("AC-1: アプリ名と名前の入力欄が表示される", () => {
     render(<Home />);
@@ -66,7 +99,10 @@ describe("初めて開いたとき", () => {
     expect(
       screen.getByRole("textbox", { name: "今日の日記" }),
     ).toBeInTheDocument();
-    expect(stored()).toEqual(piyo(0));
+    expect(stored()).toEqual({
+      ...piyo(0),
+      character: { name: "ぴよ", totalExp: 0, startDate: "2026-10-28" },
+    });
   });
 });
 

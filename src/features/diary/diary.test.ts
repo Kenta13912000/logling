@@ -1,6 +1,20 @@
 import { describe, expect, test } from "vitest";
 
-import { BODY_MAX_LENGTH, validateBody } from "./diary";
+import { BODY_MAX_LENGTH, bodyErrorMessage, validateBody } from "./diary";
+
+describe("diary-history: bodyErrorMessage", () => {
+  test("AC-8: 書き直しでも diary-exp と同じ文言を使う（空のとき）", () => {
+    expect(bodyErrorMessage({ ok: false, reason: "empty", length: 0 })).toBe(
+      "なにか書いてくれるとうれしいな",
+    );
+  });
+
+  test("AC-8: 書き直しでも diary-exp と同じ文言を使う（長すぎるとき）", () => {
+    expect(
+      bodyErrorMessage({ ok: false, reason: "tooLong", length: 2001 }),
+    ).toBe("2000 文字までにしてね（いま 2001 文字）");
+  });
+});
 
 describe("validateBody", () => {
   test("本文の上限は 2000 文字", () => {
