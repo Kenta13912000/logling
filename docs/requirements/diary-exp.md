@@ -38,6 +38,7 @@
 
 - localStorage のキー `logling:v1` に、`{ version: 1, character: { name, totalExp } | null, entries: [{ date, body, createdAt }] }` を JSON で保存する
 - 保存するのは名前と経験値の合計だけで、レベルと進み具合は合計から計算する
+- （`diary-history` で追加）キャラクターに始めた日 `startDate`（名前を付けた日）、日記に後から書いた印 `writtenLater: true` を加えた。どちらもないデータもそのまま読めるため、`version` は 1 のまま。詳しくは [diary-history の要件定義](diary-history.md) を参照
 - 読み込み時に形をチェックし、JSON として読めない・形が合わない場合は「壊れている」として扱う
 - 「はじめからにする」を選ぶと、元のデータを `logling:v1:broken:<日時>` に移してから、初めての状態に戻す
 - 別のタブでデータが変わったら、表示を更新する（ブラウザの `storage` イベント。AC-25）

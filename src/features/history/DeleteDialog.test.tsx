@@ -47,7 +47,7 @@ test("AC-11: レベルが下がらないときは、レベルの文は出ない"
   expect(dialog).not.toHaveTextContent(/下がるよ/);
 });
 
-test("開いたときは「やめる」にフォーカスがある（うっかり消さないため）", () => {
+test("AC-10: 開いたときは「やめる」にフォーカスがある（うっかり消さないため）", () => {
   setup(10, 2, 2);
 
   expect(screen.getByRole("button", { name: "やめる" })).toHaveFocus();

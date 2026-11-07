@@ -135,7 +135,7 @@ describe("Bolt-3：書き直しと削除", () => {
     ).toHaveValue("今日は晴れた。\n公園を歩いた。");
   });
 
-  test("書き直し中は、ほかのカードの「書き直す」「消す」が出ない", async () => {
+  test("AC-26: 書き直し中は、ほかのカードの「書き直す」「消す」が出ない", async () => {
     const { user, items } = renderList();
 
     await user.click(
@@ -232,7 +232,7 @@ describe("Bolt-4：後から書く", () => {
     );
   });
 
-  test("書いている途中は、ほかのカードのボタンが出ない", async () => {
+  test("AC-26: 書いている途中は、ほかのカードのボタンが出ない", async () => {
     const { user, items } = renderList();
 
     await user.click(within(items[1]).getByRole("button", { name: WRITE }));
@@ -242,7 +242,7 @@ describe("Bolt-4：後から書く", () => {
     }
   });
 
-  test("書き直している途中も、空いた日のボタンが出ない", async () => {
+  test("AC-26: 書き直している途中も、空いた日のボタンが出ない", async () => {
     const { user, items } = renderList();
 
     await user.click(

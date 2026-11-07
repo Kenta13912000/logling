@@ -144,7 +144,7 @@ test("AC-20: 開き直しても、保存されている日記がそのまま表�
   expect(screen.getByText("あとから")).toBeInTheDocument();
 });
 
-test("保存データが壊れているときは、ホームへ案内する", () => {
+test("AC-27: 保存データが壊れているときは、ホームへ案内する", () => {
   localStorage.setItem(STORAGE_KEY, "{oops");
   render(<HistoryPage />);
 
@@ -308,7 +308,7 @@ describe("Bolt-3：書き直しと削除", () => {
     expect(stored()).toEqual(data);
   });
 
-  test("開いたまま朝 4 時を過ぎて 8 日以上前になった日記は、書き直さずに伝える", async () => {
+  test("AC-25: 開いたまま朝 4 時を過ぎて 8 日以上前になった日記は、書き直さずに伝える", async () => {
     const data = withEntries([
       entry("2026-11-01", "一週間前の日記"),
       entry("2026-11-07", "今日の日記"),
@@ -331,7 +331,7 @@ describe("Bolt-3：書き直しと削除", () => {
     expect(stored()).toEqual(data);
   });
 
-  test("開いたまま朝 4 時を過ぎて 8 日以上前になった日記は、消さずに伝える", async () => {
+  test("AC-25: 開いたまま朝 4 時を過ぎて 8 日以上前になった日記は、消さずに伝える", async () => {
     const data = withEntries([
       entry("2026-11-01", "一週間前の日記"),
       entry("2026-11-07", "今日の日記"),
@@ -470,7 +470,7 @@ describe("Bolt-4：後から書く", () => {
     expect(screen.queryByText(/11月1日/)).not.toBeInTheDocument();
   });
 
-  test("開いたまま朝 4 時を過ぎて 8 日以上前になった日には、書かずに伝える", async () => {
+  test("AC-25: 開いたまま朝 4 時を過ぎて 8 日以上前になった日には、書かずに伝える", async () => {
     const data = startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")]);
     store(data);
     render(<HistoryPage />);
