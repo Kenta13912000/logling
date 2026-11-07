@@ -46,7 +46,9 @@ export function Home() {
       content = (
         <NameForm
           onSubmit={(name) => {
-            setSaveError(!save({ ...data, character: createCharacter(name) }));
+            // The naming day is the start date, even without an entry.
+            const character = createCharacter(name, getDiaryDate(new Date()));
+            setSaveError(!save({ ...data, character }));
           }}
         />
       );

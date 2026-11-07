@@ -15,6 +15,8 @@ type Props = {
   items: HistoryItem[];
   /** Saves the new body. Returns true when it was saved. */
   onSaveEdit: (date: string, body: string) => boolean;
+  /** Saves an entry for a missed day. Returns true when it was saved. */
+  onSaveLater: (date: string, body: string) => boolean;
   onRequestDelete: (date: string) => void;
 };
 
@@ -25,13 +27,55 @@ function isOld(item: HistoryItem): boolean {
 const smallButton =
   "min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-bold";
 
-function MissingCard({ date }: { date: string }) {
+type MissingCardProps = {
+  date: string;
+  /** Shows the write button. */
+  showActions: boolean;
+  writing: boolean;
+  onWrite: () => void;
+  onSave: (body: string) => void;
+  onCancel: () => void;
+};
+
+function MissingCard({
+  date,
+  showActions,
+  writing,
+  onWrite,
+  onSave,
+  onCancel,
+}: MissingCardProps) {
   return (
     <li className="rounded-xl border border-dashed border-line p-3">
       <div className="mb-1.5 font-bold">{formatShortDiaryDate(date)}</div>
-      <p className="text-sm text-ink-muted">
-        {`この日はまだ書いていないよ（あとから書くと +${EXP_PER_LATE_ENTRY} 経験値）`}
-      </p>
+      {writing ? (
+        <EntryForm
+          label={`${formatMonthDay(date)}の日記`}
+          initialBody=""
+          prompt={`${formatMonthDay(date)}は、どんな一日だった？`}
+          placeholder="思い出せることを書いてみよう"
+          submitLabel="日記をのこす"
+          onSubmit={onSave}
+          onCancel={onCancel}
+        />
+      ) : (
+        <>
+          <p className="text-sm text-ink-muted">
+            {`この日はまだ書いていないよ（あとから書くと +${EXP_PER_LATE_ENTRY} 経験値）`}
+          </p>
+          {showActions && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={onWrite}
+                className="min-h-11 rounded-xl bg-ember px-4 text-sm font-bold text-white"
+              >
+                この日の日記を書く
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </li>
   );
 }
@@ -99,29 +143,50 @@ function EntryCard({
   );
 }
 
-export function HistoryList({ items, onSaveEdit, onRequestDelete }: Props) {
-  // Only one card is edited at a time.
-  const [editingDate, setEditingDate] = useState<string | null>(null);
+export function HistoryList({
+  items,
+  onSaveEdit,
+  onSaveLater,
+  onRequestDelete,
+}: Props) {
+  // Only one card takes input at a time, whether rewriting or writing later.
+  const [activeDate, setActiveDate] = useState<string | null>(null);
+  // Hide other buttons during input so typed text is not lost.
+  const showActions = activeDate === null;
+
+  const saveWith =
+    (save: (date: string, body: string) => boolean, date: string) =>
+    (body: string) => {
+      if (save(date, body)) {
+        setActiveDate(null);
+      }
+    };
 
   function renderItem(item: HistoryItem) {
     if (item.kind === "missing") {
-      return <MissingCard key={item.date} date={item.date} />;
+      const { date } = item;
+      return (
+        <MissingCard
+          key={date}
+          date={date}
+          showActions={showActions}
+          writing={activeDate === date}
+          onWrite={() => setActiveDate(date)}
+          onSave={saveWith(onSaveLater, date)}
+          onCancel={() => setActiveDate(null)}
+        />
+      );
     }
     const { date } = item.entry;
     return (
       <EntryCard
         key={date}
         entry={item.entry}
-        // Hide other buttons while editing so typed text is not lost.
-        showActions={item.editable && editingDate === null}
-        editing={item.editable && editingDate === date}
-        onEdit={() => setEditingDate(date)}
-        onSave={(body) => {
-          if (onSaveEdit(date, body)) {
-            setEditingDate(null);
-          }
-        }}
-        onCancel={() => setEditingDate(null)}
+        showActions={item.editable && showActions}
+        editing={item.editable && activeDate === date}
+        onEdit={() => setActiveDate(date)}
+        onSave={saveWith(onSaveEdit, date)}
+        onCancel={() => setActiveDate(null)}
         onDelete={() => onRequestDelete(date)}
       />
     );

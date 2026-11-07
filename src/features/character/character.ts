@@ -2,6 +2,11 @@ export type Character = {
   name: string;
   /** Sum of all EXP earned. Level and progress are derived from this. */
   totalExp: number;
+  /**
+   * Diary date the character was named on. Missing in data saved by
+   * diary-exp; see getStartDate in the history feature.
+   */
+  startDate?: string;
 };
 
 export type LevelInfo = {
@@ -19,8 +24,8 @@ export function expToNextLevel(level: number): number {
   return 20 + 10 * level;
 }
 
-export function createCharacter(name: string): Character {
-  return { name, totalExp: 0 };
+export function createCharacter(name: string, startDate: string): Character {
+  return { name, totalExp: 0, startDate };
 }
 
 export function getLevelInfo(totalExp: number): LevelInfo {

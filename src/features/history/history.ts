@@ -4,6 +4,7 @@ import {
   gainExp,
   getLevelInfo,
   loseExp,
+  type Character,
 } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
 import type { SaveData } from "@/features/home/save-data";
@@ -16,10 +17,40 @@ export type HistoryItem =
 type Failed = { ok: false };
 const FAILED: Failed = { ok: false };
 
+/**
+ * The day the character was named. Data from diary-exp has no record, so
+ * the oldest entry stands in for it. Null when neither exists.
+ */
+export function getStartDate(data: SaveData): string | null {
+  if (data.character?.startDate !== undefined) {
+    return data.character.startDate;
+  }
+  let oldest: string | null = null;
+  for (const entry of data.entries) {
+    if (oldest === null || entry.date < oldest) {
+      oldest = entry.date;
+    }
+  }
+  return oldest;
+}
+
+/**
+ * Records the start date when it is missing, so that deleting the oldest
+ * entry later does not move it.
+ */
+function withStartDate(data: SaveData, character: Character): Character {
+  if (character.startDate !== undefined) {
+    return character;
+  }
+  const startDate = getStartDate(data);
+  return startDate === null ? character : { ...character, startDate };
+}
+
 /** Newest first: the recent days (entries or missed days), then older entries. */
 export function buildHistory(
   entries: DiaryEntry[],
   today: string,
+  startDate: string | null,
 ): HistoryItem[] {
   const byDate = new Map(entries.map((entry) => [entry.date, entry]));
   const items: HistoryItem[] = [];
@@ -29,8 +60,9 @@ export function buildHistory(
     const entry = byDate.get(date);
     if (entry) {
       items.push({ kind: "entry", entry, editable: true });
-    } else if (date !== today) {
-      // Today's entry is written from the home page.
+    } else if (date !== today && startDate !== null && date >= startDate) {
+      // Today's entry is written from the home page. Days before the
+      // start date cannot be filled in.
       items.push({ kind: "missing", date });
     }
   }
@@ -82,7 +114,8 @@ export function editEntry(
   const entries = data.entries.map((entry) =>
     entry.date === date ? { ...entry, body } : entry,
   );
-  return { ok: true, data: { ...data, entries } };
+  const character = data.character && withStartDate(data, data.character);
+  return { ok: true, data: { ...data, character, entries } };
 }
 
 export function deleteEntry(
@@ -108,7 +141,7 @@ export function deleteEntry(
     ok: true,
     data: {
       ...data,
-      character: result.character,
+      character: withStartDate(data, result.character),
       entries: data.entries.filter((e) => e.date !== date),
     },
     lost,
@@ -132,10 +165,13 @@ export function writeLaterEntry(
       level: number;
     }
   | Failed {
+  const startDate = getStartDate(data);
   if (
     !data.character ||
     date === today ||
     !isRecentDiaryDate(date, today) ||
+    startDate === null ||
+    date < startDate ||
     findEntry(data, date)
   ) {
     return FAILED;
@@ -153,7 +189,11 @@ export function writeLaterEntry(
   const result = gainExp(data.character, EXP_PER_LATE_ENTRY);
   return {
     ok: true,
-    data: { ...data, character: result.character, entries },
+    data: {
+      ...data,
+      character: withStartDate(data, result.character),
+      entries,
+    },
     gained: EXP_PER_LATE_ENTRY,
     leveledUp: result.leveledUp,
     level: result.level,

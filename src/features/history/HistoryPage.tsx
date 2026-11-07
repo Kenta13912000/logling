@@ -3,16 +3,31 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+import { ExpGainToast } from "@/features/character/ExpGainToast";
+import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { SaveErrorNotice } from "@/features/home/SaveErrorNotice";
 import { useSaveData } from "@/features/home/useSaveData";
 import { useToday } from "@/features/home/useToday";
 import { RECENT_DAYS, getDiaryDate } from "@/lib/diary-date";
 
 import { DeleteDialog } from "./DeleteDialog";
-import { buildHistory, deleteEntry, editEntry, previewDelete } from "./history";
+import {
+  buildHistory,
+  deleteEntry,
+  editEntry,
+  getStartDate,
+  previewDelete,
+  writeLaterEntry,
+} from "./history";
 import { HistoryList } from "./HistoryList";
 
-type Notice = "saveFailed" | "tooOld" | null;
+type Notice = "saveFailed" | "tooOld" | "tooLate" | null;
+
+/** Shown when the day left the editable range while the page was open. */
+const OUT_OF_RANGE: Record<"tooOld" | "tooLate", string> = {
+  tooOld: "この日記は、もう書き直したり消したりできないよ",
+  tooLate: "この日には、もう後から書けないよ",
+};
 
 /** Recomputed on save: the page may have stayed open past 4 AM. */
 const currentDiaryDate = () => getDiaryDate(new Date());
@@ -41,6 +56,8 @@ export function HistoryPage() {
   const today = useToday();
   const [notice, setNotice] = useState<Notice>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
+  const [gainedExp, setGainedExp] = useState<number | null>(null);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
 
   let content: ReactNode = null;
   let dialog: ReactNode = null;
@@ -74,6 +91,31 @@ export function HistoryPage() {
         return saved;
       };
 
+      const handleSaveLater = (date: string, body: string): boolean => {
+        const now = new Date();
+        const result = writeLaterEntry(
+          data,
+          date,
+          body,
+          getDiaryDate(now),
+          now,
+        );
+        if (!result.ok) {
+          // Close the form: the day can no longer be filled in.
+          setNotice("tooLate");
+          return true;
+        }
+        const saved = save(result.data);
+        setNotice(saved ? null : "saveFailed");
+        if (saved) {
+          setGainedExp(result.gained);
+          if (result.leveledUp) {
+            setLevelUp(result.level);
+          }
+        }
+        return saved;
+      };
+
       content = (
         <section className="flex flex-col gap-3 px-4 py-5">
           <h1 className="text-lg font-bold">ふりかえり</h1>
@@ -81,8 +123,9 @@ export function HistoryPage() {
             {`最近 ${RECENT_DAYS} 日の日記は、書き直したり消したりできるよ`}
           </p>
           <HistoryList
-            items={buildHistory(entries, today)}
+            items={buildHistory(entries, today, getStartDate(data))}
             onSaveEdit={handleSaveEdit}
+            onSaveLater={handleSaveLater}
             onRequestDelete={setDeletingDate}
           />
         </section>
@@ -129,14 +172,24 @@ export function HistoryPage() {
       </header>
       <main>
         {notice === "saveFailed" && <SaveErrorNotice />}
-        {notice === "tooOld" && (
+        {(notice === "tooOld" || notice === "tooLate") && (
           <p role="alert" className="mx-4 mt-4 text-sm text-alert">
-            ⚠ この日記は、もう書き直したり消したりできないよ
+            {`⚠ ${OUT_OF_RANGE[notice]}`}
           </p>
         )}
         {content}
       </main>
       {dialog}
+      {gainedExp !== null && (
+        <ExpGainToast amount={gainedExp} onDone={() => setGainedExp(null)} />
+      )}
+      {levelUp !== null && state.status === "ok" && state.data.character && (
+        <LevelUpDialog
+          name={state.data.character.name}
+          level={levelUp}
+          onClose={() => setLevelUp(null)}
+        />
+      )}
     </div>
   );
 }
