@@ -39,8 +39,9 @@ test("AC-3: 続いていないときは「0 日」と出さず、今日書くと
   expect(band).not.toHaveTextContent("0 日");
 });
 
-test("🔥 は飾りなので、読み上げでは読まない", () => {
+test("AC-23: 帯には「連続記録」の名前があり、🔥 は飾りなので読み上げでは読まない", () => {
   renderBand(true, 5, { days: 7, bonus: 20, remaining: 2 });
 
+  expect(screen.getByRole("group", { name: "連続記録" })).toBeInTheDocument();
   expect(screen.getByText("🔥")).toHaveAttribute("aria-hidden", "true");
 });
