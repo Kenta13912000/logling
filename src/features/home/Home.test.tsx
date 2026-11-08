@@ -76,6 +76,64 @@ describe("diary-history", () => {
   });
 });
 
+describe("streak", () => {
+  // Today is 2026-10-28 (see beforeEach).
+  const withEntries = (...dates: string[]): SaveData => ({
+    ...piyo(30),
+    entries: dates.map((date) => ({
+      date,
+      body: `${date} の日記`,
+      createdAt: `${date}T12:00:00.000Z`,
+    })),
+  });
+
+  const band = () => screen.getByRole("group", { name: "連続記録" });
+
+  test("AC-1, AC-7: 今日の日記があれば、今日までの連続日数と次の区切りが出る", () => {
+    store(withEntries("2026-10-26", "2026-10-27", "2026-10-28"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 3 日連続");
+    expect(band()).toHaveTextContent("あと 4 日で 7 日連続。ボーナス +20");
+  });
+
+  test("AC-2: 今日まだなら「今日書くと」が出て、日記を書くと今日までの日数に変わる", async () => {
+    store(withEntries("2026-10-26", "2026-10-27"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 2 日連続中。今日書くと 3 日！");
+
+    await writeDiary("晴れた。");
+
+    expect(band()).toHaveTextContent("🔥 3 日連続");
+    expect(band()).not.toHaveTextContent("今日書くと");
+  });
+
+  test("AC-3: 昨日も今日も日記がなければ、今日書くと 1 日目になると出る", () => {
+    store(withEntries("2026-10-20"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 今日書くと 1 日目！");
+  });
+
+  test("AC-6: 開き直しても、同じ連続日数が出る", () => {
+    store(withEntries("2026-10-27", "2026-10-28"));
+    const { unmount } = render(<Home />);
+    unmount();
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 2 日連続");
+  });
+
+  test("名前を付ける前は、連続記録の帯を出さない", () => {
+    render(<Home />);
+
+    expect(
+      screen.queryByRole("group", { name: "連続記録" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("初めて開いたとき", () => {
   test("AC-1: アプリ名と名前の入力欄が表示される", () => {
     render(<Home />);
