@@ -127,6 +127,44 @@ describe("diary-history", () => {
   });
 });
 
+describe("streak", () => {
+  const withEntry = (extra: Record<string, unknown>) =>
+    JSON.stringify({
+      ...saved,
+      entries: [
+        {
+          date: "2026-11-08",
+          body: "7 日続いた。",
+          createdAt: "2026-11-08T12:00:00.000Z",
+          ...extra,
+        },
+      ],
+    });
+
+  test("AC-19: ボーナスの記録（bonus）がある日記を読める", () => {
+    const raw = withEntry({ bonus: 20 });
+
+    expect(parseSaveData(raw)).toEqual({
+      status: "ok",
+      data: JSON.parse(raw),
+    });
+  });
+
+  test("AC-21: ボーナスの記録がない日記も、そのまま読める", () => {
+    expect(parseSaveData(withEntry({})).status).toBe("ok");
+  });
+
+  test("AC-19: ボーナスの記録がおかしな値の日記は、壊れたデータとして扱う", () => {
+    for (const bonus of [0, -10, 1.5, "20", null, true]) {
+      const raw = withEntry({ bonus });
+      expect(parseSaveData(raw), String(bonus)).toEqual({
+        status: "broken",
+        raw,
+      });
+    }
+  });
+});
+
 describe("loadSaveData / writeSaveData", () => {
   test("AC-16: 書き込んだデータを読み直せる", () => {
     expect(writeSaveData(localStorage, saved)).toBe(true);
