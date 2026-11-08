@@ -73,6 +73,31 @@ test("AC-12: 「やめる」を押すと、やめたことが伝わる", async (
   expect(onConfirm).not.toHaveBeenCalled();
 });
 
+test("streak AC-15: ボーナスが付いた日記なら、合計の減る量と内訳が出る", () => {
+  render(
+    <DeleteDialog
+      date="2026-11-07"
+      name="ぴよ"
+      lost={30}
+      bonus={{ amount: 20, days: 7 }}
+      levelBefore={2}
+      levelAfter={2}
+      onConfirm={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  const dialog = screen.getByRole("dialog");
+  expect(dialog).toHaveTextContent("消すと経験値が 30 減るよ。");
+  expect(dialog).toHaveTextContent("（日記の 10 と、7 日連続のボーナス 20）");
+});
+
+test("streak AC-15: ボーナスが付いていなければ、内訳は出ない", () => {
+  const { dialog } = setup(10, 2, 2);
+
+  expect(dialog).not.toHaveTextContent("ボーナス");
+});
+
 test("AC-12: Esc キーなどで窓が閉じられたときも、やめたことになる", () => {
   const { onConfirm, onCancel, dialog } = setup(10, 2, 2);
 

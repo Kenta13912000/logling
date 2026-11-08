@@ -308,20 +308,36 @@ describe("writeLaterEntry", () => {
 
 describe("streak：ボーナスの付いた日記", () => {
   const NOW = new Date("2026-11-07T12:34:00.000Z");
-  const withBonus = (date: string, bonus: number): DiaryEntry => ({
+  const withBonus = (
+    date: string,
+    bonus: number,
+    bonusDays: number,
+  ): DiaryEntry => ({
     ...entry(date, "区切りの日"),
     bonus,
+    bonusDays,
   });
   // 11/7 reached a milestone (+20). 11/4 has a bonus from an earlier one.
   const bonusData = () =>
     saveData(75, [
-      withBonus("2026-11-04", 10),
+      withBonus("2026-11-04", 10, 3),
       entry("2026-11-05", "あとから", true),
-      withBonus("2026-11-07", 20),
+      withBonus("2026-11-07", 20, 7),
     ]);
 
   test("AC-16: ボーナスの付いた日記の経験値は、日記の 10 とボーナスの合計", () => {
-    expect(expForEntry(withBonus("2026-11-07", 20))).toBe(30);
+    expect(expForEntry(withBonus("2026-11-07", 20, 7))).toBe(30);
+  });
+
+  test("AC-15: 消す前の見込みには、その日記のボーナスの量と連続日数が入る", () => {
+    expect(previewDelete(bonusData(), "2026-11-07")?.bonus).toEqual({
+      amount: 20,
+      days: 7,
+    });
+  });
+
+  test("AC-15: ボーナスのない日記の見込みには、ボーナスが入らない", () => {
+    expect(previewDelete(bonusData(), "2026-11-05")?.bonus).toBeUndefined();
   });
 
   test("AC-14, AC-21: ボーナスの記録がない日記は、ボーナス 0 として扱う", () => {
@@ -356,7 +372,7 @@ describe("streak：ボーナスの付いた日記", () => {
     if (!result.ok) return;
     expect(
       result.data.entries.find((e) => e.date === "2026-11-07"),
-    ).toMatchObject({ body: "書き直した", bonus: 20 });
+    ).toMatchObject({ body: "書き直した", bonus: 20, bonusDays: 7 });
     expect(result.data.character?.totalExp).toBe(75);
   });
 

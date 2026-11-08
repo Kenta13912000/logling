@@ -141,8 +141,8 @@ describe("streak", () => {
       ],
     });
 
-  test("AC-19: ボーナスの記録（bonus）がある日記を読める", () => {
-    const raw = withEntry({ bonus: 20 });
+  test("AC-19: ボーナスの記録（bonus と bonusDays）がある日記を読める", () => {
+    const raw = withEntry({ bonus: 20, bonusDays: 7 });
 
     expect(parseSaveData(raw)).toEqual({
       status: "ok",
@@ -156,8 +156,28 @@ describe("streak", () => {
 
   test("AC-19: ボーナスの記録がおかしな値の日記は、壊れたデータとして扱う", () => {
     for (const bonus of [0, -10, 1.5, "20", null, true]) {
-      const raw = withEntry({ bonus });
+      const raw = withEntry({ bonus, bonusDays: 7 });
       expect(parseSaveData(raw), String(bonus)).toEqual({
+        status: "broken",
+        raw,
+      });
+    }
+  });
+
+  test("AC-19: 連続日数の記録（bonusDays）がおかしな値の日記は、壊れたデータとして扱う", () => {
+    for (const bonusDays of [0, -7, 7.5, "7", null, true]) {
+      const raw = withEntry({ bonus: 20, bonusDays });
+      expect(parseSaveData(raw), String(bonusDays)).toEqual({
+        status: "broken",
+        raw,
+      });
+    }
+  });
+
+  test("AC-19: bonus と bonusDays の片方だけがある日記は、壊れたデータとして扱う", () => {
+    for (const extra of [{ bonus: 20 }, { bonusDays: 7 }]) {
+      const raw = withEntry(extra);
+      expect(parseSaveData(raw), JSON.stringify(extra)).toEqual({
         status: "broken",
         raw,
       });
