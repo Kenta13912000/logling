@@ -46,7 +46,10 @@ function isDiaryEntry(value: unknown): value is DiaryEntry {
     typeof value.body === "string" &&
     typeof value.createdAt === "string" &&
     // Entries from diary-exp have no flag; they were written on the day.
-    (value.writtenLater === undefined || value.writtenLater === true)
+    (value.writtenLater === undefined || value.writtenLater === true) &&
+    // Only entries that reached a streak milestone carry a bonus.
+    (value.bonus === undefined ||
+      (Number.isInteger(value.bonus) && (value.bonus as number) >= 1))
   );
 }
 

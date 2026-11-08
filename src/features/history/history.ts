@@ -76,8 +76,10 @@ export function buildHistory(
   return items;
 }
 
+/** All EXP this entry brought in, including any streak bonus. */
 export function expForEntry(entry: DiaryEntry): number {
-  return entry.writtenLater ? EXP_PER_LATE_ENTRY : EXP_PER_ENTRY;
+  const base = entry.writtenLater ? EXP_PER_LATE_ENTRY : EXP_PER_ENTRY;
+  return base + (entry.bonus ?? 0);
 }
 
 function findEntry(data: SaveData, date: string): DiaryEntry | undefined {
