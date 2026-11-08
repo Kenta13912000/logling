@@ -24,6 +24,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isPositiveInteger(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) >= 1;
+}
+
 function isDiaryDate(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -47,9 +51,10 @@ function isDiaryEntry(value: unknown): value is DiaryEntry {
     typeof value.createdAt === "string" &&
     // Entries from diary-exp have no flag; they were written on the day.
     (value.writtenLater === undefined || value.writtenLater === true) &&
-    // Only entries that reached a streak milestone carry a bonus.
-    (value.bonus === undefined ||
-      (Number.isInteger(value.bonus) && (value.bonus as number) >= 1))
+    // Only entries that reached a streak milestone carry a bonus, and the
+    // amount and the streak length always come together.
+    ((value.bonus === undefined && value.bonusDays === undefined) ||
+      (isPositiveInteger(value.bonus) && isPositiveInteger(value.bonusDays)))
   );
 }
 

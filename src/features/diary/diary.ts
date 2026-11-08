@@ -13,6 +13,8 @@ export type DiaryEntry = {
    * milestone. Deleting the entry removes it too.
    */
   bonus?: number;
+  /** Streak length that earned `bonus` (e.g. 7). Always set together. */
+  bonusDays?: number;
 };
 
 export const BODY_MAX_LENGTH = 2000;

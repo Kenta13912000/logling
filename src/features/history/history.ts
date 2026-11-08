@@ -86,11 +86,20 @@ function findEntry(data: SaveData, date: string): DiaryEntry | undefined {
   return data.entries.find((entry) => entry.date === date);
 }
 
+export type DeletePreview = {
+  /** All EXP the entry brought in, bonus included. */
+  lost: number;
+  levelBefore: number;
+  levelAfter: number;
+  /** Set only when the entry carries a streak bonus. */
+  bonus?: { amount: number; days: number };
+};
+
 /** What deleting would cost, for the confirmation. Saves nothing. */
 export function previewDelete(
   data: SaveData,
   date: string,
-): { lost: number; levelBefore: number; levelAfter: number } | null {
+): DeletePreview | null {
   const entry = findEntry(data, date);
   if (!data.character || !entry) {
     return null;
@@ -101,6 +110,9 @@ export function previewDelete(
     lost,
     levelBefore: getLevelInfo(data.character.totalExp).level,
     levelAfter: result.level,
+    ...(entry.bonus !== undefined && entry.bonusDays !== undefined
+      ? { bonus: { amount: entry.bonus, days: entry.bonusDays } }
+      : {}),
   };
 }
 

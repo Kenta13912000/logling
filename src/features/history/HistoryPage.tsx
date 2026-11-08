@@ -149,6 +149,7 @@ export function HistoryPage() {
             date={deletingDate}
             name={character.name}
             lost={preview.lost}
+            bonus={preview.bonus}
             levelBefore={preview.levelBefore}
             levelAfter={preview.levelAfter}
             onConfirm={handleConfirm}
