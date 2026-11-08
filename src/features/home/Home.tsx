@@ -14,6 +14,8 @@ import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
+import { bonusForTodayEntry, getStreakStatus } from "@/features/streak/streak";
+import { StreakBand } from "@/features/streak/StreakBand";
 import { getDiaryDate } from "@/lib/diary-date";
 
 import { BrokenDataNotice } from "./BrokenDataNotice";
@@ -21,11 +23,14 @@ import { SaveErrorNotice } from "./SaveErrorNotice";
 import { useSaveData } from "./useSaveData";
 import { useToday } from "./useToday";
 
+/** What the EXP notice shows after saving today's entry. */
+type Gained = { amount: number; bonus?: { days: number; amount: number } };
+
 export function Home() {
   const { state, save, reset } = useSaveData();
   const today = useToday();
   const [saveError, setSaveError] = useState(false);
-  const [gainedExp, setGainedExp] = useState<number | null>(null);
+  const [gained, setGained] = useState<Gained | null>(null);
   const [levelUp, setLevelUp] = useState<number | null>(null);
 
   let content: ReactNode = null;
@@ -62,20 +67,27 @@ export function Home() {
         if (data.entries.some((entry) => entry.date === date)) {
           return;
         }
-        const result = gainExp(character, EXP_PER_ENTRY);
+        // Writing today extends the streak through yesterday by one day.
+        const bonus = bonusForTodayEntry(data.entries, date);
+        const bonusDays = getStreakStatus(data.entries, date).days + 1;
+        const earned = bonus > 0 ? { bonus, bonusDays } : {};
+        const result = gainExp(character, EXP_PER_ENTRY + bonus);
         const saved = save({
           ...data,
           character: result.character,
           entries: [
             ...data.entries,
-            { date, body, createdAt: now.toISOString() },
+            { date, body, createdAt: now.toISOString(), ...earned },
           ],
         });
         setSaveError(!saved);
         if (!saved) {
           return;
         }
-        setGainedExp(EXP_PER_ENTRY);
+        setGained({
+          amount: EXP_PER_ENTRY,
+          ...(bonus > 0 ? { bonus: { days: bonusDays, amount: bonus } } : {}),
+        });
         if (result.leveledUp) {
           setLevelUp(result.level);
         }
@@ -83,7 +95,9 @@ export function Home() {
 
       content = (
         <>
-          <CharacterStatus character={character} />
+          <CharacterStatus character={character}>
+            <StreakBand status={getStreakStatus(data.entries, today)} />
+          </CharacterStatus>
           {todayEntry ? (
             <TodayEntry entry={todayEntry} />
           ) : (
@@ -115,8 +129,12 @@ export function Home() {
         {saveError && <SaveErrorNotice />}
         {content}
       </main>
-      {gainedExp !== null && (
-        <ExpGainToast amount={gainedExp} onDone={() => setGainedExp(null)} />
+      {gained !== null && (
+        <ExpGainToast
+          amount={gained.amount}
+          bonus={gained.bonus}
+          onDone={() => setGained(null)}
+        />
       )}
       {levelUp !== null && (
         <LevelUpDialog

@@ -8,6 +8,13 @@ export type DiaryEntry = {
   createdAt: string;
   /** Set only for entries written later for a missed day. */
   writtenLater?: true;
+  /**
+   * Bonus EXP earned when this same-day entry made the streak reach a
+   * milestone. Deleting the entry removes it too.
+   */
+  bonus?: number;
+  /** Streak length that earned `bonus` (e.g. 7). Always set together. */
+  bonusDays?: number;
 };
 
 export const BODY_MAX_LENGTH = 2000;

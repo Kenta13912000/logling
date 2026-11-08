@@ -76,6 +76,137 @@ describe("diary-history", () => {
   });
 });
 
+describe("streak", () => {
+  // Today is 2026-10-28 (see beforeEach).
+  const withEntries = (...dates: string[]): SaveData => ({
+    ...piyo(30),
+    entries: dates.map((date) => ({
+      date,
+      body: `${date} の日記`,
+      createdAt: `${date}T12:00:00.000Z`,
+    })),
+  });
+
+  const band = () => screen.getByRole("group", { name: "連続記録" });
+
+  test("AC-1, AC-7: 今日の日記があれば、今日までの連続日数と次の区切りが出る", () => {
+    store(withEntries("2026-10-26", "2026-10-27", "2026-10-28"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 3 日連続");
+    expect(band()).toHaveTextContent("あと 4 日で 7 日連続。ボーナス +20");
+  });
+
+  test("AC-2: 今日まだなら「今日書くと」が出て、日記を書くと今日までの日数に変わる", async () => {
+    store(withEntries("2026-10-26", "2026-10-27"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 2 日連続中。今日書くと 3 日！");
+
+    await writeDiary("晴れた。");
+
+    expect(band()).toHaveTextContent("🔥 3 日連続");
+    expect(band()).not.toHaveTextContent("今日書くと");
+  });
+
+  test("AC-3: 昨日も今日も日記がなければ、今日書くと 1 日目になると出る", () => {
+    store(withEntries("2026-10-20"));
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 今日書くと 1 日目！");
+  });
+
+  test("AC-6: 開き直しても、同じ連続日数が出る", () => {
+    store(withEntries("2026-10-27", "2026-10-28"));
+    const { unmount } = render(<Home />);
+    unmount();
+    render(<Home />);
+
+    expect(band()).toHaveTextContent("🔥 2 日連続");
+  });
+
+  // 10/22–10/27 is 6 days, so writing today (10/28) makes 7.
+  const SIX_DAYS = [
+    "2026-10-22",
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-10-27",
+  ];
+
+  test("AC-9, AC-19: 今日書いて 7 日に届くと、ボーナスが入り、お知らせに 2 行出て、日記に記録される", async () => {
+    store(withEntries(...SIX_DAYS));
+    render(<Home />);
+
+    await writeDiary("1 週間続いた！");
+
+    const toast = screen.getByRole("status");
+    expect(toast).toHaveTextContent("✨ +10 経験値！");
+    expect(toast).toHaveTextContent("🔥 7 日連続！ボーナス +20");
+    const data = stored();
+    expect(data.character?.totalExp).toBe(60);
+    expect(data.entries.at(-1)).toMatchObject({
+      date: "2026-10-28",
+      bonus: 20,
+      bonusDays: 7,
+    });
+    expect(band()).toHaveTextContent("あと 7 日で 14 日連続。ボーナス +30");
+  });
+
+  test("AC-10: ボーナスを含めて必要な量に届けば、レベルアップのお知らせが出る", async () => {
+    // 40 = Lv2 (10 / 40); +30 makes 70 = Lv3.
+    store({
+      ...withEntries(...SIX_DAYS),
+      character: { name: "ぴよ", totalExp: 40 },
+    });
+    render(<Home />);
+
+    await writeDiary("1 週間続いた！");
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "ぴよ が レベル 3 になった！",
+    );
+  });
+
+  test("AC-11: 区切りでない日は、ボーナスの行が出ず、日記にもボーナスを記録しない", async () => {
+    // 4 days through yesterday + today = 5.
+    store(withEntries(...SIX_DAYS.slice(2)));
+    render(<Home />);
+
+    await writeDiary("5 日目。");
+
+    expect(screen.getByRole("status")).not.toHaveTextContent("ボーナス");
+    const data = stored();
+    expect(data.character?.totalExp).toBe(40);
+    expect(data.entries.at(-1)).not.toHaveProperty("bonus");
+    expect(data.entries.at(-1)).not.toHaveProperty("bonusDays");
+  });
+
+  test("AC-20: 保存に失敗したら、ボーナスも入らず、お知らせも出ない", async () => {
+    const data = withEntries(...SIX_DAYS);
+    store(data);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("full", "QuotaExceededError");
+    });
+    render(<Home />);
+
+    await writeDiary("1 週間続いた！");
+
+    expect(screen.getByText(/保存できなかった/)).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(stored()).toEqual(data);
+  });
+
+  test("名前を付ける前は、連続記録の帯を出さない", () => {
+    render(<Home />);
+
+    expect(
+      screen.queryByRole("group", { name: "連続記録" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("初めて開いたとき", () => {
   test("AC-1: アプリ名と名前の入力欄が表示される", () => {
     render(<Home />);

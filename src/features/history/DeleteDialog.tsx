@@ -7,6 +7,8 @@ type Props = {
   date: string;
   name: string;
   lost: number;
+  /** The streak bonus included in `lost`, if the entry carries one. */
+  bonus?: { amount: number; days: number };
   levelBefore: number;
   levelAfter: number;
   onConfirm: () => void;
@@ -18,6 +20,7 @@ export function DeleteDialog({
   date,
   name,
   lost,
+  bonus,
   levelBefore,
   levelAfter,
   onConfirm,
@@ -48,6 +51,11 @@ export function DeleteDialog({
         {`${formatMonthDay(date)}の日記を消す？`}
       </p>
       <p>{`消すと経験値が ${lost} 減るよ。`}</p>
+      {bonus && (
+        <p className="text-sm text-ink-muted">
+          {`（日記の ${lost - bonus.amount} と、${bonus.days} 日連続のボーナス ${bonus.amount}）`}
+        </p>
+      )}
       {levelAfter < levelBefore && (
         <p className="font-bold text-alert">
           {`${name} のレベルが ${levelBefore} から ${levelAfter} に下がるよ。`}

@@ -1,10 +1,14 @@
+import type { ReactNode } from "react";
+
 import { getLevelInfo, type Character } from "./character";
 
 type Props = {
   character: Character;
+  /** Shown under the EXP bar (e.g. the streak band from the home page). */
+  children?: ReactNode;
 };
 
-export function CharacterStatus({ character }: Props) {
+export function CharacterStatus({ character, children }: Props) {
   const { level, expInLevel, expToNext, remaining } = getLevelInfo(
     character.totalExp,
   );
@@ -38,6 +42,7 @@ export function CharacterStatus({ character }: Props) {
         <span>{`あと ${remaining} でレベルアップ`}</span>
         <span>{`${expInLevel} / ${expToNext}`}</span>
       </div>
+      {children}
     </section>
   );
 }

@@ -306,6 +306,104 @@ describe("writeLaterEntry", () => {
   });
 });
 
+describe("streak：ボーナスの付いた日記", () => {
+  const NOW = new Date("2026-11-07T12:34:00.000Z");
+  const withBonus = (
+    date: string,
+    bonus: number,
+    bonusDays: number,
+  ): DiaryEntry => ({
+    ...entry(date, "区切りの日"),
+    bonus,
+    bonusDays,
+  });
+  // 11/7 reached a milestone (+20). 11/4 has a bonus from an earlier one.
+  const bonusData = () =>
+    saveData(75, [
+      withBonus("2026-11-04", 10, 3),
+      entry("2026-11-05", "あとから", true),
+      withBonus("2026-11-07", 20, 7),
+    ]);
+
+  test("AC-16: ボーナスの付いた日記の経験値は、日記の 10 とボーナスの合計", () => {
+    expect(expForEntry(withBonus("2026-11-07", 20, 7))).toBe(30);
+  });
+
+  test("AC-15: 消す前の見込みには、その日記のボーナスの量と連続日数が入る", () => {
+    expect(previewDelete(bonusData(), "2026-11-07")?.bonus).toEqual({
+      amount: 20,
+      days: 7,
+    });
+  });
+
+  test("AC-15: ボーナスのない日記の見込みには、ボーナスが入らない", () => {
+    expect(previewDelete(bonusData(), "2026-11-05")?.bonus).toBeUndefined();
+  });
+
+  test("AC-14, AC-21: ボーナスの記録がない日記は、ボーナス 0 として扱う", () => {
+    expect(expForEntry(entry("2026-11-07", "今日"))).toBe(10);
+  });
+
+  test("AC-15: 消す前の見込みでは、ボーナスも含めた量が減る", () => {
+    // 75 = Lv3; losing 30 gives 45 = Lv2.
+    expect(previewDelete(bonusData(), "2026-11-07")).toMatchObject({
+      lost: 30,
+      levelBefore: 3,
+      levelAfter: 2,
+    });
+  });
+
+  test("AC-16: 消すと、日記の経験値とボーナスが一緒に減り、ほかの日のボーナスは残る", () => {
+    const result = deleteEntry(bonusData(), "2026-11-07", TODAY);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.character?.totalExp).toBe(45);
+    expect(result).toMatchObject({ lost: 30, leveledDown: true, level: 2 });
+    expect(
+      result.data.entries.find((e) => e.date === "2026-11-04")?.bonus,
+    ).toBe(10);
+  });
+
+  test("AC-18: 書き直しても、ボーナスはそのまま残る", () => {
+    const result = editEntry(bonusData(), "2026-11-07", "書き直した", TODAY);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.data.entries.find((e) => e.date === "2026-11-07"),
+    ).toMatchObject({ body: "書き直した", bonus: 20, bonusDays: 7 });
+    expect(result.data.character?.totalExp).toBe(75);
+  });
+
+  test("AC-12: 後から書いて連続が区切りに届いても、ボーナスは付かない", () => {
+    // 11/1–11/7 except 11/4: filling 11/4 later makes 7 days in a row.
+    const week = [
+      "2026-11-01",
+      "2026-11-02",
+      "2026-11-03",
+      "2026-11-05",
+      "2026-11-06",
+      "2026-11-07",
+    ].map((date) => entry(date, date));
+    const result = writeLaterEntry(
+      saveData(75, week),
+      "2026-11-04",
+      "x",
+      TODAY,
+      NOW,
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.gained).toBe(5);
+    expect(result.data.character?.totalExp).toBe(80);
+    expect(
+      result.data.entries.find((e) => e.date === "2026-11-04"),
+    ).not.toHaveProperty("bonus");
+  });
+});
+
 describe("始めた日の書き込み（AC-24）", () => {
   const NOW = new Date("2026-11-07T12:34:00.000Z");
   const legacy = () =>

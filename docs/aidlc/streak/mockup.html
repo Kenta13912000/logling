@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（streak）</title>
+    <style>
+      :root {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --button-text: #ffffff;
+        --bar: #d97706;
+        --bar-track: #f6e7cf;
+        --error: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        min-height: 560px;
+        background: var(--bg);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .appbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .appbar-title {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .appbar-link {
+        color: var(--button);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .content {
+        padding: 16px;
+      }
+      .status {
+        padding: 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-emoji {
+        font-size: 40px;
+        line-height: 1;
+      }
+      .status-name {
+        font-weight: 700;
+        font-size: 18px;
+        flex: 1;
+      }
+      .status-level {
+        font-weight: 700;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--bar-track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--bar);
+      }
+      .bar-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      /* New in streak */
+      .streak {
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: var(--bar-track);
+      }
+      .streak-main {
+        font-weight: 700;
+      }
+      .streak-next {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .date {
+        font-weight: 700;
+      }
+      .speech {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin: 4px 0 10px;
+      }
+      .speech-emoji {
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      .bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 12px;
+      }
+      .textarea {
+        width: 100%;
+        min-height: 120px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        color: var(--muted);
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: var(--button-text);
+        font: inherit;
+        font-weight: 700;
+      }
+      .button.secondary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .button.danger {
+        background: var(--error);
+      }
+      .entry {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .toast {
+        position: absolute;
+        top: 56px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--text);
+        color: #fff;
+        border-radius: 16px;
+        padding: 6px 16px;
+        font-size: 14px;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgb(63 45 28 / 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+      }
+      .dialog-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（streak）</h1>
+    <p class="lead">
+      スマホ（幅 375px）での見た目。例として、今日を
+      2026年11月8日（日）とする。ボタンなどは見た目だけで、押しても動かない。
+      新しく加えるのは、ステータスの下の「🔥」の帯と、お知らせのボーナスの行、消す前の確認の内訳。
+    </p>
+
+    <div class="screens">
+      <!-- 画面 1：今日まだ書いていない（連続中） -->
+      <section class="screen">
+        <h2>画面 1：今日まだ書いていない（昨日まで 4 日連続）</h2>
+        <p>
+          昨日までの日数と、今日書くと何日になるか（AC-2）。次の区切りまで（AC-7）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 2</span>
+            </div>
+            <div class="bar"><span style="width: 25%"></span></div>
+            <div class="bar-text">
+              <span>あと 30 でレベルアップ</span><span>10 / 40</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 4 日連続中。今日書くと 5 日！</div>
+              <div class="streak-next">あと 3 日で 7 日連続。ボーナス +20</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月8日（日）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日はどんな一日だった？きかせて！</div>
+            </div>
+            <div class="textarea">今日あったこと、思ったことを書いてみよう</div>
+            <button class="button" type="button">日記をのこす</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2：今日書いた（連続中） -->
+      <section class="screen">
+        <h2>画面 2：今日書いた（5 日連続）</h2>
+        <p>今日までの連続日数（AC-1）と、次の区切りまで（AC-7）</p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 2</span>
+            </div>
+            <div class="bar"><span style="width: 50%"></span></div>
+            <div class="bar-text">
+              <span>あと 20 でレベルアップ</span><span>20 / 40</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 5 日連続</div>
+              <div class="streak-next">あと 2 日で 7 日連続。ボーナス +20</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月8日（日）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日も書いてくれてありがとう！また明日ね</div>
+            </div>
+            <div class="entry">朝から雨だったけど、図書館で本を読んだ。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 3：連続していない -->
+      <section class="screen">
+        <h2>画面 3：昨日も今日も書いていない</h2>
+        <p>「0 日」とは出さず、今日書くと 1 日目になることを伝える（AC-3）</p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 2</span>
+            </div>
+            <div class="bar"><span style="width: 25%"></span></div>
+            <div class="bar-text">
+              <span>あと 30 でレベルアップ</span><span>10 / 40</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 今日書くと 1 日目！</div>
+              <div class="streak-next">あと 3 日で 3 日連続。ボーナス +10</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月8日（日）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日はどんな一日だった？きかせて！</div>
+            </div>
+            <div class="textarea">今日あったこと、思ったことを書いてみよう</div>
+            <button class="button" type="button">日記をのこす</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 4：区切りに届いた -->
+      <section class="screen">
+        <h2>画面 4：日記をのこして 7 日連続に届いた</h2>
+        <p>
+          お知らせにボーナスの行を加える（AC-9）。帯は次の区切り（14
+          日）に変わる。 例：Lv. 2 の 20 / 40 から +30 で Lv. 3
+          に上がるので、このあとレベルアップのお知らせも出る（AC-10）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="toast">
+            ✨ +10 経験値！<br />🔥 7 日連続！ボーナス +20
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="status-emoji" aria-hidden="true">🐣</span>
+              <span class="status-name">ぴよ</span>
+              <span class="status-level">Lv. 3</span>
+            </div>
+            <div class="bar"><span style="width: 20%"></span></div>
+            <div class="bar-text">
+              <span>あと 40 でレベルアップ</span><span>10 / 50</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 7 日連続</div>
+              <div class="streak-next">あと 7 日で 14 日連続。ボーナス +30</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月8日（日）</div>
+            <div class="speech">
+              <span class="speech-emoji" aria-hidden="true">🐣</span>
+              <div class="bubble">今日も書いてくれてありがとう！また明日ね</div>
+            </div>
+            <div class="entry">1 週間続いた！</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 5：ボーナスの付いた日記を消す -->
+      <section class="screen">
+        <h2>画面 5：ボーナスの付いた日記を消す（振り返り）</h2>
+        <p>減る経験値はボーナスを含めた合計。内訳も出す（AC-15）</p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="overlay">
+            <div class="dialog" role="dialog" aria-labelledby="delete-title">
+              <p id="delete-title" class="dialog-title">
+                11月8日の日記を消す？
+              </p>
+              <p>消すと経験値が 30 減るよ。</p>
+              <p class="muted">（日記の 10 と、7 日連続のボーナス 20）</p>
+              <p class="muted">消した日記は元に戻せないよ</p>
+              <button class="button danger" type="button">消す</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

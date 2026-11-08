@@ -491,3 +491,81 @@ describe("Bolt-4：後から書く", () => {
     expect(stored()).toEqual(data);
   });
 });
+
+describe("streak：ボーナスの付いた日記を消す", () => {
+  // 11/1–11/6 written on the day; today (11/7) made 7 days in a row.
+  // 100 = Lv3 (70–119), so losing 30 keeps Lv3.
+  const bonusData = () =>
+    startedOn(
+      "2026-11-01",
+      [
+        ...[
+          "2026-11-01",
+          "2026-11-02",
+          "2026-11-03",
+          "2026-11-04",
+          "2026-11-05",
+          "2026-11-06",
+        ].map((date) => entry(date, `${date} の日記`)),
+        { ...entry("2026-11-07", "7 日目の日記"), bonus: 20, bonusDays: 7 },
+      ],
+      100,
+    );
+
+  async function openDelete(cardText: string) {
+    const user = userEvent.setup();
+    await user.click(
+      within(card(cardText)).getByRole("button", { name: "消す" }),
+    );
+    return { user, dialog: screen.getByRole("dialog") };
+  }
+
+  test("AC-15: 確認には、ボーナスを含めた減る量と、内訳が出る", async () => {
+    store(bonusData());
+    render(<HistoryPage />);
+
+    const { dialog } = await openDelete("7 日目の日記");
+
+    expect(dialog).toHaveTextContent("消すと経験値が 30 減るよ。");
+    expect(dialog).toHaveTextContent("（日記の 10 と、7 日連続のボーナス 20）");
+  });
+
+  test("AC-15: ボーナスのない日記の確認には、内訳が出ない", async () => {
+    store(bonusData());
+    render(<HistoryPage />);
+
+    const { dialog } = await openDelete("2026-11-06 の日記");
+
+    expect(dialog).toHaveTextContent("消すと経験値が 10 減るよ。");
+    expect(dialog).not.toHaveTextContent("ボーナス");
+  });
+
+  test("AC-16, AC-17: 消すとボーナスも一緒に減り、その日のうちに書き直すと、またボーナスが入る", async () => {
+    store(bonusData());
+    const { unmount } = render(<HistoryPage />);
+
+    const { user, dialog } = await openDelete("7 日目の日記");
+    await user.click(within(dialog).getByRole("button", { name: "消す" }));
+    expect(stored().character?.totalExp).toBe(70);
+
+    unmount();
+    render(<Home />);
+    await user.type(
+      screen.getByRole("textbox", { name: "今日の日記" }),
+      "書き直した 7 日目",
+    );
+    await user.click(screen.getByRole("button", { name: "日記をのこす" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "🔥 7 日連続！ボーナス +20",
+    );
+    const data = stored();
+    expect(data.character?.totalExp).toBe(100);
+    expect(data.entries.at(-1)).toMatchObject({
+      date: "2026-11-07",
+      body: "書き直した 7 日目",
+      bonus: 20,
+      bonusDays: 7,
+    });
+  });
+});
