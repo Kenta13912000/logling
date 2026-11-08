@@ -14,6 +14,8 @@ import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
+import { getStreakStatus } from "@/features/streak/streak";
+import { StreakBand } from "@/features/streak/StreakBand";
 import { getDiaryDate } from "@/lib/diary-date";
 
 import { BrokenDataNotice } from "./BrokenDataNotice";
@@ -83,7 +85,9 @@ export function Home() {
 
       content = (
         <>
-          <CharacterStatus character={character} />
+          <CharacterStatus character={character}>
+            <StreakBand status={getStreakStatus(data.entries, today)} />
+          </CharacterStatus>
           {todayEntry ? (
             <TodayEntry entry={todayEntry} />
           ) : (
