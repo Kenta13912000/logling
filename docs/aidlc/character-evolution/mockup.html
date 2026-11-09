@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（character-evolution）</title>
+    <style>
+      :root {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --button-text: #ffffff;
+        --bar: #d97706;
+        --bar-track: #f6e7cf;
+        --error: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        min-height: 560px;
+        background: var(--bg);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .appbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .appbar-title {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .appbar-link {
+        color: var(--button);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .content {
+        padding: 16px;
+      }
+      .status {
+        padding: 12px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      /* New in character-evolution: the stage art replaces 🐣. */
+      .status-art {
+        width: 88px;
+        height: 88px;
+        flex: none;
+      }
+      .status-name {
+        flex: 1;
+        min-width: 0;
+      }
+      .status-name strong {
+        font-size: 18px;
+      }
+      .stage-name {
+        margin-left: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0 8px;
+        white-space: nowrap;
+      }
+      .status-level {
+        font-weight: 700;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--bar-track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--bar);
+      }
+      .bar-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .streak {
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: var(--bar-track);
+      }
+      .streak-main {
+        font-weight: 700;
+      }
+      .streak-next {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .date {
+        font-weight: 700;
+      }
+      .speech {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin: 4px 0 10px;
+      }
+      .speech-art {
+        width: 48px;
+        height: 48px;
+        flex: none;
+      }
+      /*
+       * Crop the empty space around the character: each stage has its own
+       * square (x, y, side in the 400 x 400 art) and fills a box of --size px.
+       */
+      .crop {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        flex: none;
+        width: calc(var(--size) * 1px);
+        height: calc(var(--size) * 1px);
+      }
+      .crop img {
+        position: absolute;
+        max-width: none;
+        width: calc(400px * var(--size) / var(--side));
+        left: calc(-1px * var(--x) * var(--size) / var(--side));
+        top: calc(-1px * var(--y) * var(--size) / var(--side));
+      }
+      .stage-1 {
+        --x: 83;
+        --y: 132;
+        --side: 240;
+      }
+      .stage-2 {
+        --x: 85;
+        --y: 126;
+        --side: 240;
+      }
+      .stage-3 {
+        --x: 71;
+        --y: 90;
+        --side: 270;
+      }
+      .stage-4 {
+        --x: 79;
+        --y: 56;
+        --side: 300;
+      }
+      .stage-5 {
+        --x: 50;
+        --y: 56;
+        --side: 300;
+      }
+      .crop-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        text-align: center;
+        font-size: 11px;
+      }
+      .crop-row .crop {
+        margin: 0 auto 4px;
+        background: var(--surface);
+        border: 1px dashed var(--border);
+      }
+      .bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 12px;
+      }
+      .textarea {
+        width: 100%;
+        min-height: 200px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        color: var(--muted);
+      }
+      .input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        color: var(--muted);
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: var(--button-text);
+        font: inherit;
+        font-weight: 700;
+      }
+      .button.secondary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .button.danger {
+        background: var(--error);
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .warn {
+        color: var(--error);
+        font-weight: 700;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgb(63 45 28 / 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+      }
+      .dialog-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .evolve-art {
+        display: block;
+        width: 240px;
+        height: 240px;
+        margin: 0 auto 8px;
+      }
+      .stages {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        text-align: center;
+        font-size: 11px;
+      }
+      .stages img {
+        width: 100%;
+        height: auto;
+      }
+      .tab-preview {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 10px 10px 0 0;
+        font-size: 13px;
+      }
+      .tab.light {
+        background: #f1f3f4;
+        color: #202124;
+      }
+      .tab.dark {
+        background: #35363a;
+        color: #e8eaed;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（character-evolution）</h1>
+    <p class="lead">
+      スマホ（幅 375px）での見た目。絵は開発者が描いた
+      public/characters/stage-1〜5.svg をそのまま表示している（このファイルを
+      docs/aidlc/character-evolution/ に置いたまま、ブラウザで開くと見られる）。
+      ボタンなどは見た目だけで、押しても動かない。
+    </p>
+
+    <div class="screens">
+      <!-- 画面 1：段階の一覧 -->
+      <section class="screen">
+        <h2>画面 1：5 つの段階（参考）</h2>
+        <p>レベルで段階が決まる（AC-1）。名前はステータスとお知らせに出す</p>
+        <div class="phone" style="min-height: 0; padding: 16px">
+          <div class="stages">
+            <div>
+              <img src="../../../public/characters/stage-1.svg" alt="" />
+              <div><strong>ねこだま</strong></div>
+              <div class="muted">Lv. 1〜4</div>
+            </div>
+            <div>
+              <img src="../../../public/characters/stage-2.svg" alt="" />
+              <div><strong>ころねこ</strong></div>
+              <div class="muted">Lv. 5〜9</div>
+            </div>
+            <div>
+              <img src="../../../public/characters/stage-3.svg" alt="" />
+              <div><strong>ちびねこ</strong></div>
+              <div class="muted">Lv. 10〜14</div>
+            </div>
+            <div>
+              <img src="../../../public/characters/stage-4.svg" alt="" />
+              <div><strong>えらそうねこ</strong></div>
+              <div class="muted">Lv. 15〜19</div>
+            </div>
+            <div>
+              <img src="../../../public/characters/stage-5.svg" alt="" />
+              <div><strong>ねこ像</strong></div>
+              <div class="muted">Lv. 20〜</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2：ホーム（今日まだ書いていない） -->
+      <section class="screen">
+        <h2>画面 2：ホーム（ころねこ・Lv. 6）</h2>
+        <p>
+          ステータスの絵と段階の名前（AC-1）。吹き出しの横も今の段階の絵（AC-2）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="crop stage-2" style="--size: 64">
+                <img
+                  src="../../../public/characters/stage-2.svg"
+                  alt="ぴよ のすがた（ころねこ）"
+                />
+              </span>
+              <span class="status-name"
+                ><strong>ぴよ</strong
+                ><span class="stage-name">ころねこ</span></span
+              >
+              <span class="status-level">Lv. 6</span>
+            </div>
+            <div class="bar"><span style="width: 25%"></span></div>
+            <div class="bar-text">
+              <span>あと 60 でレベルアップ</span><span>20 / 80</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 4 日連続中。今日書くと 5 日！</div>
+              <div class="streak-next">あと 3 日で 7 日連続。ボーナス +20</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月10日（火）</div>
+            <div class="speech">
+              <span class="crop stage-2" style="--size: 48">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+              </span>
+              <div class="bubble">今日はどんな一日だった？きかせて！</div>
+            </div>
+            <div class="textarea">今日あったこと、思ったことを書いてみよう</div>
+            <button class="button" type="button">日記をのこす</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2b：ステータスでの切り取り -->
+      <section class="screen">
+        <h2>
+          画面 2b：確認用（アプリには出ない）。ステータスでの 5
+          つの段階の切り取り方
+        </h2>
+        <p>
+          段階ごとに絵の余白を切り取り、枠いっぱいに出す。点線が枠。キャラクターがはみ出していないかを確かめる
+        </p>
+        <div class="phone" style="min-height: 0; padding: 16px">
+          <div class="crop-row">
+            <div>
+              <span class="crop stage-1" style="--size: 64"
+                ><img src="../../../public/characters/stage-1.svg" alt=""
+              /></span>
+              <div>ねこだま</div>
+            </div>
+            <div>
+              <span class="crop stage-2" style="--size: 64"
+                ><img src="../../../public/characters/stage-2.svg" alt=""
+              /></span>
+              <div>ころねこ</div>
+            </div>
+            <div>
+              <span class="crop stage-3" style="--size: 64"
+                ><img src="../../../public/characters/stage-3.svg" alt=""
+              /></span>
+              <div>ちびねこ</div>
+            </div>
+            <div>
+              <span class="crop stage-4" style="--size: 64"
+                ><img src="../../../public/characters/stage-4.svg" alt=""
+              /></span>
+              <div>えらそうねこ</div>
+            </div>
+            <div>
+              <span class="crop stage-5" style="--size: 64"
+                ><img src="../../../public/characters/stage-5.svg" alt=""
+              /></span>
+              <div>ねこ像</div>
+            </div>
+          </div>
+          <p class="muted" style="margin: 12px 0 0">
+            ※ ステータスと同じ 64 画素で、同じ切り取り方で表示している
+          </p>
+        </div>
+      </section>
+
+      <!-- 画面 3：すがたが変わったお知らせ -->
+      <section class="screen">
+        <h2>画面 3：すがたが変わったお知らせ（Lv. 9 → 10）</h2>
+        <p>
+          段階が変わるレベルに上がったときだけ、いつものレベルアップのお知らせの代わりに出す（AC-6）。「とじる」にフォーカス（AC-10）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ふりかえる ›</span>
+          </div>
+          <div class="overlay">
+            <div class="dialog" role="dialog" aria-labelledby="evolve-title">
+              <img
+                class="evolve-art"
+                src="../../../public/characters/stage-3.svg"
+                alt="ぴよ のすがた（ちびねこ）"
+              />
+              <p id="evolve-title" class="dialog-title">
+                ぴよ が ちびねこ になった！
+              </p>
+              <p>レベル 10 になったよ</p>
+              <button class="button" type="button">とじる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 4：名前を付ける前 -->
+      <section class="screen">
+        <h2>画面 4：名前を付ける前</h2>
+        <p>キャラクターがまだいないので、段階 1 の絵（AC-3）</p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+          </div>
+          <div class="content">
+            <img
+              src="../../../public/characters/stage-1.svg"
+              alt=""
+              style="
+                display: block;
+                width: 220px;
+                height: 220px;
+                margin: 24px auto 8px;
+              "
+            />
+            <div class="speech" style="justify-content: center">
+              <div class="bubble">はじめまして！名前をつけてくれる？</div>
+            </div>
+            <div class="input">名前（10 文字まで）</div>
+            <button class="button" type="button">この名前にする</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 5：消すとすがたが戻る -->
+      <section class="screen">
+        <h2>画面 5：消すとすがたが戻るとき（振り返り）</h2>
+        <p>
+          レベルが下がり、前の段階に戻るときだけ「すがたも前にもどるよ。」を足す（AC-12）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-link">‹ ホーム</span>
+            <span class="appbar-title">logling</span>
+            <span style="width: 52px"></span>
+          </div>
+          <div class="overlay">
+            <div class="dialog" role="dialog" aria-labelledby="delete-title">
+              <p id="delete-title" class="dialog-title">
+                11月10日の日記を消す？
+              </p>
+              <p>消すと経験値が 10 減るよ。</p>
+              <p class="warn">ぴよ のレベルが 5 から 4 に下がるよ。</p>
+              <p class="warn">すがたも前にもどるよ。</p>
+              <p class="muted">消した日記は元に戻せないよ</p>
+              <button class="button danger" type="button">消す</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 6：ファビコン -->
+      <section class="screen">
+        <h2>画面 6：タブのアイコン（ファビコン）</h2>
+        <p>
+          段階 1
+          の絵を小さくして使う（AC-13）。明るいタブと暗いタブで見え方を確かめる
+        </p>
+        <div class="phone" style="min-height: 0; padding: 16px">
+          <div class="tab-preview">
+            <div class="tab light">
+              <img
+                src="../../../public/characters/stage-1.svg"
+                alt=""
+                width="16"
+                height="16"
+              />
+              logling
+            </div>
+            <div class="tab dark">
+              <img
+                src="../../../public/characters/stage-1.svg"
+                alt=""
+                width="16"
+                height="16"
+              />
+              logling
+            </div>
+            <div class="tab light">
+              <img
+                src="../../../public/characters/stage-1.svg"
+                alt=""
+                width="32"
+                height="32"
+              />
+              32 画素
+            </div>
+            <div class="tab dark">
+              <img
+                src="../../../public/characters/stage-1.svg"
+                alt=""
+                width="32"
+                height="32"
+              />
+              32 画素
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
