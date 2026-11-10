@@ -581,7 +581,7 @@ describe("character-evolution：振り返りのページの絵", () => {
     expect(art()).toHaveAttribute("alt", "");
   });
 
-  test("日記がないときの案内には、今の段階の絵が出る", () => {
+  test("AC-17: 日記がないときの案内には、今の段階の絵が出る", () => {
     // 180 EXP is Lv. 5, the first level of stage 2 (ころねこ).
     store(withEntries([], 180));
     render(<HistoryPage />);

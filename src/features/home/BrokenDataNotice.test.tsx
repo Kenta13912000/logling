@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 
 import { BrokenDataNotice } from "./BrokenDataNotice";
 
-test("character-evolution：キャラクターがわからないので、段階 1 の絵が飾りとして出る", () => {
+test("character-evolution AC-17: キャラクターがわからないので、段階 1 の絵が飾りとして出る", () => {
   const { container } = render(<BrokenDataNotice onReset={() => {}} />);
 
   expect(
