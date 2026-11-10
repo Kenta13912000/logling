@@ -30,17 +30,18 @@ describe.each(STAGES)("段階 $stage（$name）の絵", ({ src }) => {
   });
 });
 
-// The favicon is a copy of stage-1.svg that shows only its crop square.
-// When stage-1.svg is redrawn, copy it again and keep this viewBox.
+// The favicon is a copy of stage-1.svg with only the body and face (no
+// tail, whiskers or shadow), framed tightly so it reads at tab size.
+// When stage-1.svg is redrawn, make the copy again the same way.
+const FAVICON_VIEW_BOX = "94 141 212 212";
 describe("ファビコン（src/app/icon.svg）", () => {
   const svg = readFileSync(
     join(process.cwd(), "src", "app", "icon.svg"),
     "utf8",
   );
 
-  test("AC-13: 段階 1 の絵の写しで、余白を切り取った範囲だけを見せる", () => {
-    const { x, y, side } = STAGES[0].crop;
-    expect(svg).toContain(`viewBox="${x} ${y} ${side} ${side}"`);
+  test("AC-13: 段階 1 の絵の体と顔だけを写し、枠いっぱいに見せる", () => {
+    expect(svg).toContain(`viewBox="${FAVICON_VIEW_BOX}"`);
     // The body path of ねこだま, so a different picture is caught.
     expect(svg).toContain("M 104 290 C 98 248");
   });
