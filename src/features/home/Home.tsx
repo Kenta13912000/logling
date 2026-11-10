@@ -15,7 +15,7 @@ import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
-import { getStage } from "@/features/evolution/stages";
+import { getStage, levelUpOf, type LevelUp } from "@/features/evolution/stages";
 import { bonusForTodayEntry, getStreakStatus } from "@/features/streak/streak";
 import { StreakBand } from "@/features/streak/StreakBand";
 import { getDiaryDate } from "@/lib/diary-date";
@@ -33,7 +33,7 @@ export function Home() {
   const today = useToday();
   const [saveError, setSaveError] = useState(false);
   const [gained, setGained] = useState<Gained | null>(null);
-  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
 
   let content: ReactNode = null;
 
@@ -61,7 +61,8 @@ export function Home() {
       );
     } else {
       const todayEntry = data.entries.find((entry) => entry.date === today);
-      const stage = getStage(getLevelInfo(character.totalExp).level);
+      const level = getLevelInfo(character.totalExp).level;
+      const stage = getStage(level);
 
       const handleSave = (body: string) => {
         // Recompute: the page may have stayed open past 4 AM.
@@ -92,7 +93,7 @@ export function Home() {
           ...(bonus > 0 ? { bonus: { days: bonusDays, amount: bonus } } : {}),
         });
         if (result.leveledUp) {
-          setLevelUp(result.level);
+          setLevelUp(levelUpOf(level, result.level));
         }
       };
 
@@ -142,7 +143,8 @@ export function Home() {
       {levelUp !== null && (
         <LevelUpDialog
           name={characterName}
-          level={levelUp}
+          level={levelUp.level}
+          evolvedTo={levelUp.evolvedTo}
           onClose={() => setLevelUp(null)}
         />
       )}

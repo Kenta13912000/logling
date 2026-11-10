@@ -1,6 +1,16 @@
 import { describe, expect, test } from "vitest";
 
-import { STAGES, getStage, stageChange } from "./stages";
+import { STAGES, getStage, levelUpOf, stageChange } from "./stages";
+
+describe("levelUpOf", () => {
+  test("AC-6: 段階が上がったときは、新しいレベルと新しい段階を返す", () => {
+    expect(levelUpOf(4, 5)).toEqual({ level: 5, evolvedTo: getStage(5) });
+  });
+
+  test("AC-7: 同じ段階の中なら、新しいレベルだけを返す", () => {
+    expect(levelUpOf(1, 2)).toEqual({ level: 2 });
+  });
+});
 
 describe("getStage", () => {
   test("AC-1: レベルの区切りどおりに段階が決まる", () => {

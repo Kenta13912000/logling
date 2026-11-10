@@ -7,7 +7,13 @@ import { getLevelInfo } from "@/features/character/character";
 import { ExpGainToast } from "@/features/character/ExpGainToast";
 import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { CharacterArt } from "@/features/evolution/CharacterArt";
-import { STAGES, getStage, type Stage } from "@/features/evolution/stages";
+import {
+  STAGES,
+  getStage,
+  levelUpOf,
+  type LevelUp,
+  type Stage,
+} from "@/features/evolution/stages";
 import { SaveErrorNotice } from "@/features/home/SaveErrorNotice";
 import { useSaveData } from "@/features/home/useSaveData";
 import { useToday } from "@/features/home/useToday";
@@ -58,7 +64,7 @@ export function HistoryPage() {
   const [notice, setNotice] = useState<Notice>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [gainedExp, setGainedExp] = useState<number | null>(null);
-  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
 
   let content: ReactNode = null;
   let dialog: ReactNode = null;
@@ -113,7 +119,9 @@ export function HistoryPage() {
         if (saved) {
           setGainedExp(result.gained);
           if (result.leveledUp) {
-            setLevelUp(result.level);
+            setLevelUp(
+              levelUpOf(getLevelInfo(character.totalExp).level, result.level),
+            );
           }
         }
         return saved;
@@ -191,7 +199,8 @@ export function HistoryPage() {
       {levelUp !== null && state.status === "ok" && state.data.character && (
         <LevelUpDialog
           name={state.data.character.name}
-          level={levelUp}
+          level={levelUp.level}
+          evolvedTo={levelUp.evolvedTo}
           onClose={() => setLevelUp(null)}
         />
       )}

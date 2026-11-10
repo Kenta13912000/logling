@@ -65,6 +65,15 @@ export function getStage(level: number): Stage {
   return found;
 }
 
+/** What the level-up notice shows: the new level, and the new stage if any. */
+export type LevelUp = { level: number; evolvedTo?: Stage };
+
+export function levelUpOf(levelBefore: number, levelAfter: number): LevelUp {
+  return stageChange(levelBefore, levelAfter) === "up"
+    ? { level: levelAfter, evolvedTo: getStage(levelAfter) }
+    : { level: levelAfter };
+}
+
 /** Whether moving between two levels changes the stage, and which way. */
 export function stageChange(
   levelBefore: number,
