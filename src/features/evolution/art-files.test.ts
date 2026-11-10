@@ -29,3 +29,23 @@ describe.each(STAGES)("段階 $stage（$name）の絵", ({ src }) => {
     expect(svg).not.toMatch(pattern);
   });
 });
+
+// The favicon is a copy of stage-1.svg that shows only its crop square.
+// When stage-1.svg is redrawn, copy it again and keep this viewBox.
+describe("ファビコン（src/app/icon.svg）", () => {
+  const svg = readFileSync(
+    join(process.cwd(), "src", "app", "icon.svg"),
+    "utf8",
+  );
+
+  test("AC-13: 段階 1 の絵の写しで、余白を切り取った範囲だけを見せる", () => {
+    const { x, y, side } = STAGES[0].crop;
+    expect(svg).toContain(`viewBox="${x} ${y} ${side} ${side}"`);
+    // The body path of ねこだま, so a different picture is caught.
+    expect(svg).toContain("M 104 290 C 98 248");
+  });
+
+  test.each(FORBIDDEN)("AC-15: %s が入っていない", (_label, pattern) => {
+    expect(svg).not.toMatch(pattern);
+  });
+});
