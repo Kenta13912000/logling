@@ -1,5 +1,7 @@
 import { useId, useState, type SubmitEvent } from "react";
 
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import type { Stage } from "@/features/evolution/stages";
 import { formatDiaryDate } from "@/lib/diary-date";
 import { countCharacters } from "@/lib/text";
 
@@ -8,10 +10,12 @@ import { BODY_MAX_LENGTH, bodyErrorMessage, validateBody } from "./diary";
 type Props = {
   /** Diary date, e.g. "2026-10-28". */
   date: string;
+  /** The character's current stage, shown beside the question. */
+  stage: Stage;
   onSave: (body: string) => void;
 };
 
-export function DiaryEditor({ date, onSave }: Props) {
+export function DiaryEditor({ date, stage, onSave }: Props) {
   const textareaId = useId();
   const errorId = useId();
   const [value, setValue] = useState("");
@@ -33,9 +37,7 @@ export function DiaryEditor({ date, onSave }: Props) {
     <form onSubmit={handleSubmit} noValidate className="flex flex-col p-4">
       <p className="font-bold">{formatDiaryDate(date)}</p>
       <div className="mt-2 mb-3 flex items-start gap-2">
-        <span aria-hidden="true" className="text-2xl leading-tight">
-          🐣
-        </span>
+        <CharacterArt stage={stage} size={48} crop />
         <p className="rounded-2xl border border-line bg-white px-3 py-2">
           今日はどんな一日だった？きかせて！
         </p>
@@ -50,7 +52,7 @@ export function DiaryEditor({ date, onSave }: Props) {
         placeholder="今日あったこと、思ったことを書いてみよう"
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-40 rounded-xl border border-line bg-white px-3 py-2.5"
+        className="min-h-50 rounded-xl border border-line bg-white px-3 py-2.5"
       />
       <p
         className={`mt-1 text-right text-sm ${length > BODY_MAX_LENGTH ? "text-alert" : "text-ink-muted"}`}

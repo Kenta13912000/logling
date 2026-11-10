@@ -7,6 +7,7 @@ import {
   EXP_PER_ENTRY,
   createCharacter,
   gainExp,
+  getLevelInfo,
 } from "@/features/character/character";
 import { CharacterStatus } from "@/features/character/CharacterStatus";
 import { ExpGainToast } from "@/features/character/ExpGainToast";
@@ -14,6 +15,7 @@ import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
+import { getStage } from "@/features/evolution/stages";
 import { bonusForTodayEntry, getStreakStatus } from "@/features/streak/streak";
 import { StreakBand } from "@/features/streak/StreakBand";
 import { getDiaryDate } from "@/lib/diary-date";
@@ -59,6 +61,7 @@ export function Home() {
       );
     } else {
       const todayEntry = data.entries.find((entry) => entry.date === today);
+      const stage = getStage(getLevelInfo(character.totalExp).level);
 
       const handleSave = (body: string) => {
         // Recompute: the page may have stayed open past 4 AM.
@@ -99,9 +102,9 @@ export function Home() {
             <StreakBand status={getStreakStatus(data.entries, today)} />
           </CharacterStatus>
           {todayEntry ? (
-            <TodayEntry entry={todayEntry} />
+            <TodayEntry entry={todayEntry} stage={stage} />
           ) : (
-            <DiaryEditor date={today} onSave={handleSave} />
+            <DiaryEditor date={today} stage={stage} onSave={handleSave} />
           )}
         </>
       );

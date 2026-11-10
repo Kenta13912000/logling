@@ -594,14 +594,14 @@ describe("character-evolution：振り返りのページの絵", () => {
     store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")], 180));
     render(<HistoryPage />);
     const user = userEvent.setup();
+    // Find the card first: the prompt also says 11月6日 once it opens.
+    const missed = card(/11月6日/);
 
     await user.click(
-      within(card(/11月6日/)).getByRole("button", {
-        name: "この日の日記を書く",
-      }),
+      within(missed).getByRole("button", { name: "この日の日記を書く" }),
     );
 
-    expect(card(/11月6日/).querySelector("img")).toHaveAttribute(
+    expect(missed.querySelector("img")).toHaveAttribute(
       "src",
       "/characters/stage-2.svg",
     );

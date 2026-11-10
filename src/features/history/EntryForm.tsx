@@ -5,6 +5,8 @@ import {
   bodyErrorMessage,
   validateBody,
 } from "@/features/diary/diary";
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import type { Stage } from "@/features/evolution/stages";
 import { countCharacters } from "@/lib/text";
 
 type Props = {
@@ -13,6 +15,8 @@ type Props = {
   initialBody: string;
   /** Question from the character above the textarea, when writing later. */
   prompt?: string;
+  /** The character's current stage, shown beside the prompt. */
+  stage?: Stage;
   placeholder?: string;
   submitLabel: string;
   /** Receives the trimmed, valid body. */
@@ -25,6 +29,7 @@ export function EntryForm({
   label,
   initialBody,
   prompt,
+  stage,
   placeholder,
   submitLabel,
   onSubmit,
@@ -51,9 +56,7 @@ export function EntryForm({
     <form onSubmit={handleSubmit} noValidate className="flex flex-col">
       {prompt && (
         <div className="mb-2 flex items-start gap-2">
-          <span aria-hidden="true" className="text-2xl leading-tight">
-            🐣
-          </span>
+          {stage && <CharacterArt stage={stage} size={48} crop />}
           <p className="rounded-2xl border border-line bg-cream px-3 py-2 text-sm">
             {prompt}
           </p>
