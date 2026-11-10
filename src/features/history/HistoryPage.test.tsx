@@ -606,4 +606,49 @@ describe("character-evolution：振り返りのページの絵", () => {
       "/characters/stage-2.svg",
     );
   });
+
+  test("AC-8: 後から書いて次の段階のレベルに上がると、すがたが変わったお知らせが出る", async () => {
+    // 175 EXP is Lv. 4 (stage 1); +5 makes 180 = Lv. 5 (stage 2).
+    store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")], 175));
+    render(<HistoryPage />);
+    const user = userEvent.setup();
+    const missed = card(/11月6日/);
+
+    await user.click(
+      within(missed).getByRole("button", { name: "この日の日記を書く" }),
+    );
+    await user.type(within(missed).getByRole("textbox"), "思い出した。");
+    await user.click(screen.getByRole("button", { name: "日記をのこす" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "ぴよ が ころねこ になった！" }),
+    ).toHaveTextContent("レベル 5 になったよ");
+  });
+
+  test("AC-11, AC-12: 消すと前の段階に戻るときは確認でわかり、消したあとホームの絵も戻る", async () => {
+    // 180 EXP is Lv. 5 (stage 2); losing 10 makes 170 = Lv. 4 (stage 1).
+    store(
+      startedOn(
+        "2026-11-01",
+        [entry("2026-11-06", "昨日の日記"), entry("2026-11-07", "今日の日記")],
+        180,
+      ),
+    );
+    const { unmount } = render(<HistoryPage />);
+    const user = userEvent.setup();
+
+    await user.click(
+      within(card("今日の日記")).getByRole("button", { name: "消す" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("ぴよ のレベルが 5 から 4 に下がるよ。");
+    expect(dialog).toHaveTextContent("すがたも前にもどるよ。");
+    await user.click(within(dialog).getByRole("button", { name: "消す" }));
+
+    unmount();
+    render(<Home />);
+    expect(
+      screen.getByRole("img", { name: "ぴよ のすがた（ねこだま）" }),
+    ).toBeInTheDocument();
+  });
 });

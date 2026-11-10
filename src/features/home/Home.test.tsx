@@ -92,6 +92,32 @@ describe("character-evolution", () => {
     expect(speechArt).toHaveAttribute("src", "/characters/stage-2.svg");
   });
 
+  test("AC-6: 今日の日記で次の段階のレベルに上がると、すがたが変わったお知らせが出る", async () => {
+    // 170 EXP is Lv. 4 (stage 1); +10 makes 180 = Lv. 5 (stage 2).
+    store(piyo(170));
+    render(<Home />);
+
+    await writeDiary("晴れた。");
+
+    const dialog = screen.getByRole("dialog", {
+      name: "ぴよ が ころねこ になった！",
+    });
+    expect(dialog).toHaveTextContent("レベル 5 になったよ");
+  });
+
+  test("AC-7: 同じ段階の中でレベルが上がったときは、いつものお知らせが出る", async () => {
+    // 20 EXP is Lv. 1; +10 makes 30 = Lv. 2, still stage 1.
+    store(piyo(20));
+    render(<Home />);
+
+    await writeDiary("晴れた。");
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("ぴよ が レベル 2 になった！");
+    expect(dialog).toHaveTextContent("これからもよろしくね");
+    expect(dialog).not.toHaveTextContent("レベル 2 になったよ");
+  });
+
   test("AC-3: 名前を付ける前は、段階 1 の絵が出る", () => {
     const { container } = render(<Home />);
 
