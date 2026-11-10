@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Lv.1 ねこだま：耳のついた、横長のおもちのようなねこ">
+<ellipse cx="200" cy="334" rx="94" ry="8" fill="#EADFD0"></ellipse>
+<g fill="#8B5A3C" stroke="#8B5A3C" stroke-linejoin="round" stroke-linecap="round">
+<g transform="translate(0 1.6)">
+<path fill="none" stroke-width="17" d="M 284 306 C 306 306, 318 292, 312 276"></path>
+<path stroke-width="11" d="M 104 290 C 98 248, 108 226, 126 214 C 124 198, 126 182, 132 172 Q 138 162, 148 168 C 156 174, 162 182, 168 190 C 186 182, 214 182, 232 190 C 238 182, 244 174, 252 168 Q 262 162, 268 172 C 274 182, 276 198, 274 214 C 292 226, 302 248, 296 290 C 292 316, 250 328, 200 328 C 150 328, 108 316, 104 290 Z"></path>
+</g>
+<path fill="none" stroke-width="17" d="M 284 306 C 306 306, 318 292, 312 276"></path>
+<path stroke-width="11" d="M 104 290 C 98 248, 108 226, 126 214 C 124 198, 126 182, 132 172 Q 138 162, 148 168 C 156 174, 162 182, 168 190 C 186 182, 214 182, 232 190 C 238 182, 244 174, 252 168 Q 262 162, 268 172 C 274 182, 276 198, 274 214 C 292 226, 302 248, 296 290 C 292 316, 250 328, 200 328 C 150 328, 108 316, 104 290 Z"></path>
+</g>
+<path fill="none" stroke="#FFFCF2" stroke-width="6" stroke-linecap="round" d="M 284 306 C 306 306, 318 292, 312 276"></path>
+<path fill="#FFFCF2" d="M 104 290 C 98 248, 108 226, 126 214 C 124 198, 126 182, 132 172 Q 138 162, 148 168 C 156 174, 162 182, 168 190 C 186 182, 214 182, 232 190 C 238 182, 244 174, 252 168 Q 262 162, 268 172 C 274 182, 276 198, 274 214 C 292 226, 302 248, 296 290 C 292 316, 250 328, 200 328 C 150 328, 108 316, 104 290 Z"></path>
+<g transform="translate(200 250)">
+<ellipse cx="-54" cy="14" rx="10" ry="6.5" fill="#F7B6B0" opacity="0.7"></ellipse>
+<ellipse cx="54" cy="14" rx="10" ry="6.5" fill="#F7B6B0" opacity="0.7"></ellipse>
+<ellipse cx="-34" cy="0" rx="5.8" ry="7" fill="#5B3A28"></ellipse>
+<ellipse cx="34" cy="0" rx="5.8" ry="7" fill="#5B3A28"></ellipse>
+<path d="M -8.5 10 Q -4.2 16 0 10.5 Q 4.2 16 8.5 10" fill="none" stroke="#8B5A3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+</g>
+<path d="M 89 254 L 113 258 M 89 268 L 113 268 M 287 258 L 311 254 M 287 268 L 311 268" fill="none" stroke="#8B5A3C" stroke-width="3.6" stroke-linecap="round"></path>
+</svg>

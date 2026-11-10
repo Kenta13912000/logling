@@ -76,6 +76,58 @@ describe("diary-history", () => {
   });
 });
 
+describe("character-evolution", () => {
+  // 180 EXP is Lv. 5, the first level of stage 2 (ころねこ).
+  test("AC-1, AC-2, AC-5: ステータスと吹き出しに今の段階の絵が出て、開き直しても同じ", () => {
+    store(piyo(180));
+    const { unmount } = render(<Home />);
+    unmount();
+    const { container } = render(<Home />);
+
+    expect(
+      screen.getByRole("img", { name: "ぴよ のすがた（ころねこ）" }),
+    ).toHaveAttribute("src", "/characters/stage-2.svg");
+    expect(screen.getByText("ころねこ")).toBeInTheDocument();
+    const speechArt = container.querySelector('img[alt=""]');
+    expect(speechArt).toHaveAttribute("src", "/characters/stage-2.svg");
+  });
+
+  test("AC-6: 今日の日記で次の段階のレベルに上がると、すがたが変わったお知らせが出る", async () => {
+    // 170 EXP is Lv. 4 (stage 1); +10 makes 180 = Lv. 5 (stage 2).
+    store(piyo(170));
+    render(<Home />);
+
+    await writeDiary("晴れた。");
+
+    const dialog = screen.getByRole("dialog", {
+      name: "ぴよ が ころねこ になった！",
+    });
+    expect(dialog).toHaveTextContent("レベル 5 になったよ");
+  });
+
+  test("AC-7: 同じ段階の中でレベルが上がったときは、いつものお知らせが出る", async () => {
+    // 20 EXP is Lv. 1; +10 makes 30 = Lv. 2, still stage 1.
+    store(piyo(20));
+    render(<Home />);
+
+    await writeDiary("晴れた。");
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("ぴよ が レベル 2 になった！");
+    expect(dialog).toHaveTextContent("これからもよろしくね");
+    expect(dialog).not.toHaveTextContent("レベル 2 になったよ");
+  });
+
+  test("AC-3: 名前を付ける前は、段階 1 の絵が出る", () => {
+    const { container } = render(<Home />);
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/characters/stage-1.svg",
+    );
+  });
+});
+
 describe("streak", () => {
   // Today is 2026-10-28 (see beforeEach).
   const withEntries = (...dates: string[]): SaveData => ({

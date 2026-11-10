@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { EXP_PER_LATE_ENTRY } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
+import type { Stage } from "@/features/evolution/stages";
 import {
   RECENT_DAYS,
   formatMonthDay,
@@ -13,6 +14,8 @@ import type { HistoryItem } from "./history";
 
 type Props = {
   items: HistoryItem[];
+  /** The character's current stage, shown when writing a missed day. */
+  stage: Stage;
   /** Saves the new body. Returns true when it was saved. */
   onSaveEdit: (date: string, body: string) => boolean;
   /** Saves an entry for a missed day. Returns true when it was saved. */
@@ -29,6 +32,7 @@ const smallButton =
 
 type MissingCardProps = {
   date: string;
+  stage: Stage;
   /** Shows the write button. */
   showActions: boolean;
   writing: boolean;
@@ -39,6 +43,7 @@ type MissingCardProps = {
 
 function MissingCard({
   date,
+  stage,
   showActions,
   writing,
   onWrite,
@@ -53,6 +58,7 @@ function MissingCard({
           label={`${formatMonthDay(date)}の日記`}
           initialBody=""
           prompt={`${formatMonthDay(date)}は、どんな一日だった？`}
+          stage={stage}
           placeholder="思い出せることを書いてみよう"
           submitLabel="日記をのこす"
           onSubmit={onSave}
@@ -145,6 +151,7 @@ function EntryCard({
 
 export function HistoryList({
   items,
+  stage,
   onSaveEdit,
   onSaveLater,
   onRequestDelete,
@@ -169,6 +176,7 @@ export function HistoryList({
         <MissingCard
           key={date}
           date={date}
+          stage={stage}
           showActions={showActions}
           writing={activeDate === date}
           onWrite={() => setActiveDate(date)}

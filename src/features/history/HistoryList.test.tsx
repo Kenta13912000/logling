@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 
 import type { DiaryEntry } from "@/features/diary/diary";
+import { getStage } from "@/features/evolution/stages";
 
 import { buildHistory } from "./history";
 import { HistoryList } from "./HistoryList";
@@ -38,6 +39,8 @@ function renderList(
   render(
     <HistoryList
       items={buildHistory(entries, TODAY, "2026-10-31")}
+      // Level 6 is stage 2 (ころねこ).
+      stage={getStage(6)}
       {...handlers}
     />,
   );
@@ -229,6 +232,17 @@ describe("Bolt-4：後から書く", () => {
     expect(textarea).toHaveAttribute(
       "placeholder",
       "思い出せることを書いてみよう",
+    );
+  });
+
+  test("character-evolution AC-2: 問いかけの横に、渡された段階の絵が出る", async () => {
+    const { user, items } = renderList();
+
+    await user.click(within(items[1]).getByRole("button", { name: WRITE }));
+
+    expect(items[1].querySelector("img")).toHaveAttribute(
+      "src",
+      "/characters/stage-2.svg",
     );
   });
 

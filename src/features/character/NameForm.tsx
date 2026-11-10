@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import { STAGES } from "@/features/evolution/stages";
+
 import { validateName, type NameValidation } from "./name";
 
 const ERROR_MESSAGES: Record<
@@ -13,6 +16,15 @@ const ERROR_MESSAGES: Record<
 type Props = {
   onSubmit: (name: string) => void;
 };
+
+/** Before naming there is no character yet, so show the first stage. */
+function FirstStageArt() {
+  return (
+    <div className="mt-6 mb-2 flex justify-center">
+      <CharacterArt stage={STAGES[0]} size={220} />
+    </div>
+  );
+}
 
 export function NameForm({ onSubmit }: Props) {
   const inputId = useId();
@@ -52,9 +64,7 @@ export function NameForm({ onSubmit }: Props) {
   if (pendingName !== null) {
     return (
       <section aria-label="名前の確認" className="flex flex-col p-4">
-        <p aria-hidden="true" className="mt-8 mb-4 text-center text-8xl">
-          🐣
-        </p>
+        <FirstStageArt />
         <p
           ref={confirmRef}
           tabIndex={-1}
@@ -85,9 +95,7 @@ export function NameForm({ onSubmit }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col p-4">
-      <p aria-hidden="true" className="mt-8 mb-4 text-center text-8xl">
-        🐣
-      </p>
+      <FirstStageArt />
       <p className="text-center">
         はじめまして！
         <br />

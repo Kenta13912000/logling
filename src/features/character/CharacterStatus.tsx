@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import { getStage } from "@/features/evolution/stages";
+
 import { getLevelInfo, type Character } from "./character";
 
 type Props = {
@@ -12,17 +15,26 @@ export function CharacterStatus({ character, children }: Props) {
   const { level, expInLevel, expToNext, remaining } = getLevelInfo(
     character.totalExp,
   );
+  const stage = getStage(level);
 
   return (
     <section
       aria-label="キャラクターのステータス"
-      className="border-b border-line bg-white p-4"
+      className="border-b border-line bg-white px-4 py-3"
     >
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="text-4xl leading-none">
-          🐣
+        <CharacterArt
+          stage={stage}
+          size={64}
+          crop
+          alt={`${character.name} のすがた（${stage.name}）`}
+        />
+        <span className="min-w-0 flex-1">
+          <span className="text-lg font-bold">{character.name}</span>
+          <span className="ml-1.5 rounded-full border border-line px-2 text-xs whitespace-nowrap text-ink-muted">
+            {stage.name}
+          </span>
         </span>
-        <span className="flex-1 text-lg font-bold">{character.name}</span>
         <span className="font-bold">{`Lv. ${level}`}</span>
       </div>
       <div

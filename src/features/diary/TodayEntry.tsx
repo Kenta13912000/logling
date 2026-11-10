@@ -1,19 +1,21 @@
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import type { Stage } from "@/features/evolution/stages";
 import { DAY_START_HOUR, formatDiaryDate } from "@/lib/diary-date";
 
 import type { DiaryEntry } from "./diary";
 
 type Props = {
   entry: DiaryEntry;
+  /** The character's current stage, shown beside the thanks. */
+  stage: Stage;
 };
 
-export function TodayEntry({ entry }: Props) {
+export function TodayEntry({ entry, stage }: Props) {
   return (
     <section aria-label="今日の日記" className="flex flex-col p-4">
       <p className="font-bold">{formatDiaryDate(entry.date)}</p>
       <div className="mt-2 mb-3 flex items-start gap-2">
-        <span aria-hidden="true" className="text-2xl leading-tight">
-          🐣
-        </span>
+        <CharacterArt stage={stage} size={48} crop />
         <p className="rounded-2xl border border-line bg-white px-3 py-2">
           今日も書いてくれてありがとう！また明日ね
         </p>

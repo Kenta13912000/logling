@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 
+import { stageChange } from "@/features/evolution/stages";
 import { formatMonthDay } from "@/lib/diary-date";
 
 type Props = {
@@ -60,6 +61,9 @@ export function DeleteDialog({
         <p className="font-bold text-alert">
           {`${name} のレベルが ${levelBefore} から ${levelAfter} に下がるよ。`}
         </p>
+      )}
+      {stageChange(levelBefore, levelAfter) === "down" && (
+        <p className="font-bold text-alert">すがたも前にもどるよ。</p>
       )}
       <p className="mt-1 text-sm text-ink-muted">消した日記は元に戻せないよ</p>
       {/* Confirm without close() so the close event only means "cancel". */}

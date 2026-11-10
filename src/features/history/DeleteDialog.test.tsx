@@ -98,6 +98,21 @@ test("streak AC-15: ボーナスが付いていなければ、内訳は出ない
   expect(dialog).not.toHaveTextContent("ボーナス");
 });
 
+test("character-evolution AC-12: 消すと前の段階に戻るときは、すがたも戻ることが出る", () => {
+  // Lv. 5 is stage 2 and Lv. 4 is stage 1.
+  const { dialog } = setup(10, 5, 4);
+
+  expect(dialog).toHaveTextContent("ぴよ のレベルが 5 から 4 に下がるよ。");
+  expect(dialog).toHaveTextContent("すがたも前にもどるよ。");
+});
+
+test("character-evolution AC-12: レベルが下がっても段階が同じなら、すがたの文は出ない", () => {
+  const { dialog } = setup(10, 6, 5);
+
+  expect(dialog).toHaveTextContent("ぴよ のレベルが 6 から 5 に下がるよ。");
+  expect(dialog).not.toHaveTextContent("すがた");
+});
+
 test("AC-12: Esc キーなどで窓が閉じられたときも、やめたことになる", () => {
   const { onConfirm, onCancel, dialog } = setup(10, 2, 2);
 

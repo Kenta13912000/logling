@@ -19,6 +19,26 @@ test("AC-1: 名前の入力欄とあいさつが表示される", () => {
   expect(screen.getByText(/名前をつけてくれる？/)).toBeInTheDocument();
 });
 
+const stageOneArt = () =>
+  document.querySelector('img[src="/characters/stage-1.svg"]');
+
+test("character-evolution AC-3: 名前の入力では、段階 1 の絵が飾りとして出る", () => {
+  setup();
+
+  expect(stageOneArt()).toHaveAttribute("alt", "");
+});
+
+test("character-evolution AC-3: 名前の確認でも、段階 1 の絵が出る", async () => {
+  const user = userEvent.setup();
+  const { input, button } = setup();
+
+  await user.type(input, "ぴよ");
+  await user.click(button);
+
+  expect(screen.getByText("「ぴよ」でいい？")).toBeInTheDocument();
+  expect(stageOneArt()).toHaveAttribute("alt", "");
+});
+
 test("AC-2: 1〜10 文字の名前を決定して確認すると、前後の空白を除いた名前が渡される", async () => {
   const user = userEvent.setup();
   const { onSubmit, input, button } = setup();

@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
+import { getLevelInfo } from "@/features/character/character";
 import { ExpGainToast } from "@/features/character/ExpGainToast";
 import { LevelUpDialog } from "@/features/character/LevelUpDialog";
+import { CharacterArt } from "@/features/evolution/CharacterArt";
+import {
+  STAGES,
+  getStage,
+  levelUpOf,
+  type LevelUp,
+  type Stage,
+} from "@/features/evolution/stages";
 import { SaveErrorNotice } from "@/features/home/SaveErrorNotice";
 import { useSaveData } from "@/features/home/useSaveData";
 import { useToday } from "@/features/home/useToday";
@@ -32,14 +41,12 @@ const OUT_OF_RANGE: Record<"tooOld" | "tooLate", string> = {
 /** Recomputed on save: the page may have stayed open past 4 AM. */
 const currentDiaryDate = () => getDiaryDate(new Date());
 
-function Guide({ emoji, message }: { emoji?: string; message: string }) {
+const stageOf = (totalExp: number) => getStage(getLevelInfo(totalExp).level);
+
+function Guide({ stage, message }: { stage?: Stage; message: string }) {
   return (
     <section className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-      {emoji && (
-        <span aria-hidden="true" className="text-5xl">
-          {emoji}
-        </span>
-      )}
+      {stage && <CharacterArt stage={stage} size={160} />}
       <p>{message}</p>
       <Link
         href="/"
@@ -57,7 +64,7 @@ export function HistoryPage() {
   const [notice, setNotice] = useState<Notice>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [gainedExp, setGainedExp] = useState<number | null>(null);
-  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
 
   let content: ReactNode = null;
   let dialog: ReactNode = null;
@@ -68,16 +75,18 @@ export function HistoryPage() {
     const { character, entries } = state.data;
 
     if (character === null) {
-      content = <Guide emoji="🐣" message="ホームで名前を付けてね" />;
+      // No character yet, so show the first stage.
+      content = <Guide stage={STAGES[0]} message="ホームで名前を付けてね" />;
     } else if (entries.length === 0) {
       content = (
         <Guide
-          emoji="🐣"
+          stage={stageOf(character.totalExp)}
           message="まだ日記がないよ。ホームで今日の日記を書いてみよう"
         />
       );
     } else {
       const data = state.data;
+      const stage = stageOf(character.totalExp);
 
       const handleSaveEdit = (date: string, body: string): boolean => {
         const result = editEntry(data, date, body, currentDiaryDate());
@@ -110,7 +119,9 @@ export function HistoryPage() {
         if (saved) {
           setGainedExp(result.gained);
           if (result.leveledUp) {
-            setLevelUp(result.level);
+            setLevelUp(
+              levelUpOf(getLevelInfo(character.totalExp).level, result.level),
+            );
           }
         }
         return saved;
@@ -124,6 +135,7 @@ export function HistoryPage() {
           </p>
           <HistoryList
             items={buildHistory(entries, today, getStartDate(data))}
+            stage={stage}
             onSaveEdit={handleSaveEdit}
             onSaveLater={handleSaveLater}
             onRequestDelete={setDeletingDate}
@@ -187,7 +199,8 @@ export function HistoryPage() {
       {levelUp !== null && state.status === "ok" && state.data.character && (
         <LevelUpDialog
           name={state.data.character.name}
-          level={levelUp}
+          level={levelUp.level}
+          evolvedTo={levelUp.evolvedTo}
           onClose={() => setLevelUp(null)}
         />
       )}
