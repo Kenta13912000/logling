@@ -76,6 +76,32 @@ describe("diary-history", () => {
   });
 });
 
+describe("character-evolution", () => {
+  // 180 EXP is Lv. 5, the first level of stage 2 (ころねこ).
+  test("AC-1, AC-2, AC-5: ステータスと吹き出しに今の段階の絵が出て、開き直しても同じ", () => {
+    store(piyo(180));
+    const { unmount } = render(<Home />);
+    unmount();
+    const { container } = render(<Home />);
+
+    expect(
+      screen.getByRole("img", { name: "ぴよ のすがた（ころねこ）" }),
+    ).toHaveAttribute("src", "/characters/stage-2.svg");
+    expect(screen.getByText("ころねこ")).toBeInTheDocument();
+    const speechArt = container.querySelector('img[alt=""]');
+    expect(speechArt).toHaveAttribute("src", "/characters/stage-2.svg");
+  });
+
+  test("AC-3: 名前を付ける前は、段階 1 の絵が出る", () => {
+    const { container } = render(<Home />);
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/characters/stage-1.svg",
+    );
+  });
+});
+
 describe("streak", () => {
   // Today is 2026-10-28 (see beforeEach).
   const withEntries = (...dates: string[]): SaveData => ({

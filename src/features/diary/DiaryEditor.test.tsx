@@ -2,13 +2,18 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
+import { getStage } from "@/features/evolution/stages";
+
 import { DiaryEditor } from "./DiaryEditor";
 
 function setup() {
   const user = userEvent.setup();
   const onSave = vi.fn();
-  render(<DiaryEditor date="2026-10-28" onSave={onSave} />);
+  const { container } = render(
+    <DiaryEditor date="2026-10-28" stage={getStage(6)} onSave={onSave} />,
+  );
   return {
+    container,
     user,
     onSave,
     textarea: screen.getByRole("textbox", { name: "今日の日記" }),
@@ -24,6 +29,14 @@ test("AC-5: 今日の日付・呼びかけ・入力欄・文字数が表示さ�
     screen.getByText("今日はどんな一日だった？きかせて！"),
   ).toBeInTheDocument();
   expect(screen.getByText("0 / 2000")).toBeInTheDocument();
+});
+
+test("character-evolution AC-2: 吹き出しの横に、渡された段階の絵が飾りとして出る", () => {
+  const { container } = setup();
+
+  const art = container.querySelector("img");
+  expect(art).toHaveAttribute("src", "/characters/stage-2.svg");
+  expect(art).toHaveAttribute("alt", "");
 });
 
 test("AC-5: 入力すると文字数の表示が増える", async () => {

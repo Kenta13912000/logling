@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
+import { getStage } from "@/features/evolution/stages";
+
 import { EntryForm } from "./EntryForm";
 
 function setup(initialBody = "今日は晴れた。") {
@@ -93,6 +95,24 @@ test("AC-14: 問いかけと入力欄の案内を渡すと、空の入力欄と�
   expect(
     screen.getByRole("button", { name: "日記をのこす" }),
   ).toBeInTheDocument();
+});
+
+test("character-evolution AC-2: 問いかけの横に、渡された段階の絵が飾りとして出る", () => {
+  const { container } = render(
+    <EntryForm
+      label="11月6日の日記"
+      initialBody=""
+      prompt="11月6日は、どんな一日だった？"
+      stage={getStage(6)}
+      submitLabel="日記をのこす"
+      onSubmit={() => {}}
+      onCancel={() => {}}
+    />,
+  );
+
+  const art = container.querySelector("img");
+  expect(art).toHaveAttribute("src", "/characters/stage-2.svg");
+  expect(art).toHaveAttribute("alt", "");
 });
 
 test("問いかけを渡さなければ、問いかけは出ない（書き直すとき）", () => {

@@ -569,3 +569,41 @@ describe("streak：ボーナスの付いた日記を消す", () => {
     });
   });
 });
+
+describe("character-evolution：振り返りのページの絵", () => {
+  const art = () => document.querySelector("img");
+
+  test("AC-3: キャラクターがいないときの案内には、段階 1 の絵が出る", () => {
+    render(<HistoryPage />);
+
+    expect(screen.getByText(/ホームで名前を付けてね/)).toBeInTheDocument();
+    expect(art()).toHaveAttribute("src", "/characters/stage-1.svg");
+    expect(art()).toHaveAttribute("alt", "");
+  });
+
+  test("日記がないときの案内には、今の段階の絵が出る", () => {
+    // 180 EXP is Lv. 5, the first level of stage 2 (ころねこ).
+    store(withEntries([], 180));
+    render(<HistoryPage />);
+
+    expect(screen.getByText(/まだ日記がないよ/)).toBeInTheDocument();
+    expect(art()).toHaveAttribute("src", "/characters/stage-2.svg");
+  });
+
+  test("AC-2: 後から書く入力欄の吹き出しには、今の段階の絵が出る", async () => {
+    store(startedOn("2026-11-01", [entry("2026-11-07", "今日の日記")], 180));
+    render(<HistoryPage />);
+    const user = userEvent.setup();
+
+    await user.click(
+      within(card(/11月6日/)).getByRole("button", {
+        name: "この日の日記を書く",
+      }),
+    );
+
+    expect(card(/11月6日/).querySelector("img")).toHaveAttribute(
+      "src",
+      "/characters/stage-2.svg",
+    );
+  });
+});
