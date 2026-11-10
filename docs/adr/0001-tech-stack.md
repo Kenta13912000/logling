@@ -1,7 +1,7 @@
 # ADR-0001：技術スタック
 
 - 日付：2026-10-25
-- 状態：採用
+- 状態：採用（「実行環境」は [ADR-0004](0004-node-26.md) で置き換え）
 
 ## 背景
 
@@ -20,7 +20,7 @@ logling は「日記を書くとキャラクターが成長する、続けたく
 | フレームワーク | Next.js 16（App Router）               | 画面と API を 1 つのプロジェクトで書ける。公開先の Vercel と相性が最もよい             |
 | UI             | React 19 + Tailwind CSS v4             | Next.js の標準構成。Tailwind は雛形の既定で入り、画面づくりを速くできるため残す        |
 | 言語           | TypeScript（strict）                   | 型で仕様の一部を表せ、リファクタリングを安全にできる                                   |
-| 実行環境       | Node.js 24.22.1（`.nvmrc` で固定）     | 現行の LTS。ローカルと CI で同じバージョンを使う                                       |
+| 実行環境       | Node.js 24.22.1（`.nvmrc` で固定）     | 現行の LTS。ローカルと CI で同じバージョンを使う（ADR-0004 で 26 系に置き換え）        |
 | パッケージ管理 | npm                                    | Node.js に同梱されていて追加のツールが不要                                             |
 | 単体テスト     | Vitest 5 + Testing Library（jsdom）    | 高速で TypeScript をそのまま扱える。画面をユーザー視点で検証でき、AC と対応させやすい  |
 | E2E テスト     | Playwright（Chromium のみ）            | 実ブラウザで主要な流れを検証できる。ダウンロード量と実行時間を抑えるため Chromium のみ |
@@ -30,7 +30,7 @@ logling は「日記を書くとキャラクターが成長する、続けたく
 ### 補足の判断
 
 - **型チェックは `next typegen && tsc --noEmit`**：`LayoutProps` などの型は Next.js が `.next/types/` に生成する。何もない状態から始まる CI で失敗したため、先に型を生成する
-- **`@types/node` は v24 系**：Vitest 5 が v20 系と組み合わせられないため、実行環境の Node 24 に合わせた（`--force` は使わない）
+- **`@types/node` は v24 系**：Vitest 5 が v20 系と組み合わせられないため、実行環境の Node 24 に合わせた（`--force` は使わない）。ADR-0004 で、Node 26 に合わせて 26 系にする
 - **tsconfig の `@/*` は Vite 標準の `resolve.tsconfigPaths` で解決**：追加のプラグインを入れず依存を減らす
 - **CI のセキュリティ**：アクションはコミット SHA で固定し、`permissions: contents: read`・`persist-credentials: false` で権限を最小にする
 - **テレメトリ**：Next.js の匿名テレメトリは開発 PC と CI の両方で無効にする
@@ -60,3 +60,4 @@ DB・認証・デプロイの詳細設定は、必要になった機能の ⑤ �
 - 初期構築の各ゲートで判断した点：Tailwind と AGENTS.md は残す／Next.js のテレメトリは無効化／コミットのメールアドレスは GitHub の noreply を使う（ポートフォリオとして公開するため）
 - この ADR へのゲートでの判断：指摘なしで承認
 - `diary-exp` の ⑧ で更新：CI に本番ビルドを追加（Bolt-3 でビルドが止まる問題が CI では見つからなかったため）
+- Node 26 への更新で更新：「実行環境」を ADR-0004 で置き換えた（Node 24 が「保守のみ」の期間に入り、`account-sync` でサーバーの処理が入る前に新しい LTS に上げるため）。`@types/node` も 26 系にする

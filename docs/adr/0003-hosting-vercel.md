@@ -23,7 +23,7 @@ logling を、採用担当者や日記を続けたい人が URL を開くだけ�
 - 月あたりの上限：通信量 100GB、CDN へのリクエスト 100 万回、1 日の公開回数 100 回。logling の規模では十分
 - Deployment Protection の **Standard Protection** は無料プランでも使え、本番の URL 以外（PR ごとの確認用の URL など）を Vercel にログインした本人だけに見せられる
 - 本番の公開が成功したときだけ、本番の URL が新しい公開に向く（「When a production deployment succeeds, Vercel updates your production domains to point to the new deployment」）。ビルドに失敗しても、前の公開がそのまま残る（release の AC-5。2026-11-05 に追記）
-- Node.js は 26.x（標準）・24.x・22.x が使える。`package.json` の `engines.node` が「以上」の指定（例：`>=22.0.0`）だと最新の 26.x が使われるため、手元・CI と合わせて `^24.22.1` を指定する
+- Node.js は 26.x（標準）・24.x・22.x が使える。`package.json` の `engines.node` が「以上」の指定（例：`>=22.0.0`）だと最新の 26.x が使われるため、手元・CI と合わせて `^24.22.1` を指定する（2026-11-11 に [ADR-0004](0004-node-26.md) で Node 26 に上げ、`^26.13.0` にした）
 
 ## 検討した他の案
 

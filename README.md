@@ -48,11 +48,11 @@
 | CI             | GitHub Actions（lint・型チェック・テスト・ビルド） |
 | 公開先         | Vercel（Hobby）                                    |
 
-選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md) と [ADR-0003：公開先に Vercel を使う](docs/adr/0003-hosting-vercel.md) にまとめています。
+選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md)、[ADR-0003：公開先に Vercel を使う](docs/adr/0003-hosting-vercel.md)、[ADR-0004：Node.js を 26 に上げる](docs/adr/0004-node-26.md) にまとめています。
 
 ## 起動方法
 
-Node.js 24.22.1 以上が必要です（バージョンは [.nvmrc](.nvmrc) に記載）。
+Node.js 26 系（26.13.0 以上）が必要です（バージョンは [.nvmrc](.nvmrc) に記載）。
 
 ```bash
 git clone https://github.com/Kenta13912000/logling.git
