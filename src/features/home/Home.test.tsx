@@ -2,6 +2,8 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { cloudMock, signInAs } from "@/test/mocks";
+
 import { Home } from "./Home";
 import { STORAGE_KEY, type SaveData } from "./save-data";
 
@@ -94,6 +96,117 @@ describe("account-sync", () => {
       "href",
       "/account",
     );
+  });
+
+  describe("ログイン中", () => {
+    beforeEach(() => {
+      signInAs("you@example.com");
+    });
+
+    test("AC-12: クラウドから読み込んでいる間は「読み込んでいるよ…」が出て、名前を付ける画面は出ない", () => {
+      cloudMock.loadCloudData.mockReturnValue(new Promise(() => {}));
+      render(<Home />);
+
+      expect(screen.getByText("読み込んでいるよ…")).toBeInTheDocument();
+      expect(
+        screen.queryByLabelText("名前（10 文字まで）"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("AC-12: 読み込めなかったときは、名前を付ける画面を出さず、もう一度読み込める", async () => {
+      cloudMock.loadCloudData.mockResolvedValueOnce({
+        ok: false,
+        reason: "failed",
+      });
+      cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo(0) });
+      const user = userEvent.setup();
+      render(<Home />);
+
+      expect(
+        await screen.findByText("データを読み込めなかった…"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByLabelText("名前（10 文字まで）"),
+      ).not.toBeInTheDocument();
+      await user.click(
+        screen.getByRole("button", { name: "もう一度読み込む" }),
+      );
+
+      expect(await screen.findByText("ぴよ")).toBeInTheDocument();
+    });
+
+    test("AC-8: 名前を付けると、キャラクターがクラウドに作られる", async () => {
+      cloudMock.loadCloudData.mockResolvedValue({
+        ok: true,
+        data: { version: 1, character: null, entries: [] },
+      });
+      cloudMock.createCloudCharacter.mockResolvedValue({
+        ok: true,
+        data: piyo(0),
+      });
+      const user = userEvent.setup();
+      render(<Home />);
+
+      await user.type(
+        await screen.findByLabelText("名前（10 文字まで）"),
+        "ぴよ",
+      );
+      await user.click(screen.getByRole("button", { name: "この名前にする" }));
+      await user.click(screen.getByRole("button", { name: "これにする" }));
+
+      expect(cloudMock.createCloudCharacter).toHaveBeenCalledWith({
+        name: "ぴよ",
+        totalExp: 0,
+        startDate: "2026-10-28",
+      });
+      expect(await screen.findByText("ぴよ")).toBeInTheDocument();
+    });
+
+    test("AC-8, AC-10: 今日の日記を書くと、経験値といっしょにクラウドに保存され、ブラウザの中には保存されない", async () => {
+      cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo(0) });
+      cloudMock.addCloudEntry.mockImplementation(async (entry, exp) => ({
+        ok: true,
+        data: {
+          version: 1,
+          character: { name: "ぴよ", totalExp: exp },
+          entries: [entry],
+        },
+      }));
+      render(<Home />);
+      await screen.findByText("ぴよ");
+
+      await writeDiary("クラウドに残したい");
+
+      expect(cloudMock.addCloudEntry).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: "2026-10-28",
+          body: "クラウドに残したい",
+        }),
+        10,
+        "2026-10-28",
+      );
+      expect(await screen.findByText("クラウドに残したい")).toBeInTheDocument();
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    });
+
+    test("AC-11: 保存できなかったときは、通信できるところでもう一度とわかり、書いていた文が残る", async () => {
+      cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo(0) });
+      cloudMock.addCloudEntry.mockResolvedValue({
+        ok: false,
+        reason: "failed",
+      });
+      render(<Home />);
+      await screen.findByText("ぴよ");
+
+      await writeDiary("電車の中で書いた");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "保存できなかった…通信できるところで、もう一度「日記をのこす」を押してね",
+      );
+      expect(screen.getByRole("textbox", { name: "今日の日記" })).toHaveValue(
+        "電車の中で書いた",
+      );
+    });
   });
 });
 

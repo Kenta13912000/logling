@@ -6,6 +6,8 @@ import type { DiaryEntry } from "@/features/diary/diary";
 import { Home } from "@/features/home/Home";
 import { STORAGE_KEY, type SaveData } from "@/features/home/save-data";
 
+import { cloudMock, signInAs } from "@/test/mocks";
+
 import { HistoryPage } from "./HistoryPage";
 
 function store(data: SaveData) {
@@ -69,6 +71,90 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+});
+
+describe("account-sync：ログイン中", () => {
+  beforeEach(() => {
+    signInAs("you@example.com");
+  });
+
+  async function openDelete(cardText: string) {
+    const user = userEvent.setup();
+    await user.click(
+      within(card(cardText)).getByRole("button", { name: "消す" }),
+    );
+    return { user, dialog: screen.getByRole("dialog") };
+  }
+
+  test("AC-8, AC-10: 日記を消すと、減る経験値と始めた日といっしょにクラウドに送り、ブラウザの中には書き込まない", async () => {
+    const data = startedOn(
+      "2026-11-05",
+      [entry("2026-11-05", "消す日記"), entry("2026-11-07", "今日の日記")],
+      20,
+    );
+    cloudMock.loadCloudData.mockResolvedValue({ ok: true, data });
+    cloudMock.deleteCloudEntry.mockResolvedValue({
+      ok: true,
+      data: startedOn("2026-11-05", [entry("2026-11-07", "今日の日記")], 10),
+    });
+    render(<HistoryPage />);
+    await screen.findByText("消す日記");
+
+    const { user, dialog } = await openDelete("消す日記");
+    await user.click(within(dialog).getByRole("button", { name: "消す" }));
+
+    expect(cloudMock.deleteCloudEntry).toHaveBeenCalledWith(
+      "2026-11-05",
+      10,
+      "2026-11-05",
+    );
+    expect(
+      await screen.findByText("この日はまだ書いていないよ", { exact: false }),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  test("AC-11: 書き直しを保存できなかったときは、お知らせが出て、本文は変わらない", async () => {
+    const data = startedOn(
+      "2026-11-05",
+      [entry("2026-11-07", "今日の日記")],
+      10,
+    );
+    cloudMock.loadCloudData.mockResolvedValue({ ok: true, data });
+    cloudMock.editCloudEntry.mockResolvedValue({ ok: false, reason: "failed" });
+    const user = userEvent.setup();
+    render(<HistoryPage />);
+    await screen.findByText("今日の日記");
+
+    await user.click(
+      within(card("今日の日記")).getByRole("button", { name: "書き直す" }),
+    );
+    const textbox = screen.getByRole("textbox");
+    await user.clear(textbox);
+    await user.type(textbox, "書き直した");
+    await user.click(screen.getByRole("button", { name: "保存する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "通信できるところで",
+    );
+    expect(cloudMock.editCloudEntry).toHaveBeenCalledWith(
+      "2026-11-07",
+      "書き直した",
+      "2026-11-05",
+    );
+  });
+
+  test("AC-12: 読み込めなかったときは、そのことがわかり、もう一度読み込める", async () => {
+    cloudMock.loadCloudData.mockResolvedValue({ ok: false, reason: "failed" });
+    render(<HistoryPage />);
+
+    expect(
+      await screen.findByText("データを読み込めなかった…"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "もう一度読み込む" }),
+    ).toBeInTheDocument();
+  });
 });
 
 test("AC-1: 上の帯に、ホームへ戻るリンクがある", () => {

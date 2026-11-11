@@ -109,6 +109,19 @@ describe("ログイン中", () => {
     auth.session = { user: { email: "you@example.com" } };
   });
 
+  test("AC-4, AC-22: 日記がクラウドに保存されていることと、ログアウトすると端末に残らないことがわかる", () => {
+    render(<AccountPage loginFailed={false} />);
+
+    expect(
+      screen.getByText(/日記はクラウドに保存されているよ/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "ログアウトすると、この端末には日記もキャラクターも残らないよ",
+      ),
+    ).toBeInTheDocument();
+  });
+
   test("AC-4: ログインしていることと、メールアドレスがわかる", () => {
     render(<AccountPage loginFailed={false} />);
 
