@@ -189,6 +189,69 @@ describe("account-sync", () => {
       expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
 
+    test("AC-13: ほかの端末で今日の日記がもう書かれていたときは、お知らせ・ほかの端末の日記・書いていた文が出る", async () => {
+      cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo(0) });
+      cloudMock.addCloudEntry.mockResolvedValue({
+        ok: false,
+        reason: "exists",
+        data: {
+          version: 1,
+          character: { name: "ぴよ", totalExp: 10 },
+          entries: [
+            {
+              date: "2026-10-28",
+              body: "PC で書いた日記",
+              createdAt: "2026-10-28T11:00:00.000Z",
+            },
+          ],
+        },
+      });
+      render(<Home />);
+      await screen.findByText("ぴよ");
+
+      await writeDiary("スマホで書いた日記");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "ほかの端末で、今日の日記がもう書かれていたよ。最新の内容を表示したよ",
+      );
+      expect(screen.getByText("PC で書いた日記")).toBeInTheDocument();
+      expect(
+        screen.getByRole("region", {
+          name: "この端末で書いていた文（保存されていないよ）",
+        }),
+      ).toHaveTextContent("スマホで書いた日記");
+    });
+
+    test("AC-13: 名前を付けようとしたら、ほかの端末でもうキャラクターが作られていたときは、お知らせとそのキャラクターが出る", async () => {
+      cloudMock.loadCloudData.mockResolvedValue({
+        ok: true,
+        data: { version: 1, character: null, entries: [] },
+      });
+      cloudMock.createCloudCharacter.mockResolvedValue({
+        ok: false,
+        reason: "exists",
+        data: {
+          version: 1,
+          character: { name: "たま", totalExp: 30 },
+          entries: [],
+        },
+      });
+      const user = userEvent.setup();
+      render(<Home />);
+
+      await user.type(
+        await screen.findByLabelText("名前（10 文字まで）"),
+        "ぴよ",
+      );
+      await user.click(screen.getByRole("button", { name: "この名前にする" }));
+      await user.click(screen.getByRole("button", { name: "これにする" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "ほかの端末で、もうキャラクターが作られていたよ。そのキャラクターを表示したよ",
+      );
+      expect(screen.getByText("たま")).toBeInTheDocument();
+    });
+
     test("AC-11: 保存できなかったときは、通信できるところでもう一度とわかり、書いていた文が残る", async () => {
       cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo(0) });
       cloudMock.addCloudEntry.mockResolvedValue({

@@ -144,6 +144,75 @@ describe("account-sync：ログイン中", () => {
     );
   });
 
+  test("AC-13: 書き直そうとした日記がほかの端末で消されていたときは、お知らせが出て、最新の一覧になり、書いていた文が残る", async () => {
+    cloudMock.loadCloudData.mockResolvedValue({
+      ok: true,
+      data: startedOn(
+        "2026-11-05",
+        [
+          entry("2026-11-06", "消された日記"),
+          entry("2026-11-07", "今日の日記"),
+        ],
+        20,
+      ),
+    });
+    cloudMock.editCloudEntry.mockResolvedValue({
+      ok: false,
+      reason: "notFound",
+      data: startedOn("2026-11-05", [entry("2026-11-07", "今日の日記")], 10),
+    });
+    const user = userEvent.setup();
+    render(<HistoryPage />);
+    await screen.findByText("消された日記");
+
+    await user.click(
+      within(card("消された日記")).getByRole("button", { name: "書き直す" }),
+    );
+    const textbox = screen.getByRole("textbox");
+    await user.clear(textbox);
+    await user.type(textbox, "書き直したかった文");
+    await user.click(screen.getByRole("button", { name: "保存する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "ほかの端末で変わっていたよ。最新の内容を表示したよ",
+    );
+    expect(screen.queryByText("消された日記")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", {
+        name: "この端末で書いていた文（保存されていないよ）",
+      }),
+    ).toHaveTextContent("書き直したかった文");
+  });
+
+  test("AC-13: 消そうとした日記がほかの端末で消されていたときは、お知らせが出て、最新の一覧になる", async () => {
+    cloudMock.loadCloudData.mockResolvedValue({
+      ok: true,
+      data: startedOn(
+        "2026-11-05",
+        [
+          entry("2026-11-06", "消された日記"),
+          entry("2026-11-07", "今日の日記"),
+        ],
+        20,
+      ),
+    });
+    cloudMock.deleteCloudEntry.mockResolvedValue({
+      ok: false,
+      reason: "notFound",
+      data: startedOn("2026-11-05", [entry("2026-11-07", "今日の日記")], 10),
+    });
+    render(<HistoryPage />);
+    await screen.findByText("消された日記");
+
+    const { user, dialog } = await openDelete("消された日記");
+    await user.click(within(dialog).getByRole("button", { name: "消す" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "ほかの端末で変わっていたよ。最新の内容を表示したよ",
+    );
+    expect(screen.queryByText("消された日記")).not.toBeInTheDocument();
+  });
+
   test("AC-12: 読み込めなかったときは、そのことがわかり、もう一度読み込める", async () => {
     cloudMock.loadCloudData.mockResolvedValue({ ok: false, reason: "failed" });
     render(<HistoryPage />);

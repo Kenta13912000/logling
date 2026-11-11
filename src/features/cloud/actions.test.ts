@@ -141,26 +141,54 @@ describe("ログイン中", () => {
   });
 
   test("AC-8: ないものを書き直す・消す、キャラクターなしで足す、同じ日を二重に足すは、その理由を返す", async () => {
-    expect(await addCloudEntry(entry("2026-11-12", "日記"), 10)).toStrictEqual({
+    expect(await addCloudEntry(entry("2026-11-12", "日記"), 10)).toMatchObject({
       ok: false,
       reason: "noCharacter",
     });
     await createCloudCharacter({ name: "ぴよ", totalExp: 0 });
-    expect(await editCloudEntry("2026-11-12", "書き直し")).toStrictEqual({
+    expect(await editCloudEntry("2026-11-12", "書き直し")).toMatchObject({
       ok: false,
       reason: "notFound",
     });
-    expect(await deleteCloudEntry("2026-11-12", 10)).toStrictEqual({
+    expect(await deleteCloudEntry("2026-11-12", 10)).toMatchObject({
       ok: false,
       reason: "notFound",
     });
     await addCloudEntry(entry("2026-11-12", "1 件目"), 10);
     expect(
       await addCloudEntry(entry("2026-11-12", "2 件目"), 10),
-    ).toStrictEqual({ ok: false, reason: "exists" });
+    ).toMatchObject({ ok: false, reason: "exists" });
     expect(
       await createCloudCharacter({ name: "たま", totalExp: 0 }),
-    ).toStrictEqual({ ok: false, reason: "exists" });
+    ).toMatchObject({ ok: false, reason: "exists" });
+  });
+
+  test("AC-13: ほかの端末で変わっていたために断るときも、最新のデータをいっしょに返す", async () => {
+    await createCloudCharacter({ name: "ぴよ", totalExp: 0 });
+    // Another device already wrote today.
+    await addCloudEntry(entry("2026-11-12", "PC で書いた"), 10);
+    const latest = {
+      version: 1,
+      character: { name: "ぴよ", totalExp: 10 },
+      entries: [entry("2026-11-12", "PC で書いた")],
+    };
+
+    expect(
+      await addCloudEntry(entry("2026-11-12", "スマホで書いた"), 10),
+    ).toStrictEqual({ ok: false, reason: "exists", data: latest });
+    expect(await editCloudEntry("2026-11-11", "消された日記")).toStrictEqual({
+      ok: false,
+      reason: "notFound",
+      data: latest,
+    });
+    expect(await deleteCloudEntry("2026-11-11", 10)).toStrictEqual({
+      ok: false,
+      reason: "notFound",
+      data: latest,
+    });
+    expect(
+      await createCloudCharacter({ name: "たま", totalExp: 0 }),
+    ).toStrictEqual({ ok: false, reason: "exists", data: latest });
   });
 
   test("AC-8: 始めた日のないキャラクターは、書き直す・消すときに渡された始めた日が入り、あとから変わらない", async () => {

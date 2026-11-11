@@ -82,6 +82,48 @@ test.describe("ログイン中のクラウド保存", () => {
     await other.close();
   });
 
+  test("AC-13: 2 つのブラウザで同じアカウントを開き、片方で今日の日記を書いたあとにもう片方でも書くと、お知らせが出て、日記は 1 件のまま、書いていた文が残る", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    const email = await signUp(page);
+    await page.goto("/");
+    await nameCharacter(page, "どうじぴよ");
+
+    // The phone opens the home page before the PC writes today's entry.
+    const other = await browser.newContext({ baseURL });
+    const phone = await other.newPage();
+    await phone.request.post("/api/auth/sign-in/email", {
+      data: { email, password: PASSWORD },
+    });
+    await phone.goto("/");
+    await expect(
+      phone.getByRole("textbox", { name: "今日の日記" }),
+    ).toBeVisible();
+
+    await writeDiary(page, "PC で先に書いた");
+    await expect(page.getByText("PC で先に書いた")).toBeVisible();
+    await writeDiary(phone, "スマホであとから書いた");
+
+    await expect(
+      phone
+        .getByRole("alert")
+        .filter({ hasText: "ほかの端末で、今日の日記がもう書かれていたよ" }),
+    ).toBeVisible();
+    await expect(phone.getByText("PC で先に書いた")).toBeVisible();
+    await expect(
+      phone.getByRole("region", {
+        name: "この端末で書いていた文（保存されていないよ）",
+      }),
+    ).toContainText("スマホであとから書いた");
+
+    await phone.goto("/history");
+    await expect(phone.getByText("PC で先に書いた")).toBeVisible();
+    await expect(phone.getByText("スマホであとから書いた")).toHaveCount(0);
+    await other.close();
+  });
+
   test("AC-23: ログアウトすると、ホームでも振り返りでも、前のアカウントの日記もキャラクターも見えない", async ({
     page,
   }) => {

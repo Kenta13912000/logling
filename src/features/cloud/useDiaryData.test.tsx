@@ -174,9 +174,18 @@ describe("ログイン中", () => {
     expect(result.current.state).toMatchObject({ data: before });
   });
 
-  test("AC-13: ほかの端末で先に同じ日が書かれていたときは「同じ日がもうある」を返す", async () => {
+  test("AC-13: ほかの端末で先に変わっていて断られたときは「ほかの端末で変わっていた」を返し、データを最新にする", async () => {
+    const latest: SaveData = {
+      version: 1,
+      character: { name: "ぴよ", totalExp: 10, startDate: "2026-11-10" },
+      entries: [{ ...entry, body: "PC で書いた" }],
+    };
     cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: before });
-    cloudMock.addCloudEntry.mockResolvedValue({ ok: false, reason: "exists" });
+    cloudMock.addCloudEntry.mockResolvedValue({
+      ok: false,
+      reason: "exists",
+      data: latest,
+    });
     const { result } = renderHook(() => useDiaryData());
     await waitFor(() => expect(result.current.state.status).toBe("ok"));
 
@@ -185,7 +194,8 @@ describe("ログイン中", () => {
       outcome = await result.current.save(ADD, after);
     });
 
-    expect(outcome).toBe("exists");
+    expect(outcome).toBe("conflict");
+    expect(result.current.state).toMatchObject({ data: latest });
   });
 
   test("AC-12: 読み込めなかったときは「読み込めなかった」になり、もう一度読み込める", async () => {

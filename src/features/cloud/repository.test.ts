@@ -189,6 +189,35 @@ describe("読み書きの結果", () => {
     expect(a.character?.totalExp).toBe(10);
   });
 
+  test("AC-13: 同じ日の日記を同時に 2 つ足すと、1 つだけ残り、経験値は 1 回分だけ増える", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+
+    const results = await Promise.all([
+      insertEntry(db, A, entry("2026-11-05", "端末 1"), 10),
+      insertEntry(db, A, entry("2026-11-05", "端末 2"), 10),
+    ]);
+
+    expect([...results].sort()).toStrictEqual(["exists", "ok"]);
+    const a = await getSaveData(db, A);
+    expect(a.entries).toHaveLength(1);
+    expect(a.character?.totalExp).toBe(10);
+  });
+
+  test("AC-13: 違う日の日記を同時に足すと、両方の経験値が入り、ほかの端末の分を上書きしない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+
+    await Promise.all([
+      insertEntry(db, A, entry("2026-11-05", "端末 1"), 10),
+      insertEntry(db, A, entry("2026-11-06", "端末 2"), 5),
+    ]);
+
+    const a = await getSaveData(db, A);
+    expect(a.entries).toHaveLength(2);
+    expect(a.character?.totalExp).toBe(15);
+  });
+
   test("AC-8: 日記を消しても、経験値は 0 より下がらない", async () => {
     const { db } = testDb;
     await createCharacter(db, A, PIYO);
