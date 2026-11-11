@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（account-sync）</title>
+    <style>
+      :root {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --button-text: #ffffff;
+        --bar: #d97706;
+        --bar-track: #f6e7cf;
+        --error: #b42318;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        min-height: 560px;
+        background: var(--bg);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .phone.short {
+        min-height: 0;
+      }
+      .appbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .appbar-title {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      .appbar-links {
+        display: flex;
+        gap: 16px;
+      }
+      .appbar-link {
+        color: var(--button);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .content {
+        padding: 16px;
+      }
+      .status {
+        padding: 12px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .status-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-name {
+        flex: 1;
+        min-width: 0;
+      }
+      .status-name strong {
+        font-size: 18px;
+      }
+      .stage-name {
+        margin-left: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0 8px;
+        white-space: nowrap;
+      }
+      .status-level {
+        font-weight: 700;
+      }
+      .bar {
+        margin-top: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--bar-track);
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: var(--bar);
+      }
+      .bar-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .streak {
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: var(--bar-track);
+      }
+      .streak-main {
+        font-weight: 700;
+      }
+      .streak-next {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .date {
+        font-weight: 700;
+      }
+      .speech {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin: 4px 0 10px;
+      }
+      /* Same crop as character-evolution: x, y, side in the 400 x 400 art. */
+      .crop {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        flex: none;
+        width: calc(var(--size) * 1px);
+        height: calc(var(--size) * 1px);
+      }
+      .crop img {
+        position: absolute;
+        max-width: none;
+        width: calc(400px * var(--size) / var(--side));
+        left: calc(-1px * var(--x) * var(--size) / var(--side));
+        top: calc(-1px * var(--y) * var(--size) / var(--side));
+      }
+      .stage-1 {
+        --x: 83;
+        --y: 132;
+        --side: 240;
+      }
+      .stage-2 {
+        --x: 85;
+        --y: 126;
+        --side: 240;
+      }
+      .bubble {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px 12px;
+      }
+      .textarea {
+        width: 100%;
+        min-height: 200px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        color: var(--muted);
+      }
+      .textarea.filled {
+        color: var(--text);
+      }
+      .input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px 12px;
+        color: var(--muted);
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: var(--button-text);
+        font: inherit;
+        font-weight: 700;
+      }
+      .button.secondary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .button.danger {
+        background: var(--error);
+      }
+      /* Placeholder: the real button follows Google's branding guidelines. */
+      .button.google {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #ffffff;
+        border: 1px solid #747775;
+        color: #1f1f1f;
+        font-weight: 500;
+      }
+      .g-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #4285f4;
+        font-size: 11px;
+        font-weight: 700;
+        color: #4285f4;
+      }
+      .link {
+        display: block;
+        margin-top: 16px;
+        text-align: center;
+        color: var(--button);
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+      .link.danger {
+        color: var(--error);
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .center {
+        text-align: center;
+      }
+      .alert {
+        margin: 16px 16px 0;
+        color: var(--error);
+        font-size: 14px;
+      }
+      .warn {
+        color: var(--error);
+        font-weight: 700;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .card + .card {
+        margin-top: 12px;
+      }
+      .card-label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .choice {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 4px;
+      }
+      .choice .button {
+        margin-top: 12px;
+      }
+      .note {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--bar-track);
+        font-size: 14px;
+      }
+      .kept {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border: 1px dashed #d8c4a6;
+        border-radius: 12px;
+        background: var(--surface);
+        font-size: 14px;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgb(63 45 28 / 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+      }
+      .dialog-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      .toast {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 24px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        background: var(--text);
+        color: #ffffff;
+        font-weight: 700;
+        text-align: center;
+      }
+      .doc h3 {
+        font-size: 16px;
+        margin: 20px 0 4px;
+      }
+      .doc h3:first-child {
+        margin-top: 0;
+      }
+      .doc p,
+      .doc li {
+        font-size: 14px;
+        margin: 0;
+      }
+      .doc ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .spinner {
+        padding: 120px 16px;
+        text-align: center;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（account-sync）</h1>
+    <p class="lead">
+      スマホ（幅 375px）での見た目。絵は public/characters/ の SVG
+      をそのまま表示している（このファイルを docs/aidlc/account-sync/
+      に置いたまま、ブラウザで開くと見られる）。ボタンなどは見た目だけで、押しても動かない。メールアドレスは例。Google
+      のボタンは仮の見た目で、作るときは Google
+      の決まり（ブランドの指針）どおりにする。
+    </p>
+
+    <div class="screens">
+      <!-- 画面 1：ホーム（ログインしていない） -->
+      <section class="screen">
+        <h2>画面 1：ホーム（ログインしていない）</h2>
+        <p>
+          これまでどおり使える（AC-1）。上の帯に「アカウント」を足し、ログインの入口にする（AC-2）
+        </p>
+        <div class="phone short">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-links">
+              <span class="appbar-link">ふりかえる ›</span>
+              <span class="appbar-link">アカウント ›</span>
+            </span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="crop stage-2" style="--size: 64">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+              </span>
+              <span class="status-name"
+                ><strong>ぴよ</strong
+                ><span class="stage-name">ころねこ</span></span
+              >
+              <span class="status-level">Lv. 6</span>
+            </div>
+            <div class="bar"><span style="width: 25%"></span></div>
+            <div class="bar-text">
+              <span>あと 60 でレベルアップ</span><span>20 / 80</span>
+            </div>
+            <div class="streak">
+              <div class="streak-main">🔥 4 日連続中。今日書くと 5 日！</div>
+              <div class="streak-next">あと 3 日で 7 日連続。ボーナス +20</div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="date">2026年11月10日（火）</div>
+            <div class="speech">
+              <span class="crop stage-2" style="--size: 48">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+              </span>
+              <div class="bubble">今日はどんな一日だった？きかせて！</div>
+            </div>
+            <div class="textarea" style="min-height: 80px">
+              今日あったこと、思ったことを書いてみよう
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 2：名前を付ける前（新しい端末） -->
+      <section class="screen">
+        <h2>画面 2：名前を付ける前（新しい端末で開いたとき）</h2>
+        <p>
+          ほかの端末で使っていた人が、名前を付ける前にログインできるようにする（AC-2）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">アカウント ›</span>
+          </div>
+          <div class="content center">
+            <span
+              class="crop stage-1"
+              style="--size: 160; margin: 8px auto 8px"
+            >
+              <img src="../../../public/characters/stage-1.svg" alt="" />
+            </span>
+            <p style="margin: 0">はじめまして！<br />名前をつけてくれる？</p>
+            <div style="text-align: left; margin-top: 16px">
+              <div style="font-size: 14px; font-weight: 700">
+                名前（10 文字まで）
+              </div>
+              <div class="input"></div>
+            </div>
+            <button class="button" type="button">この名前にする</button>
+            <span class="link">ほかの端末で使っていた人は ログイン ›</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 3：アカウント（ログインしていない） -->
+      <section class="screen">
+        <h2>画面 3：アカウント（ログインしていない）</h2>
+        <p>
+          ログインすると何ができるか（AC-2）。Google
+          でログイン（AC-3）。説明ページへ（AC-7）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ホーム ›</span>
+          </div>
+          <div class="content">
+            <h2 style="font-size: 18px; margin: 8px 0">アカウント</h2>
+            <div class="card">
+              <p style="margin: 0; font-weight: 700">
+                ログインすると、スマホでも PC
+                でも、同じキャラクターと日記で続きが書けるよ
+              </p>
+              <ul class="muted" style="margin: 8px 0 0; padding-left: 20px">
+                <li>日記はクラウドに保存され、あなたしか読めない</li>
+                <li>このブラウザのキャラクターと日記は、そのまま引き継げる</li>
+              </ul>
+              <button class="button google" type="button">
+                <span class="g-mark">G</span>Google でログイン
+              </button>
+            </div>
+            <p class="muted" style="margin-top: 12px">
+              ログインしなくても、このブラウザの中に保存して使えるよ
+            </p>
+            <span class="link">日記の保存のしかた ›</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 4：ログインできなかった -->
+      <section class="screen">
+        <h2>画面 4：ログインできなかった</h2>
+        <p>
+          Google
+          の画面でやめた・失敗したときは、ログインしていないまま戻る（AC-5）
+        </p>
+        <div class="phone short">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ホーム ›</span>
+          </div>
+          <p class="alert">
+            ⚠
+            ログインできなかった…もう一度ためしてね。このブラウザの日記はそのまま残っているよ
+          </p>
+          <div class="content">
+            <div class="card">
+              <button class="button google" type="button" style="margin: 0">
+                <span class="g-mark">G</span>Google でログイン
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 5：読み込み中・読み込めなかった -->
+      <section class="screen">
+        <h2>画面 5：読み込み中／読み込めなかった（ログイン中）</h2>
+        <p>
+          読み込めなかったときは名前を付ける画面を出さず、もう一度ためせる（AC-12）
+        </p>
+        <div class="phone short">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+          </div>
+          <div class="spinner" style="padding: 40px 16px">
+            読み込んでいるよ…
+          </div>
+        </div>
+        <div class="phone short" style="margin-top: 12px">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">アカウント ›</span>
+          </div>
+          <div class="content center">
+            <p style="margin: 16px 0 0; font-weight: 700">
+              データを読み込めなかった…
+            </p>
+            <p class="muted" style="margin: 4px 0 0">
+              通信できるところで、もう一度ためしてね
+            </p>
+            <button class="button" type="button">もう一度読み込む</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 6：保存できなかった（ログイン中） -->
+      <section class="screen">
+        <h2>画面 6：保存できなかった（ログイン中）</h2>
+        <p>書いていた文は入力欄に残り、もう一度保存できる（AC-11）</p>
+        <div class="phone short">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-links">
+              <span class="appbar-link">ふりかえる ›</span>
+              <span class="appbar-link">アカウント ›</span>
+            </span>
+          </div>
+          <p class="alert">
+            ⚠
+            保存できなかった…通信できるところで、もう一度「日記をのこす」を押してね
+          </p>
+          <div class="content">
+            <div class="date">2026年11月10日（火）</div>
+            <div class="textarea filled" style="min-height: 120px">
+              今日は駅まで歩いた。思ったより寒くて、手袋を出した。
+            </div>
+            <button class="button" type="button">日記をのこす</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 7：ほかの端末ですでに書かれていた -->
+      <section class="screen">
+        <h2>画面 7：ほかの端末で今日の日記がもう書かれていた</h2>
+        <p>
+          1 日 1
+          件のまま、書いていた文を消さずに見せる（AC-13）。経験値は二重に入らない
+        </p>
+        <div class="phone short">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-links">
+              <span class="appbar-link">ふりかえる ›</span>
+              <span class="appbar-link">アカウント ›</span>
+            </span>
+          </div>
+          <p class="alert">
+            ⚠
+            ほかの端末で、今日の日記がもう書かれていたよ。最新の内容を表示したよ
+          </p>
+          <div class="content">
+            <div class="date">2026年11月10日（火）</div>
+            <div class="card" style="font-size: 14px">
+              PC で書いた。会議が長かったけど、夜はゆっくりできた。
+            </div>
+            <p style="margin: 12px 0 0; font-size: 14px; font-weight: 700">
+              この端末で書いていた文（保存されていないよ）
+            </p>
+            <div class="kept">
+              今日は駅まで歩いた。思ったより寒くて、手袋を出した。
+            </div>
+            <p class="muted" style="margin-top: 4px">
+              必要なら、コピーして振り返りの画面から書き直してね
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 8：引き継ぎ（アカウントが空のとき） -->
+      <section class="screen">
+        <h2>画面 8：初めてのログイン（アカウントが空のとき）</h2>
+        <p>
+          ブラウザのキャラクターと日記がそのまま移る（AC-14）。移したらブラウザの中は消す（AC-15）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-links">
+              <span class="appbar-link">ふりかえる ›</span>
+              <span class="appbar-link">アカウント ›</span>
+            </span>
+          </div>
+          <div class="status">
+            <div class="status-row">
+              <span class="crop stage-2" style="--size: 64">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+              </span>
+              <span class="status-name"
+                ><strong>ぴよ</strong
+                ><span class="stage-name">ころねこ</span></span
+              >
+              <span class="status-level">Lv. 6</span>
+            </div>
+            <div class="bar"><span style="width: 25%"></span></div>
+            <div class="bar-text">
+              <span>あと 60 でレベルアップ</span><span>20 / 80</span>
+            </div>
+          </div>
+          <div class="toast">☁ ぴよ と日記 12 件をアカウントに移したよ</div>
+        </div>
+      </section>
+
+      <!-- 画面 9：どちらで続けるか選ぶ -->
+      <section class="screen">
+        <h2>画面 9：両方にキャラクターがあるとき</h2>
+        <p>名前・レベル・日記の件数を見比べて選ぶ。混ぜない（AC-18）</p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+          </div>
+          <div class="content">
+            <h2 style="font-size: 18px; margin: 8px 0 4px">
+              どちらのキャラクターで続ける？
+            </h2>
+            <p class="muted" style="margin: 0 0 12px">
+              アカウントにも、このブラウザにもキャラクターがいるよ。選ばなかった方は消えるよ
+            </p>
+            <div class="card">
+              <div class="card-label">このブラウザ</div>
+              <div class="choice">
+                <span class="crop stage-2" style="--size: 56">
+                  <img src="../../../public/characters/stage-2.svg" alt="" />
+                </span>
+                <div>
+                  <strong>ぴよ</strong>（ころねこ）<br /><span class="muted"
+                    >Lv. 6・日記 12 件</span
+                  >
+                </div>
+              </div>
+              <button class="button" type="button">ぴよ で続ける</button>
+            </div>
+            <div class="card">
+              <div class="card-label">アカウント（ほかの端末）</div>
+              <div class="choice">
+                <span class="crop stage-1" style="--size: 56">
+                  <img src="../../../public/characters/stage-1.svg" alt="" />
+                </span>
+                <div>
+                  <strong>たま</strong>（ねこだま）<br /><span class="muted"
+                    >Lv. 3・日記 5 件</span
+                  >
+                </div>
+              </div>
+              <button class="button" type="button">たま で続ける</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 10：選んだあとの確認 -->
+      <section class="screen">
+        <h2>画面 10：選んだあとの確認</h2>
+        <p>
+          選ばなかった方が消えて戻せないこと（AC-19）。やめると選ぶ画面へ（AC-20）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+          </div>
+          <div class="overlay">
+            <div class="dialog">
+              <p class="dialog-title">ぴよ で続ける？</p>
+              <p style="margin: 0">
+                アカウントの たま（Lv. 3・日記 5 件）は消えるよ。
+              </p>
+              <p class="warn" style="margin: 4px 0 0">元にはもどせないよ。</p>
+              <button class="button danger" type="button">
+                たま を消して ぴよ で続ける
+              </button>
+              <button class="button secondary" type="button">
+                えらびなおす
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 11：アカウント（ログイン中） -->
+      <section class="screen">
+        <h2>画面 11：アカウント（ログイン中）</h2>
+        <p>
+          どのアカウントかがわかる（AC-4）。ログアウト（AC-22）・退会（AC-25）・説明ページ（AC-31）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">ホーム ›</span>
+          </div>
+          <div class="content">
+            <h2 style="font-size: 18px; margin: 8px 0">アカウント</h2>
+            <div class="card">
+              <div class="card-label">ログイン中</div>
+              <p style="margin: 4px 0 0; font-weight: 700">you@example.com</p>
+              <p class="muted" style="margin: 4px 0 0">
+                ☁
+                日記はクラウドに保存されているよ。ほかの端末でも、このアカウントでログインすれば続きが書けるよ
+              </p>
+              <button class="button secondary" type="button">ログアウト</button>
+              <p class="muted" style="margin: 8px 0 0">
+                ログアウトすると、この端末には日記もキャラクターも残らないよ
+              </p>
+            </div>
+            <span class="link">日記の保存のしかた ›</span>
+            <span class="link danger" style="margin-top: 32px">退会する</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 12：退会の確認 -->
+      <section class="screen">
+        <h2>画面 12：退会の確認</h2>
+        <p>
+          消えるもの・戻せないこと・Google
+          アカウントは消えないこと（AC-25）。やめると何も消えない（AC-28）
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+          </div>
+          <div class="overlay">
+            <div class="dialog">
+              <p class="dialog-title">退会する？</p>
+              <p style="margin: 0">
+                ぴよ（Lv. 6）と日記 12 件が、すべて消えるよ。
+              </p>
+              <p class="warn" style="margin: 4px 0 0">元にはもどせないよ。</p>
+              <p class="muted" style="margin: 8px 0 0">
+                Google アカウントそのものは消えないよ
+              </p>
+              <button class="button danger" type="button">退会する</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面 13：説明ページ -->
+      <section class="screen">
+        <h2>画面 13：日記の保存のしかた（説明ページ）</h2>
+        <p>
+          ログインしなくても開ける（AC-30,
+          AC-31）。中身の細かいところは、DB・認証の ADR に合わせて Bolt-7
+          で仕上げる
+        </p>
+        <div class="phone">
+          <div class="appbar">
+            <span class="appbar-title">logling</span>
+            <span class="appbar-link">もどる ›</span>
+          </div>
+          <div class="content doc">
+            <h2 style="font-size: 18px; margin: 8px 0 12px">
+              日記の保存のしかた
+            </h2>
+            <h3>ログインしないとき</h3>
+            <p>
+              キャラクターと日記は、このブラウザの中だけに保存されます。外には送りません。
+            </p>
+            <h3>ログインしたとき</h3>
+            <ul>
+              <li>
+                キャラクターと日記は、クラウド（DB）に保存されます。このブラウザの中には残しません
+              </li>
+              <li>
+                Google
+                からは、ログインに必要な情報（メールアドレスなど）を受け取ります
+              </li>
+            </ul>
+            <h3>誰が読めるか</h3>
+            <ul>
+              <li>アプリからは、ログインしたあなたしか読めません</li>
+              <li>
+                DB
+                を管理する開発者は、技術的には中身を見られます。不具合の調査など、必要なとき以外は見ません
+              </li>
+            </ul>
+            <h3>ログアウトと退会</h3>
+            <ul>
+              <li>ログアウト：この端末から日記が見えなくなります</li>
+              <li>退会：アカウントと、クラウドの日記がすべて消えます</li>
+            </ul>
+            <h3>Google の許可を取り消すには</h3>
+            <p>
+              Google アカウントの「サードパーティ製のアプリとサービス」から
+              logling を選んで、アクセスを削除します。
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
