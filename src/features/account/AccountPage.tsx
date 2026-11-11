@@ -69,6 +69,10 @@ export function AccountPage({ loginFailed }: Props) {
       <div className="rounded-2xl border border-line bg-white p-4">
         <p className="text-xs font-bold text-ink-muted">ログイン中</p>
         <p className="mt-1 font-bold break-all">{session.user.email}</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          <span aria-hidden="true">☁ </span>
+          日記はクラウドに保存されているよ。ほかの端末でも、このアカウントでログインすれば続きが書けるよ
+        </p>
         <button
           type="button"
           onClick={signOut}
@@ -76,6 +80,9 @@ export function AccountPage({ loginFailed }: Props) {
         >
           ログアウト
         </button>
+        <p className="mt-2 text-sm text-ink-muted">
+          ログアウトすると、この端末には日記もキャラクターも残らないよ
+        </p>
       </div>
     ) : (
       <>

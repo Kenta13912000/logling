@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 
+import type * as actions from "@/features/cloud/actions";
 import type { CloudResult } from "@/features/cloud/actions";
 
 /*
@@ -23,11 +24,12 @@ const unauthorized = async (): Promise<CloudResult> => ({
 });
 
 export const cloudMock = {
-  loadCloudData: vi.fn(unauthorized),
-  createCloudCharacter: vi.fn(unauthorized),
-  addCloudEntry: vi.fn(unauthorized),
-  editCloudEntry: vi.fn(unauthorized),
-  deleteCloudEntry: vi.fn(unauthorized),
+  loadCloudData: vi.fn<typeof actions.loadCloudData>(unauthorized),
+  createCloudCharacter:
+    vi.fn<typeof actions.createCloudCharacter>(unauthorized),
+  addCloudEntry: vi.fn<typeof actions.addCloudEntry>(unauthorized),
+  editCloudEntry: vi.fn<typeof actions.editCloudEntry>(unauthorized),
+  deleteCloudEntry: vi.fn<typeof actions.deleteCloudEntry>(unauthorized),
 };
 
 export function resetMocks() {

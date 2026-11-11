@@ -13,6 +13,7 @@ import { CharacterStatus } from "@/features/character/CharacterStatus";
 import { ExpGainToast } from "@/features/character/ExpGainToast";
 import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
+import { useDiaryData } from "@/features/cloud/useDiaryData";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
 import { getStage, levelUpOf, type LevelUp } from "@/features/evolution/stages";
@@ -22,14 +23,14 @@ import { getDiaryDate } from "@/lib/diary-date";
 
 import { BrokenDataNotice } from "./BrokenDataNotice";
 import { SaveErrorNotice } from "./SaveErrorNotice";
-import { useSaveData } from "./useSaveData";
+import { LoadErrorNotice, LoadingNotice } from "./LoadErrorNotice";
 import { useToday } from "./useToday";
 
 /** What the EXP notice shows after saving today's entry. */
 type Gained = { amount: number; bonus?: { days: number; amount: number } };
 
 export function Home() {
-  const { state, save, reset } = useSaveData();
+  const { state, save, reset, reload } = useDiaryData();
   const today = useToday();
   const [saveError, setSaveError] = useState(false);
   const [gained, setGained] = useState<Gained | null>(null);
@@ -37,7 +38,11 @@ export function Home() {
 
   let content: ReactNode = null;
 
-  if (state.status === "broken") {
+  if (state.status === "loading") {
+    content = <LoadingNotice />;
+  } else if (state.status === "loadFailed") {
+    content = <LoadErrorNotice onRetry={reload} />;
+  } else if (state.status === "broken") {
     content = (
       <BrokenDataNotice
         onReset={() => {
@@ -45,17 +50,21 @@ export function Home() {
         }}
       />
     );
-  } else if (state.status === "ok" && today !== null) {
+  } else if (today !== null) {
     const data = state.data;
     const character = data.character;
 
     if (character === null) {
       content = (
         <NameForm
-          onSubmit={(name) => {
+          onSubmit={async (name) => {
             // The naming day is the start date, even without an entry.
             const character = createCharacter(name, getDiaryDate(new Date()));
-            setSaveError(!save({ ...data, character }));
+            const outcome = await save(
+              { type: "createCharacter", character },
+              { ...data, character },
+            );
+            setSaveError(outcome !== "saved");
           }}
         />
       );
@@ -64,7 +73,7 @@ export function Home() {
       const level = getLevelInfo(character.totalExp).level;
       const stage = getStage(level);
 
-      const handleSave = (body: string) => {
+      const handleSave = async (body: string) => {
         // Recompute: the page may have stayed open past 4 AM.
         const now = new Date();
         const date = getDiaryDate(now);
@@ -75,15 +84,17 @@ export function Home() {
         const bonus = bonusForTodayEntry(data.entries, date);
         const bonusDays = getStreakStatus(data.entries, date).days + 1;
         const earned = bonus > 0 ? { bonus, bonusDays } : {};
+        const entry = { date, body, createdAt: now.toISOString(), ...earned };
         const result = gainExp(character, EXP_PER_ENTRY + bonus);
-        const saved = save({
-          ...data,
-          character: result.character,
-          entries: [
-            ...data.entries,
-            { date, body, createdAt: now.toISOString(), ...earned },
-          ],
-        });
+        const outcome = await save(
+          { type: "addEntry", entry, exp: EXP_PER_ENTRY + bonus },
+          {
+            ...data,
+            character: result.character,
+            entries: [...data.entries, entry],
+          },
+        );
+        const saved = outcome === "saved";
         setSaveError(!saved);
         if (!saved) {
           return;
@@ -138,7 +149,15 @@ export function Home() {
         </nav>
       </header>
       <main>
-        {saveError && <SaveErrorNotice />}
+        {saveError && (
+          <SaveErrorNotice
+            cloudHint={
+              state.status === "ok" && state.storage === "cloud"
+                ? "もう一度「日記をのこす」を押してね"
+                : undefined
+            }
+          />
+        )}
         {content}
       </main>
       {gained !== null && (

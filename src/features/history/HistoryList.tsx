@@ -12,14 +12,17 @@ import {
 import { EntryForm } from "./EntryForm";
 import type { HistoryItem } from "./history";
 
+/** True when it was saved. A promise while saving to the cloud. */
+type SaveResult = boolean | Promise<boolean>;
+
 type Props = {
   items: HistoryItem[];
   /** The character's current stage, shown when writing a missed day. */
   stage: Stage;
-  /** Saves the new body. Returns true when it was saved. */
-  onSaveEdit: (date: string, body: string) => boolean;
-  /** Saves an entry for a missed day. Returns true when it was saved. */
-  onSaveLater: (date: string, body: string) => boolean;
+  /** Saves the new body. */
+  onSaveEdit: (date: string, body: string) => SaveResult;
+  /** Saves an entry for a missed day. */
+  onSaveLater: (date: string, body: string) => SaveResult;
   onRequestDelete: (date: string) => void;
 };
 
@@ -37,7 +40,7 @@ type MissingCardProps = {
   showActions: boolean;
   writing: boolean;
   onWrite: () => void;
-  onSave: (body: string) => void;
+  onSave: (body: string) => Promise<void>;
   onCancel: () => void;
 };
 
@@ -92,7 +95,7 @@ type EntryCardProps = {
   showActions: boolean;
   editing: boolean;
   onEdit: () => void;
-  onSave: (body: string) => void;
+  onSave: (body: string) => Promise<void>;
   onCancel: () => void;
   onDelete: () => void;
 };
@@ -161,10 +164,11 @@ export function HistoryList({
   // Hide other buttons during input so typed text is not lost.
   const showActions = activeDate === null;
 
+  // Close the form only once saving is done; on failure the text stays.
   const saveWith =
-    (save: (date: string, body: string) => boolean, date: string) =>
-    (body: string) => {
-      if (save(date, body)) {
+    (save: (date: string, body: string) => SaveResult, date: string) =>
+    async (body: string) => {
+      if (await save(date, body)) {
         setActiveDate(null);
       }
     };

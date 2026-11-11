@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -108,9 +108,9 @@ describe("account-sync：ログイン中", () => {
       10,
       "2026-11-05",
     );
-    expect(
-      await screen.findByText("この日はまだ書いていないよ", { exact: false }),
-    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(card(/11月5日/)).toHaveTextContent("この日はまだ書いていないよ"),
+    );
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 

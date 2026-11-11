@@ -131,6 +131,21 @@ export async function updateEntryBody(
   return updated.length > 0 ? "ok" : "notFound";
 }
 
+/**
+ * Records the start date of a character named in diary-exp (no start date
+ * yet). An existing start date is never changed, like withStartDate.
+ */
+export async function pinStartDate(
+  db: Db,
+  userId: string,
+  startDate: string,
+): Promise<void> {
+  await db
+    .update(characters)
+    .set({ startDate: sql`coalesce(${characters.startDate}, ${startDate})` })
+    .where(eq(characters.userId, userId));
+}
+
 /** Removes one entry and its EXP together. EXP never goes below 0. */
 export async function deleteEntry(
   db: Db,

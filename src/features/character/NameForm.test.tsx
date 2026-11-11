@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
@@ -25,6 +25,26 @@ test("account-sync AC-2: ほかの端末で使っていた人は、名前を付�
   expect(
     screen.getByRole("link", { name: /ほかの端末で使っていた人は ログイン/ }),
   ).toHaveAttribute("href", "/account");
+});
+
+test("account-sync AC-11: 名前を保存している間は「これにする」が「保存しているよ…」になって押せず、終わると元に戻る", async () => {
+  const user = userEvent.setup();
+  let finish = () => {};
+  const onSubmit = vi.fn(
+    () => new Promise<void>((resolve) => (finish = resolve)),
+  );
+  render(<NameForm onSubmit={onSubmit} />);
+
+  await user.type(screen.getByLabelText("名前（10 文字まで）"), "ぴよ");
+  await user.click(screen.getByRole("button", { name: "この名前にする" }));
+  await user.click(screen.getByRole("button", { name: "これにする" }));
+  const saving = screen.getByRole("button", { name: "保存しているよ…" });
+  expect(saving).toBeDisabled();
+  await user.click(saving);
+  expect(onSubmit).toHaveBeenCalledTimes(1);
+
+  await act(async () => finish());
+  expect(screen.getByRole("button", { name: "これにする" })).toBeEnabled();
 });
 
 const stageOneArt = () =>

@@ -126,7 +126,10 @@ test("AC-5: ログインに失敗して戻ってきたときは、失敗のお�
 }) => {
   await page.goto("/account?error=login");
 
-  await expect(page.getByRole("alert")).toContainText("ログインできなかった");
+  // Next.js also has an empty role="alert" route announcer on the page.
+  await expect(
+    page.getByRole("alert").filter({ hasText: "ログインできなかった" }),
+  ).toBeVisible();
 });
 
 test("AC-4, AC-6, AC-22, AC-24: ログインするとメールアドレスが出て、開き直しても続き、ログアウトしてまたログインできる", async ({
