@@ -39,19 +39,16 @@ describe("Google でのログイン", () => {
       idToken: "eyJ.id.token",
     };
 
-    const created = await hooks?.create?.before?.(
-      {
-        id: "acc-1",
-        userId: "user-a",
-        providerId: "google",
-        accountId: "google-sub-123",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...tokens,
-      },
-      null,
-    );
-    const updated = await hooks?.update?.before?.(tokens, null);
+    const created = await hooks?.create?.before?.({
+      id: "acc-1",
+      userId: "user-a",
+      providerId: "google",
+      accountId: "google-sub-123",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...tokens,
+    });
+    const updated = await hooks?.update?.before?.(tokens);
 
     for (const result of [created, updated]) {
       expect(result).toMatchObject({
@@ -67,18 +64,15 @@ describe("Google でのログイン", () => {
       image: "https://lh3.googleusercontent.com/a/photo",
     };
 
-    const created = await hooks?.create?.before?.(
-      {
-        id: "user-a",
-        email: "piyo@example.com",
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...profile,
-      },
-      null,
-    );
-    const updated = await hooks?.update?.before?.(profile, null);
+    const created = await hooks?.create?.before?.({
+      id: "user-a",
+      email: "piyo@example.com",
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...profile,
+    });
+    const updated = await hooks?.update?.before?.(profile);
 
     for (const result of [created, updated]) {
       expect(result).toMatchObject({ data: { name: "", image: null } });

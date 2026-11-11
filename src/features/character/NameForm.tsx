@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 
 import { CharacterArt } from "@/features/evolution/CharacterArt";
@@ -126,6 +127,14 @@ export function NameForm({ onSubmit }: Props) {
       >
         この名前にする
       </button>
+      {/* account-sync AC-2: a new device can sign in before naming. */}
+      <Link
+        href="/account"
+        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+      >
+        ほかの端末で使っていた人は ログイン
+        <span aria-hidden="true">&nbsp;›</span>
+      </Link>
     </form>
   );
 }

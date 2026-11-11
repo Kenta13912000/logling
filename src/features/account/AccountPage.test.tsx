@@ -130,6 +130,40 @@ describe("ログイン中", () => {
   });
 });
 
+describe("通信に失敗したとき", () => {
+  test("AC-5: Google でのログインを始められなかったときも、ログインできなかったことがわかる", async () => {
+    auth.signInSocial.mockResolvedValue({
+      data: null,
+      error: { status: 500, message: "failed" },
+    });
+    const user = userEvent.setup();
+    render(<AccountPage loginFailed={false} />);
+
+    await user.click(screen.getByRole("button", { name: "Google でログイン" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "ログインできなかった",
+    );
+  });
+
+  test("AC-22: ログアウトに失敗したときは、ホームに戻らず、ログアウトできなかったことがわかる", async () => {
+    auth.session = { user: { email: "you@example.com" } };
+    auth.signOut.mockResolvedValue({
+      data: null,
+      error: { status: 500, message: "failed" },
+    });
+    const user = userEvent.setup();
+    render(<AccountPage loginFailed={false} />);
+
+    await user.click(screen.getByRole("button", { name: "ログアウト" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "ログアウトできなかった",
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+});
+
 describe("上の帯", () => {
   test("AC-2: アカウントの画面からホームに戻れる", () => {
     render(<AccountPage loginFailed={false} />);
