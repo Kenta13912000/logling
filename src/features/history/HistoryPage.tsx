@@ -14,7 +14,8 @@ import {
   type LevelUp,
   type Stage,
 } from "@/features/evolution/stages";
-import { useDiaryData } from "@/features/cloud/useDiaryData";
+import { UnsavedText } from "@/features/cloud/UnsavedText";
+import { useDiaryData, type SaveOutcome } from "@/features/cloud/useDiaryData";
 import {
   LoadErrorNotice,
   LoadingNotice,
@@ -34,7 +35,7 @@ import {
 } from "./history";
 import { HistoryList } from "./HistoryList";
 
-type Notice = "saveFailed" | "tooOld" | "tooLate" | null;
+type Notice = "saveFailed" | "tooOld" | "tooLate" | "conflict" | null;
 
 /** Shown when the day left the editable range while the page was open. */
 const OUT_OF_RANGE: Record<"tooOld" | "tooLate", string> = {
@@ -66,6 +67,23 @@ export function HistoryPage() {
   const { state, save, reload } = useDiaryData();
   const today = useToday();
   const [notice, setNotice] = useState<Notice>(null);
+  // Text that another device's change kept from being saved (AC-13).
+  const [unsaved, setUnsaved] = useState<string | null>(null);
+
+  /**
+   * Shows the result of saving a body. Returns true when the form should
+   * close: saved, or refused because another device changed the data (the
+   * text then moves to the unsaved box). On failure the form stays open.
+   */
+  function afterSave(outcome: SaveOutcome, body: string): boolean {
+    if (outcome === "conflict") {
+      setNotice("conflict");
+      setUnsaved(body);
+      return true;
+    }
+    setNotice(outcome === "saved" ? null : "saveFailed");
+    return outcome === "saved";
+  }
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [gainedExp, setGainedExp] = useState<number | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
@@ -106,11 +124,11 @@ export function HistoryPage() {
           setNotice("tooOld");
           return true;
         }
-        const saved =
-          (await save({ type: "editEntry", date, body }, result.data)) ===
-          "saved";
-        setNotice(saved ? null : "saveFailed");
-        return saved;
+        const outcome = await save(
+          { type: "editEntry", date, body },
+          result.data,
+        );
+        return afterSave(outcome, body);
       };
 
       const handleSaveLater = async (
@@ -131,14 +149,15 @@ export function HistoryPage() {
           return true;
         }
         const entry = result.data.entries.find((e) => e.date === date);
-        const saved =
-          entry !== undefined &&
-          (await save(
-            { type: "addEntry", entry, exp: result.gained },
-            result.data,
-          )) === "saved";
-        setNotice(saved ? null : "saveFailed");
-        if (saved) {
+        if (entry === undefined) {
+          return false;
+        }
+        const outcome = await save(
+          { type: "addEntry", entry, exp: result.gained },
+          result.data,
+        );
+        const close = afterSave(outcome, body);
+        if (outcome === "saved") {
           setGainedExp(result.gained);
           if (result.leveledUp) {
             setLevelUp(
@@ -146,7 +165,7 @@ export function HistoryPage() {
             );
           }
         }
-        return saved;
+        return close;
       };
 
       content = (
@@ -179,7 +198,13 @@ export function HistoryPage() {
             { type: "deleteEntry", date: deletingDate, exp: result.lost },
             result.data,
           );
-          setNotice(outcome === "saved" ? null : "saveFailed");
+          setNotice(
+            outcome === "conflict"
+              ? "conflict"
+              : outcome === "saved"
+                ? null
+                : "saveFailed",
+          );
         };
 
         dialog = (
@@ -223,6 +248,17 @@ export function HistoryPage() {
           <p role="alert" className="mx-4 mt-4 text-sm text-alert">
             {`⚠ ${OUT_OF_RANGE[notice]}`}
           </p>
+        )}
+        {notice === "conflict" && (
+          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
+            ⚠ ほかの端末で変わっていたよ。最新の内容を表示したよ
+          </p>
+        )}
+        {unsaved !== null && (
+          <UnsavedText
+            body={unsaved}
+            hint="必要なら、コピーしてもう一度書いてね"
+          />
         )}
         {content}
       </main>

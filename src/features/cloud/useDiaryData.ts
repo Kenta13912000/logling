@@ -23,7 +23,11 @@ export type Change =
   | { type: "editEntry"; date: string; body: string }
   | { type: "deleteEntry"; date: string; exp: number };
 
-export type SaveOutcome = "saved" | "failed" | "exists";
+/**
+ * "conflict": another device changed the data first, so the save was
+ * refused and the data now shows the latest version (AC-13).
+ */
+export type SaveOutcome = "saved" | "failed" | "conflict";
 
 export type DiaryDataState =
   | { status: "loading" }
@@ -111,7 +115,11 @@ export function useDiaryData() {
         setCloud({ status: "ok", data: result.data });
         return "saved";
       }
-      return result.reason === "exists" ? "exists" : "failed";
+      if ("data" in result) {
+        setCloud({ status: "ok", data: result.data });
+        return "conflict";
+      }
+      return "failed";
     } catch {
       return "failed";
     }

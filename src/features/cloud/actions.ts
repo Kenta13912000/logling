@@ -33,11 +33,16 @@ import {
  * devices come along too.
  */
 
-export type CloudFailure =
-  "unauthorized" | "invalid" | "exists" | "notFound" | "noCharacter" | "failed";
+/** Refused because another device changed the data first (AC-13). */
+export type CloudConflict = "exists" | "notFound" | "noCharacter";
+
+export type CloudFailure = "unauthorized" | "invalid" | "failed";
 
 export type CloudResult =
-  { ok: true; data: SaveData } | { ok: false; reason: CloudFailure };
+  | { ok: true; data: SaveData }
+  // Comes with the latest data, so the page can switch to it right away.
+  | { ok: false; reason: CloudConflict; data: SaveData }
+  | { ok: false; reason: CloudFailure };
 
 const fail = (reason: CloudFailure): CloudResult => ({ ok: false, reason });
 
@@ -66,7 +71,7 @@ async function latest(
   startDate?: string,
 ): Promise<CloudResult> {
   if (result !== "ok") {
-    return fail(result);
+    return { ok: false, reason: result, data: await getSaveData(db, userId) };
   }
   if (startDate !== undefined) {
     await pinStartDate(db, userId, startDate);

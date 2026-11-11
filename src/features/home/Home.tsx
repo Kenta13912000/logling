@@ -13,6 +13,7 @@ import { CharacterStatus } from "@/features/character/CharacterStatus";
 import { ExpGainToast } from "@/features/character/ExpGainToast";
 import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
+import { UnsavedText } from "@/features/cloud/UnsavedText";
 import { useDiaryData } from "@/features/cloud/useDiaryData";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
@@ -29,12 +30,29 @@ import { useToday } from "./useToday";
 /** What the EXP notice shows after saving today's entry. */
 type Gained = { amount: number; bonus?: { days: number; amount: number } };
 
+/** Shown at the top of the page after a save that did not go through. */
+type Notice = "saveFailed" | "entryConflict" | "characterConflict" | null;
+
+/** AC-13: another device changed the data first. */
+const CONFLICT_MESSAGES: Record<"entryConflict" | "characterConflict", string> =
+  {
+    entryConflict:
+      "⚠ ほかの端末で、今日の日記がもう書かれていたよ。最新の内容を表示したよ",
+    characterConflict:
+      "⚠ ほかの端末で、もうキャラクターが作られていたよ。そのキャラクターを表示したよ",
+  };
+
 export function Home() {
   const { state, save, reset, reload } = useDiaryData();
   const today = useToday();
-  const [saveError, setSaveError] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
+  // Today's text that another device's entry kept from being saved.
+  const [unsaved, setUnsaved] = useState<string | null>(null);
   const [gained, setGained] = useState<Gained | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
+
+  const setSaveError = (failed: boolean) =>
+    setNotice(failed ? "saveFailed" : null);
 
   let content: ReactNode = null;
 
@@ -64,7 +82,13 @@ export function Home() {
               { type: "createCharacter", character },
               { ...data, character },
             );
-            setSaveError(outcome !== "saved");
+            setNotice(
+              outcome === "conflict"
+                ? "characterConflict"
+                : outcome === "saved"
+                  ? null
+                  : "saveFailed",
+            );
           }}
         />
       );
@@ -94,6 +118,11 @@ export function Home() {
             entries: [...data.entries, entry],
           },
         );
+        if (outcome === "conflict") {
+          setNotice("entryConflict");
+          setUnsaved(body);
+          return;
+        }
         const saved = outcome === "saved";
         setSaveError(!saved);
         if (!saved) {
@@ -118,6 +147,7 @@ export function Home() {
           ) : (
             <DiaryEditor date={today} stage={stage} onSave={handleSave} />
           )}
+          {todayEntry && unsaved !== null && <UnsavedText body={unsaved} />}
         </>
       );
     }
@@ -149,7 +179,7 @@ export function Home() {
         </nav>
       </header>
       <main>
-        {saveError && (
+        {notice === "saveFailed" && (
           <SaveErrorNotice
             cloudHint={
               state.status === "ok" && state.storage === "cloud"
@@ -157,6 +187,11 @@ export function Home() {
                 : undefined
             }
           />
+        )}
+        {(notice === "entryConflict" || notice === "characterConflict") && (
+          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
+            {CONFLICT_MESSAGES[notice]}
+          </p>
         )}
         {content}
       </main>
