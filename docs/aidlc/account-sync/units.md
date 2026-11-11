@@ -125,6 +125,88 @@ src/features/cloud/repository.ts / .test.ts  # 日記とキャラクターの読
 
 **Node 26 との順番**：⑥（テストを書く）からは、Node 26 への更新（`fix/node-26`）を `main` に取り込み、このブランチに取り込んでから始める。
 
+#### Bolt-2：Google でのログイン・ログアウトと、アカウントの画面
+
+環境・秘密の値・Google から保存する情報・テスト用のログインは [ADR-0006](../../adr/0006-auth-environments-and-test-login.md)。
+
+**ファイル**
+
+```
+vercel.json                                    # 関数の場所をシンガポール（sin1）に
+src/lib/db/client.ts                           # Neon の Pool と Drizzle（サーバーだけ。attachDatabasePool）
+src/lib/auth-options.ts / .test.ts             # Better Auth の設定を、環境変数から組み立てる（テストしやすいように分ける）
+src/lib/auth.ts                                # Better Auth の本体（auth-options と DB をつなぐ）
+src/lib/auth-client.ts                         # ブラウザ側の Better Auth（ログイン・ログアウト・ログイン中かを知る）
+src/app/api/auth/[...all]/route.ts             # Better Auth の入口（Google からの戻り先もここ）
+src/app/account/page.tsx                       # /account（薄く保ち、AccountPage を出すだけ）
+src/features/account/AccountPage.tsx / .test.tsx  # ログインしていない／ログイン中の表示、失敗のお知らせ、ログアウト
+src/features/account/oauth-data.ts / .test.ts  # 保存する直前に、トークン・名前・アイコンを外す関数
+src/features/home/Home.tsx（変更）             # 上の帯に「アカウント ›」
+src/features/character/NameForm.tsx（変更）    # 「ほかの端末で使っていた人は ログイン ›」
+e2e/account-sync.spec.ts                       # テスト用のログインで、ログイン・開き直し・ログアウトを通す
+package.json（scripts）                        # db:generate（SQL を作る）・db:migrate（DB に当てる）
+```
+
+**Better Auth の設定**（`auth-options.ts`）
+
+| 設定                                      | 値                                                                  | 理由                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `socialProviders.google`                  | `clientId`・`clientSecret` は環境変数。`prompt: "select_account"`   | 共用の端末で、前の人の Google アカウントで入らないよう、毎回選ばせる |
+| `databaseHooks.account`（作る・変える前） | アクセストークン・リフレッシュトークン・ID トークン・有効期限を外す | 使わないものは持たない（ADR-0006）                                   |
+| `databaseHooks.user`（作る・変える前）    | 名前を空に、アイコンをなしに                                        | 画面に出すのはメールアドレスだけ                                     |
+| `session.expiresIn`・`updateAge`          | 60 日・1 日                                                         | AC-6。日記が 1 週間あいてもログインし直さずに済む                    |
+| `emailAndPassword`                        | `LOGLING_E2E_AUTH=1` かつ本番でないときだけ有効                     | E2E テスト用（ADR-0006）                                             |
+| `telemetry`                               | `enabled: false`                                                    | 利用状況を送らない（最初から止まっているが明記する）                 |
+| `plugins`                                 | `nextCookies()`（最後に置く）                                       | サーバーの処理からのログアウトでクッキーを消すため（公式の手順）     |
+
+**ログイン・ログアウトの流れ**
+
+1. 「Google でログイン」を押すと、ブラウザ側の `signIn.social({ provider: "google", callbackURL: "/", errorCallbackURL: "/account?error=login" })` を呼ぶ
+2. Google の画面で許可すると、`/api/auth/callback/google` に戻り、Better Auth がセッションを作ってホームに戻す
+3. Google の画面でやめた・失敗したときは `/account?error=login` に戻り、「⚠ ログインできなかった…」を出す（AC-5）。ブラウザの中のデータには触れない
+4. アカウントの画面は、ブラウザ側の `useSession()` でログイン中かを知り、メールアドレスを出す（AC-4）。ページ全体を事前に作る今の作り（Cache Components）を崩さないよう、ログイン中かどうかはブラウザで調べる
+5. 「ログアウト」を押すと、ブラウザ側の `signOut()` を呼び、ホームに戻す（AC-22）。ログアウトしたあとに端末に日記を残さないこと（AC-23）は、保存先を切り替える Bolt-3 で作る
+
+この Bolt では、ログインしても日記の保存先はまだブラウザの中のまま（クラウドへの切り替えは Bolt-3）。PR-2 をまとめて取り込むので、本番でこの途中の状態になることはない。
+
+**テスト**
+
+| テスト                                                                                                               | 種類 | AC                             |
+| -------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------ |
+| 上の帯に「アカウント ›」があり、`/account` に行ける。名前を付ける前の画面にもログインの入口がある                    | 単体 | AC-2                           |
+| ログインしていないアカウントの画面に、ログインで何ができるかと「Google でログイン」が出る                            | 単体 | AC-2                           |
+| 「Google でログイン」を押すと、Google でのログインが、戻り先と失敗したときの戻り先付きで始まる                       | 単体 | AC-3                           |
+| ログイン中は「ログイン中」とメールアドレスが出る                                                                     | 単体 | AC-4                           |
+| 失敗して戻ってきたときは「ログインできなかった」が出て、ブラウザの中のデータは変わらない                             | 単体 | AC-5                           |
+| ログインの有効期間は 60 日で、使うと延びる                                                                           | 単体 | AC-6                           |
+| 「ログアウト」を押すとログアウトしてホームに戻る                                                                     | 単体 | AC-22                          |
+| Google のトークン・名前・アイコンは、保存する直前に外れる（作るときも、変えるときも）                                | 単体 | ―（ADR-0006）                  |
+| テスト用のログインは、本番では環境変数があっても無効                                                                 | 単体 | ―（ADR-0006）                  |
+| テスト用のログインでログインし、開き直してもログイン中のまま。ログアウトして、またログインするとメールアドレスが出る | E2E  | AC-3, AC-4, AC-6, AC-22, AC-24 |
+
+本物の Google ログイン（AC-3）は、手元と、取り込んだあとの本番で、開発者が手で確かめる。
+
+**開発者が管理画面で行う作業**（⑦ の途中で、1 つずつ説明しながら進める）
+
+1. **Neon**：アカウントを作り、プロジェクト `logling` をシンガポール（AWS `ap-southeast-1`）に作る。`dev` の枝を作り、`main` と `dev` それぞれのつなぎ先（プールを通す方の URL）を控える
+2. **Google Cloud**：プロジェクト `logling` を作り、Google Auth Platform で次を設定する
+   - ブランド：アプリ名 `logling`、サポートのメールアドレス（同意の画面に表示される。公開してよいアドレス）
+   - 対象：外部（External）。手元で確かめる間は「テスト中」で、自分のアドレスをテストユーザーに入れる。本番の前に「公開」にする
+   - 範囲（スコープ）：`openid`・`email`・`profile`（追加の審査が要らないもの）
+   - クライアント（ウェブアプリ）：JavaScript の生成元に `http://localhost:3000` と `https://logling.vercel.app`、戻り先の URL に `http://localhost:3000/api/auth/callback/google` と `https://logling.vercel.app/api/auth/callback/google`
+3. **手元**：`.env.local` に、`dev` の枝のつなぎ先と、Google の ID・秘密の値、Better Auth の秘密の鍵（手元で作る）、`BETTER_AUTH_URL=http://localhost:3000` を書く
+4. **Vercel**（PR-2 を取り込む前）：Production の環境変数に、`main` の枝のつなぎ先、Google の ID・秘密の値、本番用の Better Auth の秘密の鍵（手元とは別に作る）、`BETTER_AUTH_URL=https://logling.vercel.app` を入れる
+
+**入れる部品**
+
+| 部品                       | 版     | 種類       | 用途                                                          |
+| -------------------------- | ------ | ---------- | ------------------------------------------------------------- |
+| `@neondatabase/serverless` | 1.2 系 | 本番で使う | Neon へのつなぎ方（Pool。WebSocket）                          |
+| `@vercel/functions`        | 3 系   | 本番で使う | 使われていない DB のつなぎを片付ける                          |
+| `server-only`              | 最新   | 本番で使う | DB と秘密の値を扱うファイルを、ブラウザ側に入れないための目印 |
+
+Better Auth の表は、`auth.ts` ができたら `npx auth@1.7.20 generate` でも作り、Bolt-1 で書いた `auth-schema.ts` と一致するかを確かめる（Bolt-1 から持ち越し）。
+
 ## 判断メモ
 
 - Units へのゲートでの判断：指摘なしで承認（本人だけが読める決まりを画面より先に作る順番も、このまま）
@@ -134,3 +216,4 @@ src/features/cloud/repository.ts / .test.ts  # 日記とキャラクターの読
 - Bolt-1 ⑥ へのゲートでの判断：指摘なしで承認。設計の表にない、保存の形を確かめるテスト（ボーナス、始めた日のないキャラクター、1 人 1 体、経験値が 0 より下がらない）と、AC-13 の土台（同じ日を二重にしない）のテストを足した
 - Bolt-1 ⑦ で設計から変えた点：Better Auth の表（`auth-schema.ts`）は、CLI で作る代わりに、better-auth 1.7 の中の表の定義（`@better-auth/core` の `getAuthTables`）を読んで書いた。CLI は本番の DB につなぐ設定（`src/lib/auth.ts`）が要り、それは Bolt-2 で作るため。Bolt-2 で `auth.ts` を作ったら、CLI（`npx auth@1.7.20 generate`）の出力と一致するかを確かめる。`src/lib/auth.ts` は Bolt-2 に回した。読み書きの関数が受け取る DB の型（`Db`）は `src/lib/db/types.ts` に置いた
 - Bolt-1 ⑦ へのゲートでの判断：指摘なしで承認（テストは 1 件ごとに新しい DB を作る形のまま。遅くて困るようになったら使い回す形に直す。Google のトークンを何まで保存するかは Bolt-2 で確かめる）
+- Bolt-2 ⑤ へのゲートでの判断：指摘なしで承認（ADR-0006。Google のトークン・名前・アイコンは保存しない、テスト用のログインは本番では必ず無効、ログインの有効期間は 60 日）。Google の同意の画面に出るサポートのメールアドレスは、公開してよいものを開発者が用意する
