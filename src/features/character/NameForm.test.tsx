@@ -19,6 +19,14 @@ test("AC-1: 名前の入力欄とあいさつが表示される", () => {
   expect(screen.getByText(/名前をつけてくれる？/)).toBeInTheDocument();
 });
 
+test("account-sync AC-2: ほかの端末で使っていた人は、名前を付ける前にログインの画面に行ける", () => {
+  setup();
+
+  expect(
+    screen.getByRole("link", { name: /ほかの端末で使っていた人は ログイン/ }),
+  ).toHaveAttribute("href", "/account");
+});
+
 const stageOneArt = () =>
   document.querySelector('img[src="/characters/stage-1.svg"]');
 

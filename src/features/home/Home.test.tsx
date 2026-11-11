@@ -76,6 +76,27 @@ describe("diary-history", () => {
   });
 });
 
+describe("account-sync", () => {
+  test("AC-2: キャラクターがいると、上の帯に「アカウント」のリンクがあり、アカウントの画面に行ける", () => {
+    store(piyo(0));
+    render(<Home />);
+
+    expect(screen.getByRole("link", { name: /アカウント/ })).toHaveAttribute(
+      "href",
+      "/account",
+    );
+  });
+
+  test("AC-2: 名前を付ける前も、上の帯に「アカウント」のリンクがある", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("link", { name: /アカウント/ })).toHaveAttribute(
+      "href",
+      "/account",
+    );
+  });
+});
+
 describe("character-evolution", () => {
   // 180 EXP is Lv. 5, the first level of stage 2 (ころねこ).
   test("AC-1, AC-2, AC-5: ステータスと吹き出しに今の段階の絵が出て、開き直しても同じ", () => {

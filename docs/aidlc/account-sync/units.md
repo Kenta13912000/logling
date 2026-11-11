@@ -217,3 +217,4 @@ Better Auth の表は、`auth.ts` ができたら `npx auth@1.7.20 generate` で
 - Bolt-1 ⑦ で設計から変えた点：Better Auth の表（`auth-schema.ts`）は、CLI で作る代わりに、better-auth 1.7 の中の表の定義（`@better-auth/core` の `getAuthTables`）を読んで書いた。CLI は本番の DB につなぐ設定（`src/lib/auth.ts`）が要り、それは Bolt-2 で作るため。Bolt-2 で `auth.ts` を作ったら、CLI（`npx auth@1.7.20 generate`）の出力と一致するかを確かめる。`src/lib/auth.ts` は Bolt-2 に回した。読み書きの関数が受け取る DB の型（`Db`）は `src/lib/db/types.ts` に置いた
 - Bolt-1 ⑦ へのゲートでの判断：指摘なしで承認（テストは 1 件ごとに新しい DB を作る形のまま。遅くて困るようになったら使い回す形に直す。Google のトークンを何まで保存するかは Bolt-2 で確かめる）
 - Bolt-2 ⑤ へのゲートでの判断：指摘なしで承認（ADR-0006。Google のトークン・名前・アイコンは保存しない、テスト用のログインは本番では必ず無効、ログインの有効期間は 60 日）。Google の同意の画面に出るサポートのメールアドレスは、公開してよいものを開発者が用意する
+- Bolt-2 ⑥ へのゲートでの判断：指摘なしで承認。設計の表にない「ログイン中かを調べている間はボタンを出さない」テストを足した。E2E で作るテスト用の人は `dev` の DB に残り、片付け方は Bolt-6 で考える
