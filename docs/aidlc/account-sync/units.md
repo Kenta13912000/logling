@@ -132,3 +132,5 @@ src/features/cloud/repository.ts / .test.ts  # 日記とキャラクターの読
 - Bolt-1 ⑤ の作成前に確認した点：DB・認証は Supabase と Neon ＋ Better Auth を比べ、Neon ＋ Better Auth にした（ADR-0005）
 - Bolt-1 ⑤ へのゲートでの判断：指摘なしで承認（RLS は重ねない、ログインしていない人のテストと経験値の計算の場所は Bolt-3 で決める、ADR-0001 と README へのリンクは ⑧ で直す、もこのまま）。⑥ は Node 26 を取り込んでから始める
 - Bolt-1 ⑥ へのゲートでの判断：指摘なしで承認。設計の表にない、保存の形を確かめるテスト（ボーナス、始めた日のないキャラクター、1 人 1 体、経験値が 0 より下がらない）と、AC-13 の土台（同じ日を二重にしない）のテストを足した
+- Bolt-1 ⑦ で設計から変えた点：Better Auth の表（`auth-schema.ts`）は、CLI で作る代わりに、better-auth 1.7 の中の表の定義（`@better-auth/core` の `getAuthTables`）を読んで書いた。CLI は本番の DB につなぐ設定（`src/lib/auth.ts`）が要り、それは Bolt-2 で作るため。Bolt-2 で `auth.ts` を作ったら、CLI（`npx auth@1.7.20 generate`）の出力と一致するかを確かめる。`src/lib/auth.ts` は Bolt-2 に回した。読み書きの関数が受け取る DB の型（`Db`）は `src/lib/db/types.ts` に置いた
+- Bolt-1 ⑦ へのゲートでの判断：指摘なしで承認（テストは 1 件ごとに新しい DB を作る形のまま。遅くて困るようになったら使い回す形に直す。Google のトークンを何まで保存するかは Bolt-2 で確かめる）
