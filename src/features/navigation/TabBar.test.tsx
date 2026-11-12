@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { TabBar } from "./TabBar";
@@ -57,6 +58,61 @@ test("AC-3: どのタブにも入らないページでは、今のページの�
   expect(
     within(menu()).queryAllByRole("link", { current: "page" }),
   ).toHaveLength(0);
+});
+
+describe("文字を打っている間", () => {
+  function renderWithFields() {
+    render(
+      <>
+        <label>
+          日記
+          <textarea />
+        </label>
+        <label>
+          名前
+          <input type="text" />
+        </label>
+        <label>
+          えらぶ
+          <input type="checkbox" />
+        </label>
+        <button type="button">のこす</button>
+        <TabBar />
+      </>,
+    );
+  }
+
+  const tabsShown = () =>
+    screen.queryByRole("navigation", { name: "メインメニュー" }) !== null;
+
+  test("AC-9: 入力欄が選ばれている間はタブが隠れ、入力欄から離れると、また出る", async () => {
+    const user = userEvent.setup();
+    renderWithFields();
+    expect(tabsShown()).toBe(true);
+
+    await user.click(screen.getByLabelText("日記"));
+    expect(tabsShown()).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "のこす" }));
+    expect(tabsShown()).toBe(true);
+  });
+
+  test("AC-9: 入力欄から別の入力欄に移っても、隠れたまま", async () => {
+    const user = userEvent.setup();
+    renderWithFields();
+
+    await user.click(screen.getByLabelText("日記"));
+    await user.click(screen.getByLabelText("名前"));
+    expect(tabsShown()).toBe(false);
+  });
+
+  test("AC-9: 文字を打つ欄でないもの（チェックボックス）が選ばれても、隠れない", async () => {
+    const user = userEvent.setup();
+    renderWithFields();
+
+    await user.click(screen.getByLabelText("えらぶ"));
+    expect(tabsShown()).toBe(true);
+  });
 });
 
 // Moved here from the pages' tests: the links in the top bar became tabs.
