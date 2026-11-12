@@ -194,30 +194,13 @@ export function Home() {
 
   const characterName =
     state.status === "ok" ? (state.data.character?.name ?? "") : "";
-  const hasCharacter = state.status === "ok" && state.data.character !== null;
 
+  // The top bar and the tabs come from the common layout (tab-navigation).
   return (
-    <div className="mx-auto min-h-full w-full max-w-[480px] bg-cream text-ink">
-      <header className="flex items-center justify-between border-b border-line px-4 py-3">
-        <h1 className="font-bold tracking-wide">logling</h1>
-        <nav className="flex gap-4">
-          {hasCharacter && (
-            <Link
-              href="/history"
-              className="flex min-h-11 items-center text-sm font-bold text-ember underline"
-            >
-              ふりかえる<span aria-hidden="true">&nbsp;›</span>
-            </Link>
-          )}
-          <Link
-            href="/account"
-            className="flex min-h-11 items-center text-sm font-bold text-ember underline"
-          >
-            アカウント<span aria-hidden="true">&nbsp;›</span>
-          </Link>
-        </nav>
-      </header>
+    <>
       <main>
+        {/* The top bar's name is not a heading, so the page has its own. */}
+        <h1 className="sr-only">ホーム</h1>
         {notice === "saveFailed" && (
           <SaveErrorNotice
             cloudHint={
@@ -272,6 +255,6 @@ export function Home() {
           onClose={() => setLevelUp(null)}
         />
       )}
-    </div>
+    </>
   );
 }

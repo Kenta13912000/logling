@@ -175,17 +175,9 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
     );
   }
 
+  // The top bar and the tabs come from the common layout (tab-navigation).
   return (
-    <div className="mx-auto min-h-full w-full max-w-[480px] bg-cream text-ink">
-      <header className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-line px-4 py-3">
-        <Link
-          href="/"
-          className="flex min-h-11 items-center justify-self-start text-sm font-bold text-ember underline"
-        >
-          <span aria-hidden="true">‹&nbsp;</span>ホーム
-        </Link>
-        <span className="font-bold tracking-wide">logling</span>
-      </header>
+    <>
       <main className="p-4">
         {notice === "loginFailed" && (
           <p role="alert" className="mb-4 text-sm text-alert">
@@ -249,6 +241,6 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
           onCancel={() => setWithdrawing(false)}
         />
       )}
-    </div>
+    </>
   );
 }

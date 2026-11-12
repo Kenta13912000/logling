@@ -586,12 +586,11 @@ describe("streak", () => {
 });
 
 describe("初めて開いたとき", () => {
-  test("AC-1: アプリ名と名前の入力欄が表示される", () => {
+  // tab-navigation: the app's name moved to the common top bar, which is not
+  // a heading (AppHeader.test).
+  test("AC-1: 名前の入力欄が表示される", () => {
     render(<Home />);
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: "logling" }),
-    ).toBeInTheDocument();
     expect(screen.getByLabelText("名前（10 文字まで）")).toBeInTheDocument();
   });
 
