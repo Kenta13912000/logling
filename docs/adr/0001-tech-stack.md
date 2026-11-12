@@ -38,7 +38,7 @@ logling は「日記を書くとキャラクターが成長する、続けたく
 
 ### ここでは決めないこと
 
-DB・認証・デプロイの詳細設定は、必要になった機能の ⑤ 設計で別の ADR として決める（候補：Vercel + Supabase）。
+DB・認証・デプロイの詳細設定は、必要になった機能の ⑤ 設計で別の ADR として決める（候補：Vercel + Supabase）。公開先は [ADR-0003](0003-hosting-vercel.md)（Vercel）、DB と認証は `account-sync` で [ADR-0005](0005-db-auth-neon-better-auth.md)（Neon ＋ Better Auth ＋ Drizzle ORM）と [ADR-0006](0006-auth-environments-and-test-login.md)（環境の分け方とテスト用のログイン）で決めた。
 
 ## 検討した他の案
 

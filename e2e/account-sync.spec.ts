@@ -393,7 +393,7 @@ test("AC-4, AC-6, AC-22, AC-24: ログインするとメールアドレスが出
   await expect(page.getByText(email)).toBeVisible();
 });
 
-test("ADR-0006: ログインしても、Google の表示名は保存されず、画面にも出ない", async ({
+test("AC-34: ログインしても、Google の表示名は保存されず、画面にも出ない", async ({
   page,
 }) => {
   const email = newEmail();

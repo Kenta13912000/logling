@@ -27,7 +27,7 @@ test("account-sync AC-2: ほかの端末で使っていた人は、名前を付�
   ).toHaveAttribute("href", "/account");
 });
 
-test("account-sync AC-11: 名前を保存している間は「これにする」が「保存しているよ…」になって押せず、終わると元に戻る", async () => {
+test("account-sync AC-33: 名前を保存している間は「これにする」が「保存しているよ…」になって押せず、終わると元に戻る", async () => {
   const user = userEvent.setup();
   let finish = () => {};
   const onSubmit = vi.fn(

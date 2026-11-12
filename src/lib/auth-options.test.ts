@@ -31,7 +31,7 @@ describe("Google でのログイン", () => {
     });
   });
 
-  test("ADR-0006: アカウントを作るときも変えるときも、Google のトークンを保存しない", async () => {
+  test("AC-34: アカウントを作るときも変えるときも、Google のトークンを保存しない", async () => {
     const hooks = buildAuthOptions(ENV).databaseHooks?.account;
     const tokens = {
       accessToken: "ya29.access",
@@ -57,7 +57,7 @@ describe("Google でのログイン", () => {
     }
   });
 
-  test("ADR-0006: 人を作るときも変えるときも、Google の表示名とアイコンを保存しない", async () => {
+  test("AC-34: 人を作るときも変えるときも、Google の表示名とアイコンを保存しない", async () => {
     const hooks = buildAuthOptions(ENV).databaseHooks?.user;
     const profile = {
       name: "山田 ぴよ",

@@ -21,7 +21,7 @@ function setup() {
   };
 }
 
-test("account-sync AC-11: 保存している間はボタンが「保存しているよ…」になって押せず、終わると元に戻って文も残る", async () => {
+test("account-sync AC-33: 保存している間はボタンが「保存しているよ…」になって押せず、終わると元に戻って文も残る", async () => {
   const user = userEvent.setup();
   let finish = () => {};
   const onSave = vi.fn(
