@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
-import { authMock, cloudMock, resetMocks } from "@/test/mocks";
+import { authMock, cloudMock, migrationMock, resetMocks } from "@/test/mocks";
 
 // Vitest globals are off, so Testing Library cannot register this itself.
 afterEach(() => {
@@ -22,6 +22,7 @@ vi.mock("@/lib/auth-client", () => ({
   },
 }));
 vi.mock("@/features/cloud/actions", () => cloudMock);
+vi.mock("@/features/migration/actions", () => migrationMock);
 
 beforeEach(() => {
   resetMocks();

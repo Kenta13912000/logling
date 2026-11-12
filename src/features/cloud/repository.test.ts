@@ -5,10 +5,13 @@ import type { Character } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
 import { createTestDb, type TestDb } from "@/lib/db/test-db";
 
+import type { SaveData } from "@/features/home/save-data";
+
 import {
   createCharacter,
   deleteEntry,
   getSaveData,
+  importSaveData,
   insertEntry,
   updateEntryBody,
 } from "./repository";
@@ -110,6 +113,53 @@ describe("ほかの人のデータ", () => {
 
     expect((await getSaveData(db, A)).character?.totalExp).toBe(0);
     expect((await getSaveData(db, B)).entries).toStrictEqual([]);
+  });
+});
+
+describe("まとめて移す（引き継ぎ）", () => {
+  const browser: SaveData = {
+    version: 1,
+    character: { name: "ぴよ", totalExp: 75, startDate: "2026-11-01" },
+    entries: [
+      entry("2026-11-04", "ふつうの日"),
+      { ...entry("2026-11-05", "あとから"), writtenLater: true },
+      { ...entry("2026-11-07", "7 日目"), bonus: 20, bonusDays: 7 },
+    ],
+  };
+
+  test("AC-14: アカウントが空なら、キャラクターと日記がそのまま移り、経験値・始めた日・後から書いた印・ボーナスが変わらない", async () => {
+    const { db } = testDb;
+
+    expect(await importSaveData(db, A, browser, "ifEmpty")).toBe("ok");
+
+    expect(await getSaveData(db, A)).toStrictEqual(browser);
+    expect(await getSaveData(db, B)).toStrictEqual({
+      version: 1,
+      character: null,
+      entries: [],
+    });
+  });
+
+  test("AC-18: アカウントにもうキャラクターがいるとき（ifEmpty）は、何も移さない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, TAMA);
+    await insertEntry(db, A, entry("2026-11-04", "たまの日記"), 10);
+
+    expect(await importSaveData(db, A, browser, "ifEmpty")).toBe("exists");
+
+    const a = await getSaveData(db, A);
+    expect(a.character?.name).toBe("たま");
+    expect(a.entries.map((e) => e.body)).toStrictEqual(["たまの日記"]);
+  });
+
+  test("AC-19: ブラウザの方を選んだとき（replace）は、アカウントの前のキャラクターと日記は残らない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, TAMA);
+    await insertEntry(db, A, entry("2026-11-02", "たまの日記"), 10);
+
+    expect(await importSaveData(db, A, browser, "replace")).toBe("ok");
+
+    expect(await getSaveData(db, A)).toStrictEqual(browser);
   });
 });
 

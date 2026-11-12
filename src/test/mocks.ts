@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 
 import type * as actions from "@/features/cloud/actions";
+import type * as migrationActions from "@/features/migration/actions";
 import type { CloudResult } from "@/features/cloud/actions";
 
 /*
@@ -32,7 +33,13 @@ export const cloudMock = {
   deleteCloudEntry: vi.fn<typeof actions.deleteCloudEntry>(unauthorized),
 };
 
+export const migrationMock = {
+  importCloudData: vi.fn<typeof migrationActions.importCloudData>(unauthorized),
+};
+
 export function resetMocks() {
+  migrationMock.importCloudData.mockReset();
+  migrationMock.importCloudData.mockImplementation(unauthorized);
   authMock.session = null;
   authMock.isPending = false;
   authMock.signInSocial.mockReset();

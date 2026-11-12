@@ -124,6 +124,67 @@ test.describe("ログイン中のクラウド保存", () => {
     await other.close();
   });
 
+  test("AC-14, AC-15, AC-22: ログインせずに書いたあとログインすると、同じキャラクターと日記がアカウントに移り、ブラウザの中は空になる。ログアウトすると名前を付ける画面になる", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await nameCharacter(page, "まえぴよ");
+    await writeDiary(page, "ログイン前に書いた日記");
+    await expect(page.getByText("ログイン前に書いた日記")).toBeVisible();
+    expect(await storedInBrowser(page)).not.toBeNull();
+
+    await signUp(page);
+    await page.goto("/");
+
+    await expect(
+      page.getByText("☁ まえぴよ と日記 1 件をアカウントに移したよ"),
+    ).toBeVisible();
+    await expect(page.getByText("ログイン前に書いた日記")).toBeVisible();
+    expect(await storedInBrowser(page)).toBeNull();
+
+    await page.goto("/account");
+    await page.getByRole("button", { name: "ログアウト" }).click();
+    await expect(page.getByLabel("名前（10 文字まで）")).toBeVisible();
+  });
+
+  test("AC-18, AC-19: アカウントにもキャラクターがいるとき、ブラウザの方を選んで確認すると、ブラウザのキャラクターで続けられる", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    // The account already has a character, made on another device.
+    const email = await signUp(page);
+    await page.goto("/");
+    await nameCharacter(page, "アカウント");
+    await expect(page.getByText("アカウント", { exact: true })).toBeVisible();
+
+    // This browser has its own character, made before signing in.
+    const other = await browser.newContext({ baseURL });
+    const phone = await other.newPage();
+    await phone.goto("/");
+    await nameCharacter(phone, "ブラウザ");
+    await writeDiary(phone, "ブラウザで書いた日記");
+    await expect(phone.getByText("ブラウザで書いた日記")).toBeVisible();
+    await phone.request.post("/api/auth/sign-in/email", {
+      data: { email, password: PASSWORD },
+    });
+    await phone.goto("/");
+
+    await expect(
+      phone.getByRole("heading", { name: "どちらのキャラクターで続ける？" }),
+    ).toBeVisible();
+    await phone.getByRole("button", { name: "ブラウザ で続ける" }).click();
+    await phone
+      .getByRole("button", { name: "アカウント を消して ブラウザ で続ける" })
+      .click();
+
+    await expect(phone.getByText("ブラウザで書いた日記")).toBeVisible();
+    expect(await storedInBrowser(phone)).toBeNull();
+    await page.reload();
+    await expect(page.getByText("ブラウザで書いた日記")).toBeVisible();
+    await other.close();
+  });
+
   test("AC-23: ログアウトすると、ホームでも振り返りでも、前のアカウントの日記もキャラクターも見えない", async ({
     page,
   }) => {

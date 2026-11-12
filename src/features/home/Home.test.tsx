@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { cloudMock, signInAs } from "@/test/mocks";
+import { cloudMock, migrationMock, signInAs } from "@/test/mocks";
 
 import { Home } from "./Home";
 import { STORAGE_KEY, type SaveData } from "./save-data";
@@ -250,6 +250,124 @@ describe("account-sync", () => {
         "ほかの端末で、もうキャラクターが作られていたよ。そのキャラクターを表示したよ",
       );
       expect(screen.getByText("たま")).toBeInTheDocument();
+    });
+
+    describe("ブラウザのデータの引き継ぎ", () => {
+      const browser: SaveData = {
+        version: 1,
+        character: { name: "ぴよ", totalExp: 10, startDate: "2026-10-27" },
+        entries: [
+          {
+            date: "2026-10-27",
+            body: "ログイン前の日記",
+            createdAt: "2026-10-27T12:00:00.000Z",
+          },
+        ],
+      };
+      const EMPTY: SaveData = { version: 1, character: null, entries: [] };
+      const tama: SaveData = {
+        version: 1,
+        character: { name: "たま", totalExp: 0 },
+        entries: [],
+      };
+
+      beforeEach(() => {
+        store(browser);
+      });
+
+      test("AC-14, AC-15: アカウントが空なら、ブラウザのキャラクターと日記を移し、ブラウザの中を消して、移したことを知らせる", async () => {
+        cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: EMPTY });
+        migrationMock.importCloudData.mockResolvedValue({
+          ok: true,
+          data: browser,
+        });
+        render(<Home />);
+
+        expect(
+          await screen.findByText("☁ ぴよ と日記 1 件をアカウントに移したよ"),
+        ).toBeInTheDocument();
+        expect(migrationMock.importCloudData).toHaveBeenCalledWith(
+          browser,
+          "ifEmpty",
+        );
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+        expect(screen.getByText("ぴよ")).toBeInTheDocument();
+      });
+
+      test("AC-15: 移せなかったときは、ブラウザの中を残し、そのことがわかって、もう一度移せる", async () => {
+        cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: EMPTY });
+        migrationMock.importCloudData.mockResolvedValueOnce({
+          ok: false,
+          reason: "failed",
+        });
+        migrationMock.importCloudData.mockResolvedValue({
+          ok: true,
+          data: browser,
+        });
+        const user = userEvent.setup();
+        render(<Home />);
+
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+          "移せなかった…通信できるところで、もう一度ためしてね",
+        );
+        expect(stored()).toStrictEqual(browser);
+        await user.click(screen.getByRole("button", { name: "もう一度移す" }));
+
+        expect(
+          await screen.findByText("☁ ぴよ と日記 1 件をアカウントに移したよ"),
+        ).toBeInTheDocument();
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      });
+
+      test("AC-18, AC-19: どちらにもいるとき、ブラウザの方を選んで確認すると、アカウントを置き換えてブラウザの中を消す", async () => {
+        cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: tama });
+        migrationMock.importCloudData.mockResolvedValue({
+          ok: true,
+          data: browser,
+        });
+        const user = userEvent.setup();
+        render(<Home />);
+
+        await user.click(
+          await screen.findByRole("button", { name: "ぴよ で続ける" }),
+        );
+        await user.click(
+          screen.getByRole("button", { name: "たま を消して ぴよ で続ける" }),
+        );
+
+        expect(migrationMock.importCloudData).toHaveBeenCalledWith(
+          browser,
+          "replace",
+        );
+        expect(await screen.findByText("ぴよ")).toBeInTheDocument();
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      });
+
+      test("AC-19: アカウントの方を選んで確認すると、移さずにブラウザの中だけを消す", async () => {
+        cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: tama });
+        const user = userEvent.setup();
+        render(<Home />);
+
+        await user.click(
+          await screen.findByRole("button", { name: "たま で続ける" }),
+        );
+        await user.click(
+          screen.getByRole("button", { name: "ぴよ を消して たま で続ける" }),
+        );
+
+        expect(await screen.findByText("たま")).toBeInTheDocument();
+        expect(migrationMock.importCloudData).not.toHaveBeenCalled();
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+      });
+
+      test("AC-17: ブラウザの中が空なら、何も移さず、アカウントのデータが出る", async () => {
+        localStorage.clear();
+        cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: tama });
+        render(<Home />);
+
+        expect(await screen.findByText("たま")).toBeInTheDocument();
+        expect(migrationMock.importCloudData).not.toHaveBeenCalled();
+      });
     });
 
     test("AC-11: 保存できなかったときは、通信できるところでもう一度とわかり、書いていた文が残る", async () => {
