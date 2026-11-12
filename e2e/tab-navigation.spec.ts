@@ -24,6 +24,20 @@ async function expectAt(page: Page, path: RegExp, current: string) {
   await expect(page.getByRole("banner")).toHaveText("logling");
 }
 
+/**
+ * Opens 「その他」 and waits until it is on screen. In production, Next.js
+ * keeps the page being left mounted but hidden, so a row looked up too early
+ * can match that hidden page's link instead (for example the account page's
+ * 「日記の保存のしかた」) and the click waits forever.
+ */
+async function openMore(page: Page) {
+  await tab(page, "その他").click();
+  await expectAt(page, /\/more$/, "その他");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "その他" }),
+  ).toBeVisible();
+}
+
 async function expectNoHorizontalScroll(page: Page) {
   const { scrollWidth, clientWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -111,11 +125,7 @@ test("AC-1, AC-3, AC-5, AC-12: 名前を付ける前から、下のタブで 3 �
   await expectAt(page, /\/history$/, "ふりかえる");
   await expect(page.getByText("ホームで名前を付けてね")).toBeVisible();
 
-  await tab(page, "その他").click();
-  await expectAt(page, /\/more$/, "その他");
-  await expect(
-    page.getByRole("heading", { level: 1, name: "その他" }),
-  ).toBeVisible();
+  await openMore(page);
   const account = page.getByRole("link", { name: /アカウント/ });
   await expect(account).toContainText("ログインしていない");
 
@@ -125,14 +135,14 @@ test("AC-1, AC-3, AC-5, AC-12: 名前を付ける前から、下のタブで 3 �
     page.getByRole("heading", { level: 1, name: "アカウント" }),
   ).toBeVisible();
 
-  await tab(page, "その他").click();
+  await openMore(page);
   await page.getByRole("link", { name: /日記の保存のしかた/ }).click();
   await expectAt(page, /\/privacy$/, "その他");
   await expect(
     page.getByRole("heading", { level: 1, name: "日記の保存のしかた" }),
   ).toBeVisible();
 
-  await tab(page, "その他").click();
+  await openMore(page);
   await page.getByRole("link", { name: /設定/ }).click();
   await expectAt(page, /\/settings$/, "その他");
   await expect(page.getByText("設定は、これから増えるよ")).toBeVisible();

@@ -345,6 +345,11 @@ test("AC-2: ログインしていないアカウントの画面に、ログイ�
 }) => {
   await page.goto("/");
   await tab(page, "その他").click();
+  // Wait for 「その他」 itself: in production the page being left stays
+  // mounted but hidden, so an early lookup can match its links instead.
+  await expect(
+    page.getByRole("heading", { level: 1, name: "その他" }),
+  ).toBeVisible();
   await page.getByRole("link", { name: /アカウント/ }).click();
 
   await expect(page).toHaveURL(/\/account$/);
