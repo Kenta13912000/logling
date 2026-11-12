@@ -126,10 +126,16 @@ test("AC-13: タブのアイコンは段階 1 の絵のファビコンで、Next
 }) => {
   await page.goto("/");
 
-  const icon = page.locator('link[rel="icon"]');
+  // pwa-reminder added a PNG copy (from the same SVG) for browsers that skip
+  // SVG favicons, so there are two: the SVG and the PNG.
+  await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
+  const icon = page.locator('link[rel="icon"][type="image/svg+xml"]');
   await expect(icon).toHaveCount(1);
   const href = await icon.getAttribute("href");
   expect(href).toContain("/icon.svg");
+  await expect(
+    page.locator('link[rel="icon"][type="image/png"]'),
+  ).toHaveAttribute("href", /\/icon1\.png/);
   await expect(page.locator('link[href*="favicon.ico"]')).toHaveCount(0);
 
   const response = await page.request.get(href!);
