@@ -18,6 +18,9 @@ import { useDiaryData } from "@/features/cloud/useDiaryData";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
 import { getStage, levelUpOf, type LevelUp } from "@/features/evolution/stages";
+import { MigrationChoice } from "@/features/migration/MigrationChoice";
+import { MovedToast } from "@/features/migration/MovedToast";
+import { useMigration } from "@/features/migration/useMigration";
 import { bonusForTodayEntry, getStreakStatus } from "@/features/streak/streak";
 import { StreakBand } from "@/features/streak/StreakBand";
 import { getDiaryDate } from "@/lib/diary-date";
@@ -43,7 +46,11 @@ const CONFLICT_MESSAGES: Record<"entryConflict" | "characterConflict", string> =
   };
 
 export function Home() {
-  const { state, save, reset, reload } = useDiaryData();
+  const diary = useDiaryData();
+  const { state, save, reset, reload } = diary;
+  // Bolt-5: move this browser's data into the account after signing in.
+  const migration = useMigration(diary);
+  const { plan, step } = migration;
   const today = useToday();
   const [notice, setNotice] = useState<Notice>(null);
   // Today's text that another device's entry kept from being saved.
@@ -58,6 +65,38 @@ export function Home() {
 
   if (state.status === "loading") {
     content = <LoadingNotice />;
+  } else if (
+    step.kind === "moving" ||
+    (step.kind === "idle" && plan.kind === "move")
+  ) {
+    content = <LoadingNotice message="アカウントに移しているよ…" />;
+  } else if (step.kind === "failed") {
+    content = (
+      <section aria-label="引き継ぎのお知らせ" className="flex flex-col p-4">
+        <p role="alert" className="mt-6 text-center text-sm text-alert">
+          ⚠ 移せなかった…通信できるところで、もう一度ためしてね
+        </p>
+        <p className="mt-2 text-center text-sm text-ink-muted">
+          このブラウザの日記は、そのまま残っているよ
+        </p>
+        <button
+          type="button"
+          onClick={migration.retry}
+          className="mt-6 min-h-12 rounded-xl bg-ember font-bold text-white"
+        >
+          もう一度移す
+        </button>
+      </section>
+    );
+  } else if (plan.kind === "choose" && step.kind !== "tooLarge") {
+    content = (
+      <MigrationChoice
+        browser={plan.browser}
+        account={plan.account}
+        busy={false}
+        onConfirm={migration.confirm}
+      />
+    );
   } else if (state.status === "loadFailed") {
     content = <LoadErrorNotice onRetry={reload} />;
   } else if (state.status === "broken") {
@@ -188,6 +227,12 @@ export function Home() {
             }
           />
         )}
+        {step.kind === "tooLarge" && (
+          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
+            ⚠
+            日記が多すぎて、まとめて移せなかった…このブラウザの日記は、そのまま残っているよ
+          </p>
+        )}
         {(notice === "entryConflict" || notice === "characterConflict") && (
           <p role="alert" className="mx-4 mt-4 text-sm text-alert">
             {CONFLICT_MESSAGES[notice]}
@@ -195,6 +240,13 @@ export function Home() {
         )}
         {content}
       </main>
+      {step.kind === "moved" && (
+        <MovedToast
+          name={step.name}
+          count={step.count}
+          onDone={migration.dismiss}
+        />
+      )}
       {gained !== null && (
         <ExpGainToast
           amount={gained.amount}

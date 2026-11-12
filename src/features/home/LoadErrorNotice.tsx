@@ -25,10 +25,10 @@ export function LoadErrorNotice({ onRetry }: Props) {
 }
 
 /** While the account's data is on its way (AC-12). */
-export function LoadingNotice() {
+export function LoadingNotice({ message = "読み込んでいるよ…" }) {
   return (
     <p role="status" className="px-4 py-24 text-center text-ink-muted">
-      読み込んでいるよ…
+      {message}
     </p>
   );
 }

@@ -1,6 +1,7 @@
 import { EXP_PER_ENTRY, type Character } from "@/features/character/character";
 import { validateName } from "@/features/character/name";
 import { validateBody, type DiaryEntry } from "@/features/diary/diary";
+import type { SaveData } from "@/features/home/save-data";
 
 /*
  * Server-side checks for data sent from the browser (AC-8). EXP is computed
@@ -68,6 +69,30 @@ export function parseCharacter(value: unknown): Character | null {
       ? { startDate: value.startDate as string }
       : {}),
   };
+}
+
+/**
+ * Browser data to move into the account (Bolt-5): a character and entries
+ * with one entry per day. Null when anything is off, so nothing is moved.
+ */
+export function parseImport(value: unknown): SaveData | null {
+  if (
+    !isRecord(value) ||
+    value.version !== 1 ||
+    !Array.isArray(value.entries)
+  ) {
+    return null;
+  }
+  const character = parseCharacter(value.character);
+  const entries = value.entries.map(parseEntry);
+  if (character === null || entries.some((entry) => entry === null)) {
+    return null;
+  }
+  const valid = entries as DiaryEntry[];
+  if (new Set(valid.map((entry) => entry.date)).size !== valid.length) {
+    return null;
+  }
+  return { version: 1, character, entries: valid };
 }
 
 export function parseEntry(value: unknown): DiaryEntry | null {

@@ -130,5 +130,15 @@ export function useDiaryData() {
     setAttempt((count) => count + 1);
   }
 
-  return { state, save, reset: local.reset, reload };
+  return {
+    state,
+    save,
+    reset: local.reset,
+    reload,
+    /** This browser's data, kept as is while signed in (Bolt-5). */
+    browser: local.state,
+    clearBrowser: local.clear,
+    /** Shows data the server returned, e.g. after moving browser data. */
+    adoptCloudData: (data: SaveData) => setCloud({ status: "ok", data }),
+  };
 }

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { browserStorage, readItem } from "@/lib/storage";
+import { browserStorage, readItem, removeItem } from "@/lib/storage";
 
 import {
   EMPTY_SAVE_DATA,
@@ -76,5 +76,7 @@ export function useSaveData() {
     state,
     save: (data: SaveData) => update((storage) => writeSaveData(storage, data)),
     reset: () => update((storage) => resetBrokenData(storage, new Date())),
+    /** Removes this browser's data, after moving it to the account. */
+    clear: () => update((storage) => removeItem(storage, STORAGE_KEY)),
   };
 }
