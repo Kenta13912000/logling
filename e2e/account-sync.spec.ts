@@ -37,6 +37,13 @@ async function writeDiary(page: Page, body: string) {
   await page.getByRole("button", { name: "日記をのこす" }).click();
 }
 
+/** A tab at the bottom of the page (tab-navigation). */
+function tab(page: Page, name: string) {
+  return page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name });
+}
+
 const storedInBrowser = (page: Page) =>
   page.evaluate(() => localStorage.getItem("logling:v1"));
 
@@ -65,7 +72,7 @@ test("AC-30, AC-31: ログインしていなくても、ホームとアカウン
   await page.goto("/account");
   await page.getByRole("link", { name: /日記の保存のしかた/ }).click();
   await expect(page).toHaveURL(/\/privacy$/);
-  await page.getByRole("link", { name: /ホーム/ }).click();
+  await tab(page, "ホーム").click();
   await expect(page).toHaveURL(/\/$/);
 });
 
@@ -337,6 +344,7 @@ test("AC-2: ログインしていないアカウントの画面に、ログイ�
   page,
 }) => {
   await page.goto("/");
+  await tab(page, "その他").click();
   await page.getByRole("link", { name: /アカウント/ }).click();
 
   await expect(page).toHaveURL(/\/account$/);

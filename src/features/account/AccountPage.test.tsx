@@ -292,13 +292,14 @@ describe("説明ページへの入口", () => {
   });
 });
 
+// tab-navigation: the way back home moved to the tabs (TabBar.test).
 describe("上の帯", () => {
-  test("AC-2: アカウントの画面からホームに戻れる", () => {
+  test("tab-navigation AC-8: アカウントの画面に、上の帯と「‹ ホーム」のリンクはない", () => {
     render(<AccountPage loginFailed={false} />);
 
-    expect(screen.getByRole("link", { name: /ホーム/ })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    expect(
+      screen.queryByRole("link", { name: /ホーム/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
   });
 });
