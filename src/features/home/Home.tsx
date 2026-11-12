@@ -240,6 +240,16 @@ export function Home() {
         )}
         {content}
       </main>
+      {/* AC-31: what the app is, and how it keeps diaries. */}
+      <footer className="mt-10 border-t border-line px-4 py-6 text-center text-xs text-ink-muted">
+        <p>logling：日記を書くとキャラクターが育つ、続けたくなる日記アプリ</p>
+        <Link
+          href="/privacy"
+          className="mt-1 inline-flex min-h-11 items-center font-bold text-ember underline"
+        >
+          日記の保存のしかた
+        </Link>
+      </footer>
       {step.kind === "moved" && (
         <MovedToast
           name={step.name}

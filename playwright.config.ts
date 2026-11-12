@@ -14,6 +14,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
+  // Sign-out and withdrawal go to the Neon dev branch in Singapore; with 8
+  // workers in parallel they can take more than the default 5 seconds.
+  expect: { timeout: 10_000 },
   use: {
     baseURL,
     trace: "on-first-retry",

@@ -132,7 +132,8 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
         <p className="mt-1 font-bold break-all">{session.user.email}</p>
         <p className="mt-1 text-sm text-ink-muted">
           <span aria-hidden="true">☁ </span>
-          日記はクラウドに保存されているよ。ほかの端末でも、このアカウントでログインすれば続きが書けるよ
+          日記はインターネット上の保管場所にしまわれているよ。ほかのスマホや PC
+          でも、このアカウントでログインすれば続きが書けるよ
         </p>
         <button
           type="button"
@@ -153,7 +154,9 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
             でも、同じキャラクターと日記で続きが書けるよ
           </p>
           <ul className="mt-2 list-disc pl-5 text-sm text-ink-muted">
-            <li>日記はクラウドに保存され、あなたしか読めない</li>
+            <li>
+              日記はインターネット上の保管場所にしまわれ、あなたしか読めない
+            </li>
             <li>このブラウザのキャラクターと日記は、そのまま引き継げる</li>
           </ul>
           <button
@@ -217,6 +220,14 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
         )}
         <h1 className="mt-2 mb-3 text-lg font-bold">アカウント</h1>
         {content}
+        {!isPending && (
+          <Link
+            href="/privacy"
+            className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+          >
+            日記の保存のしかた<span aria-hidden="true">&nbsp;›</span>
+          </Link>
+        )}
         {signedIn && (
           <button
             type="button"
