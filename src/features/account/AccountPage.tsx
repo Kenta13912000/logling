@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { loadCloudData } from "@/features/cloud/actions";
+import type { SaveData } from "@/features/home/save-data";
 import { authClient } from "@/lib/auth-client";
+
+import { withdrawAccount } from "./actions";
+import { WithdrawDialog } from "./WithdrawDialog";
 
 type Props = {
   /** True when Google sent the person back after a failed sign-in. */
   loginFailed: boolean;
+  /** True when back from signing in again to withdraw. */
+  withdrawAgain?: boolean;
 };
 
 /** Google's "G" mark for the sign-in button (Google branding guidelines). */
@@ -35,12 +42,66 @@ function GoogleMark() {
   );
 }
 
-export function AccountPage({ loginFailed }: Props) {
+type Notice =
+  "loginFailed" | "logoutFailed" | "withdrawFailed" | "reauth" | null;
+
+const EMPTY: SaveData = { version: 1, character: null, entries: [] };
+
+export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const [notice, setNotice] = useState<"loginFailed" | "logoutFailed" | null>(
+  const [notice, setNotice] = useState<Notice>(
     loginFailed ? "loginFailed" : null,
   );
+  // Back from signing in again to withdraw: ask once more (AC-25).
+  const [withdrawing, setWithdrawing] = useState(withdrawAgain);
+  const [busy, setBusy] = useState(false);
+  // The account's data, to say what withdrawal deletes.
+  const [cloudData, setCloudData] = useState<SaveData | null>(null);
+  const signedIn = !isPending && session !== null && session !== undefined;
+
+  useEffect(() => {
+    if (!signedIn) {
+      return;
+    }
+    let current = true;
+    loadCloudData().then(
+      (result) => {
+        if (current && result.ok) {
+          setCloudData(result.data);
+        }
+      },
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [signedIn]);
+
+  async function withdraw() {
+    setBusy(true);
+    const result = await withdrawAccount().catch(
+      () => ({ ok: false, reason: "failed" }) as const,
+    );
+    setBusy(false);
+    if (result.ok) {
+      // The session is already gone; this clears the cookie and the
+      // browser's memory of being signed in.
+      await authClient.signOut().catch(() => undefined);
+      router.push("/");
+      return;
+    }
+    setWithdrawing(false);
+    setNotice(result.reason === "reauth" ? "reauth" : "withdrawFailed");
+  }
+
+  function signInAgain() {
+    void authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/account?withdraw=again",
+      errorCallbackURL: "/account?error=login",
+    });
+  }
 
   async function signIn() {
     const { error } = await authClient.signIn.social({
@@ -134,9 +195,49 @@ export function AccountPage({ loginFailed }: Props) {
             ⚠ ログアウトできなかった…通信できるところで、もう一度ためしてね
           </p>
         )}
+        {notice === "withdrawFailed" && (
+          <p role="alert" className="mb-4 text-sm text-alert">
+            ⚠ 退会できなかった…通信できるところで、もう一度ためしてね
+          </p>
+        )}
+        {notice === "reauth" && (
+          <div className="mb-4 rounded-2xl border border-line bg-white p-4 text-sm">
+            <p>本人の確認のため、もう一度ログインしてね</p>
+            <p className="mt-1 text-ink-muted">
+              ログインし直すと、退会の確認がもう一度出るよ
+            </p>
+            <button
+              type="button"
+              onClick={signInAgain}
+              className="mt-3 min-h-11 w-full rounded-xl border border-[#747775] bg-white font-medium text-[#1f1f1f]"
+            >
+              Google でログインし直す
+            </button>
+          </div>
+        )}
         <h1 className="mt-2 mb-3 text-lg font-bold">アカウント</h1>
         {content}
+        {signedIn && (
+          <button
+            type="button"
+            onClick={() => {
+              setNotice(null);
+              setWithdrawing(true);
+            }}
+            className="mx-auto mt-10 flex min-h-11 items-center text-sm font-bold text-alert underline"
+          >
+            退会する
+          </button>
+        )}
       </main>
+      {signedIn && withdrawing && (
+        <WithdrawDialog
+          data={cloudData ?? EMPTY}
+          busy={busy}
+          onConfirm={withdraw}
+          onCancel={() => setWithdrawing(false)}
+        />
+      )}
     </div>
   );
 }

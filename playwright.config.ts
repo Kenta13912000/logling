@@ -19,6 +19,8 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Removes the test-only people from the Neon dev branch (local runs only).
+  globalTeardown: remoteURL ? undefined : "./e2e/global-teardown.ts",
   // Start a local dev server only when not testing a deployed site.
   webServer: remoteURL
     ? undefined

@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
+import type { SaveData } from "@/features/home/save-data";
+
 import { WithdrawDialog } from "./WithdrawDialog";
 
 const piyo = {
@@ -14,7 +16,7 @@ const piyo = {
   })),
 };
 
-function setup(data = piyo) {
+function setup(data: SaveData = piyo) {
   const onConfirm = vi.fn();
   const onCancel = vi.fn();
   render(
