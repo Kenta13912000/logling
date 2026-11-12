@@ -8,16 +8,16 @@ logling を Vercel の無料プラン（Hobby）で https://logling.vercel.app �
 
 ## 公開の構成
 
-| 項目                | 内容                                                                                                                                                                                            |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 公開先              | Vercel（Hobby・無料）。チーム名は GitHub のユーザー名                                                                                                                                           |
-| 本番の URL          | https://logling.vercel.app                                                                                                                                                                      |
-| GitHub との連携     | Vercel の GitHub アプリに、logling のリポジトリだけへのアクセスを許可                                                                                                                           |
-| ビルド              | Vercel が Next.js を自動で認識。`vercel.json` は使わない。環境変数（秘密の値）は使わない                                                                                                        |
-| Node.js             | `package.json` の `engines.node` を `^26.13.0` にし、手元・CI と同じ Node 26 でビルドする（`.nvmrc` と一致することを単体テストで確かめる。[ADR-0004](../adr/0004-node-26.md) で 24 から上げた） |
-| 確認用の URL の保護 | Deployment Protection：Standard Protection（Vercel Authentication）。本番の URL だけを公開する                                                                                                  |
-| アクセス解析        | Web Analytics・Speed Insights は有効にしていない                                                                                                                                                |
-| 選定理由            | [ADR-0003](../adr/0003-hosting-vercel.md)                                                                                                                                                       |
+| 項目                | 内容                                                                                                                                                                                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 公開先              | Vercel（Hobby・無料）。チーム名は GitHub のユーザー名                                                                                                                                                                                                                                                         |
+| 本番の URL          | https://logling.vercel.app                                                                                                                                                                                                                                                                                    |
+| GitHub との連携     | Vercel の GitHub アプリに、logling のリポジトリだけへのアクセスを許可                                                                                                                                                                                                                                         |
+| ビルド              | Vercel が Next.js を自動で認識。`vercel.json` は使わない。環境変数（秘密の値）は使わない（`account-sync` で変更：関数の場所をシンガポールにするため `vercel.json` を使い始め、ログインと保管場所のための秘密の値を Production の環境変数に置く。[ADR-0006](../adr/0006-auth-environments-and-test-login.md)） |
+| Node.js             | `package.json` の `engines.node` を `^26.13.0` にし、手元・CI と同じ Node 26 でビルドする（`.nvmrc` と一致することを単体テストで確かめる。[ADR-0004](../adr/0004-node-26.md) で 24 から上げた）                                                                                                               |
+| 確認用の URL の保護 | Deployment Protection：Standard Protection（Vercel Authentication）。本番の URL だけを公開する                                                                                                                                                                                                                |
+| アクセス解析        | Web Analytics・Speed Insights は有効にしていない                                                                                                                                                                                                                                                              |
+| 選定理由            | [ADR-0003](../adr/0003-hosting-vercel.md)                                                                                                                                                                                                                                                                     |
 
 ## 配信の設定（`next.config.ts`）
 

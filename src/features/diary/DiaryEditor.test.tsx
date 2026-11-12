@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
@@ -20,6 +20,27 @@ function setup() {
     button: screen.getByRole("button", { name: "日記をのこす" }),
   };
 }
+
+test("account-sync AC-33: 保存している間はボタンが「保存しているよ…」になって押せず、終わると元に戻って文も残る", async () => {
+  const user = userEvent.setup();
+  let finish = () => {};
+  const onSave = vi.fn(
+    () => new Promise<void>((resolve) => (finish = resolve)),
+  );
+  render(<DiaryEditor date="2026-10-28" stage={getStage(6)} onSave={onSave} />);
+  const textarea = screen.getByRole("textbox", { name: "今日の日記" });
+
+  await user.type(textarea, "電車の中で書いた");
+  await user.click(screen.getByRole("button", { name: "日記をのこす" }));
+  const saving = screen.getByRole("button", { name: "保存しているよ…" });
+  expect(saving).toBeDisabled();
+  await user.click(saving);
+  expect(onSave).toHaveBeenCalledTimes(1);
+
+  await act(async () => finish());
+  expect(screen.getByRole("button", { name: "日記をのこす" })).toBeEnabled();
+  expect(textarea).toHaveValue("電車の中で書いた");
+});
 
 test("AC-5: 今日の日付・呼びかけ・入力欄・文字数が表示される", () => {
   setup();

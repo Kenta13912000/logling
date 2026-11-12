@@ -19,8 +19,8 @@ type Props = {
   stage?: Stage;
   placeholder?: string;
   submitLabel: string;
-  /** Receives the trimmed, valid body. */
-  onSubmit: (body: string) => void;
+  /** Receives the trimmed, valid body. May return a promise while saving. */
+  onSubmit: (body: string) => void | Promise<unknown>;
   onCancel: () => void;
 };
 
@@ -39,17 +39,27 @@ export function EntryForm({
   const errorId = useId();
   const [value, setValue] = useState(initialBody);
   const [error, setError] = useState<string | null>(null);
+  // account-sync AC-11: one save at a time while waiting for the cloud.
+  const [saving, setSaving] = useState(false);
   const length = countCharacters(value.trim());
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) {
+      return;
+    }
     const result = validateBody(value);
     if (!result.ok) {
       setError(bodyErrorMessage(result));
       return;
     }
     setError(null);
-    onSubmit(result.body);
+    setSaving(true);
+    try {
+      await onSubmit(result.body);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -88,9 +98,10 @@ export function EntryForm({
       <div className="mt-2 flex justify-end gap-2">
         <button
           type="submit"
-          className="min-h-11 rounded-xl bg-ember px-4 text-sm font-bold text-white"
+          disabled={saving}
+          className="min-h-11 rounded-xl bg-ember px-4 text-sm font-bold text-white disabled:opacity-60"
         >
-          {submitLabel}
+          {saving ? "保存しているよ…" : submitLabel}
         </button>
         <button
           type="button"

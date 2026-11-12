@@ -5,10 +5,13 @@ import type { Character } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
 import { createTestDb, type TestDb } from "@/lib/db/test-db";
 
+import type { SaveData } from "@/features/home/save-data";
+
 import {
   createCharacter,
   deleteEntry,
   getSaveData,
+  importSaveData,
   insertEntry,
   updateEntryBody,
 } from "./repository";
@@ -113,6 +116,53 @@ describe("ほかの人のデータ", () => {
   });
 });
 
+describe("まとめて移す（引き継ぎ）", () => {
+  const browser: SaveData = {
+    version: 1,
+    character: { name: "ぴよ", totalExp: 75, startDate: "2026-11-01" },
+    entries: [
+      entry("2026-11-04", "ふつうの日"),
+      { ...entry("2026-11-05", "あとから"), writtenLater: true },
+      { ...entry("2026-11-07", "7 日目"), bonus: 20, bonusDays: 7 },
+    ],
+  };
+
+  test("AC-14: アカウントが空なら、キャラクターと日記がそのまま移り、経験値・始めた日・後から書いた印・ボーナスが変わらない", async () => {
+    const { db } = testDb;
+
+    expect(await importSaveData(db, A, browser, "ifEmpty")).toBe("ok");
+
+    expect(await getSaveData(db, A)).toStrictEqual(browser);
+    expect(await getSaveData(db, B)).toStrictEqual({
+      version: 1,
+      character: null,
+      entries: [],
+    });
+  });
+
+  test("AC-18: アカウントにもうキャラクターがいるとき（ifEmpty）は、何も移さない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, TAMA);
+    await insertEntry(db, A, entry("2026-11-04", "たまの日記"), 10);
+
+    expect(await importSaveData(db, A, browser, "ifEmpty")).toBe("exists");
+
+    const a = await getSaveData(db, A);
+    expect(a.character?.name).toBe("たま");
+    expect(a.entries.map((e) => e.body)).toStrictEqual(["たまの日記"]);
+  });
+
+  test("AC-19: ブラウザの方を選んだとき（replace）は、アカウントの前のキャラクターと日記は残らない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, TAMA);
+    await insertEntry(db, A, entry("2026-11-02", "たまの日記"), 10);
+
+    expect(await importSaveData(db, A, browser, "replace")).toBe("ok");
+
+    expect(await getSaveData(db, A)).toStrictEqual(browser);
+  });
+});
+
 describe("読み書きの結果", () => {
   test("AC-8: 足した日記・書き直し・消した結果が、今の保存データと同じ形で読み出せる", async () => {
     const { db } = testDb;
@@ -187,6 +237,35 @@ describe("読み書きの結果", () => {
     const a = await getSaveData(db, A);
     expect(a.entries.map((e) => e.body)).toStrictEqual(["1 件目"]);
     expect(a.character?.totalExp).toBe(10);
+  });
+
+  test("AC-13: 同じ日の日記を同時に 2 つ足すと、1 つだけ残り、経験値は 1 回分だけ増える", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+
+    const results = await Promise.all([
+      insertEntry(db, A, entry("2026-11-05", "端末 1"), 10),
+      insertEntry(db, A, entry("2026-11-05", "端末 2"), 10),
+    ]);
+
+    expect([...results].sort()).toStrictEqual(["exists", "ok"]);
+    const a = await getSaveData(db, A);
+    expect(a.entries).toHaveLength(1);
+    expect(a.character?.totalExp).toBe(10);
+  });
+
+  test("AC-13: 違う日の日記を同時に足すと、両方の経験値が入り、ほかの端末の分を上書きしない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+
+    await Promise.all([
+      insertEntry(db, A, entry("2026-11-05", "端末 1"), 10),
+      insertEntry(db, A, entry("2026-11-06", "端末 2"), 5),
+    ]);
+
+    const a = await getSaveData(db, A);
+    expect(a.entries).toHaveLength(2);
+    expect(a.character?.totalExp).toBe(15);
   });
 
   test("AC-8: 日記を消しても、経験値は 0 より下がらない", async () => {

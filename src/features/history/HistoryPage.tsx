@@ -14,8 +14,13 @@ import {
   type LevelUp,
   type Stage,
 } from "@/features/evolution/stages";
+import { UnsavedText } from "@/features/cloud/UnsavedText";
+import { useDiaryData, type SaveOutcome } from "@/features/cloud/useDiaryData";
+import {
+  LoadErrorNotice,
+  LoadingNotice,
+} from "@/features/home/LoadErrorNotice";
 import { SaveErrorNotice } from "@/features/home/SaveErrorNotice";
-import { useSaveData } from "@/features/home/useSaveData";
 import { useToday } from "@/features/home/useToday";
 import { RECENT_DAYS, getDiaryDate } from "@/lib/diary-date";
 
@@ -30,7 +35,7 @@ import {
 } from "./history";
 import { HistoryList } from "./HistoryList";
 
-type Notice = "saveFailed" | "tooOld" | "tooLate" | null;
+type Notice = "saveFailed" | "tooOld" | "tooLate" | "conflict" | null;
 
 /** Shown when the day left the editable range while the page was open. */
 const OUT_OF_RANGE: Record<"tooOld" | "tooLate", string> = {
@@ -59,9 +64,26 @@ function Guide({ stage, message }: { stage?: Stage; message: string }) {
 }
 
 export function HistoryPage() {
-  const { state, save } = useSaveData();
+  const { state, save, reload } = useDiaryData();
   const today = useToday();
   const [notice, setNotice] = useState<Notice>(null);
+  // Text that another device's change kept from being saved (AC-13).
+  const [unsaved, setUnsaved] = useState<string | null>(null);
+
+  /**
+   * Shows the result of saving a body. Returns true when the form should
+   * close: saved, or refused because another device changed the data (the
+   * text then moves to the unsaved box). On failure the form stays open.
+   */
+  function afterSave(outcome: SaveOutcome, body: string): boolean {
+    if (outcome === "conflict") {
+      setNotice("conflict");
+      setUnsaved(body);
+      return true;
+    }
+    setNotice(outcome === "saved" ? null : "saveFailed");
+    return outcome === "saved";
+  }
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [gainedExp, setGainedExp] = useState<number | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
@@ -69,9 +91,13 @@ export function HistoryPage() {
   let content: ReactNode = null;
   let dialog: ReactNode = null;
 
-  if (state.status === "broken") {
+  if (state.status === "loading") {
+    content = <LoadingNotice />;
+  } else if (state.status === "loadFailed") {
+    content = <LoadErrorNotice onRetry={reload} />;
+  } else if (state.status === "broken") {
     content = <Guide message="データを読み込めなかったみたい…" />;
-  } else if (state.status === "ok" && today !== null) {
+  } else if (today !== null) {
     const { character, entries } = state.data;
 
     if (character === null) {
@@ -88,19 +114,27 @@ export function HistoryPage() {
       const data = state.data;
       const stage = stageOf(character.totalExp);
 
-      const handleSaveEdit = (date: string, body: string): boolean => {
+      const handleSaveEdit = async (
+        date: string,
+        body: string,
+      ): Promise<boolean> => {
         const result = editEntry(data, date, body, currentDiaryDate());
         if (!result.ok) {
           // Close the form: the entry has become read-only.
           setNotice("tooOld");
           return true;
         }
-        const saved = save(result.data);
-        setNotice(saved ? null : "saveFailed");
-        return saved;
+        const outcome = await save(
+          { type: "editEntry", date, body },
+          result.data,
+        );
+        return afterSave(outcome, body);
       };
 
-      const handleSaveLater = (date: string, body: string): boolean => {
+      const handleSaveLater = async (
+        date: string,
+        body: string,
+      ): Promise<boolean> => {
         const now = new Date();
         const result = writeLaterEntry(
           data,
@@ -114,9 +148,16 @@ export function HistoryPage() {
           setNotice("tooLate");
           return true;
         }
-        const saved = save(result.data);
-        setNotice(saved ? null : "saveFailed");
-        if (saved) {
+        const entry = result.data.entries.find((e) => e.date === date);
+        if (entry === undefined) {
+          return false;
+        }
+        const outcome = await save(
+          { type: "addEntry", entry, exp: result.gained },
+          result.data,
+        );
+        const close = afterSave(outcome, body);
+        if (outcome === "saved") {
           setGainedExp(result.gained);
           if (result.leveledUp) {
             setLevelUp(
@@ -124,7 +165,7 @@ export function HistoryPage() {
             );
           }
         }
-        return saved;
+        return close;
       };
 
       content = (
@@ -146,14 +187,24 @@ export function HistoryPage() {
       const preview =
         deletingDate === null ? null : previewDelete(data, deletingDate);
       if (deletingDate !== null && preview !== null) {
-        const handleConfirm = () => {
+        const handleConfirm = async () => {
           setDeletingDate(null);
           const result = deleteEntry(data, deletingDate, currentDiaryDate());
           if (!result.ok) {
             setNotice("tooOld");
             return;
           }
-          setNotice(save(result.data) ? null : "saveFailed");
+          const outcome = await save(
+            { type: "deleteEntry", date: deletingDate, exp: result.lost },
+            result.data,
+          );
+          setNotice(
+            outcome === "conflict"
+              ? "conflict"
+              : outcome === "saved"
+                ? null
+                : "saveFailed",
+          );
         };
 
         dialog = (
@@ -184,11 +235,30 @@ export function HistoryPage() {
         <span className="font-bold tracking-wide">logling</span>
       </header>
       <main>
-        {notice === "saveFailed" && <SaveErrorNotice />}
+        {notice === "saveFailed" && (
+          <SaveErrorNotice
+            cloudHint={
+              state.status === "ok" && state.storage === "cloud"
+                ? "もう一度ためしてね"
+                : undefined
+            }
+          />
+        )}
         {(notice === "tooOld" || notice === "tooLate") && (
           <p role="alert" className="mx-4 mt-4 text-sm text-alert">
             {`⚠ ${OUT_OF_RANGE[notice]}`}
           </p>
+        )}
+        {notice === "conflict" && (
+          <p role="alert" className="mx-4 mt-4 text-sm text-alert">
+            ⚠ ほかの端末で変わっていたよ。最新の内容を表示したよ
+          </p>
+        )}
+        {unsaved !== null && (
+          <UnsavedText
+            body={unsaved}
+            hint="必要なら、コピーしてもう一度書いてね"
+          />
         )}
         {content}
       </main>

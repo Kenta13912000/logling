@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 
 import { CharacterArt } from "@/features/evolution/CharacterArt";
@@ -14,7 +15,8 @@ const ERROR_MESSAGES: Record<
 };
 
 type Props = {
-  onSubmit: (name: string) => void;
+  /** May return a promise while saving to the cloud. */
+  onSubmit: (name: string) => void | Promise<unknown>;
 };
 
 /** Before naming there is no character yet, so show the first stage. */
@@ -33,6 +35,8 @@ export function NameForm({ onSubmit }: Props) {
   const [error, setError] = useState<string | null>(null);
   // The validated name waiting for confirmation, or null while typing.
   const [pendingName, setPendingName] = useState<string | null>(null);
+  // account-sync AC-11: one save at a time while waiting for the cloud.
+  const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLParagraphElement>(null);
   const isFirstRender = useRef(true);
@@ -49,6 +53,18 @@ export function NameForm({ onSubmit }: Props) {
       confirmRef.current?.focus();
     }
   }, [pendingName]);
+
+  async function confirm(name: string) {
+    if (saving) {
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSubmit(name);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,15 +93,17 @@ export function NameForm({ onSubmit }: Props) {
         </p>
         <button
           type="button"
-          onClick={() => onSubmit(pendingName)}
-          className="mt-6 min-h-12 rounded-xl bg-ember font-bold text-white"
+          disabled={saving}
+          onClick={() => confirm(pendingName)}
+          className="mt-6 min-h-12 rounded-xl bg-ember font-bold text-white disabled:opacity-60"
         >
-          これにする
+          {saving ? "保存しているよ…" : "これにする"}
         </button>
         <button
           type="button"
+          disabled={saving}
           onClick={() => setPendingName(null)}
-          className="mt-3 min-h-12 rounded-xl border border-line bg-white font-bold"
+          className="mt-3 min-h-12 rounded-xl border border-line bg-white font-bold disabled:opacity-60"
         >
           えらびなおす
         </button>
@@ -126,6 +144,14 @@ export function NameForm({ onSubmit }: Props) {
       >
         この名前にする
       </button>
+      {/* account-sync AC-2: a new device can sign in before naming. */}
+      <Link
+        href="/account"
+        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+      >
+        ほかの端末で使っていた人は ログイン
+        <span aria-hidden="true">&nbsp;›</span>
+      </Link>
     </form>
   );
 }

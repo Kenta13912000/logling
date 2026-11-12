@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 
@@ -27,6 +27,32 @@ function setup(initialBody = "今日は晴れた。") {
     submit: screen.getByRole("button", { name: "保存する" }),
   };
 }
+
+test("account-sync AC-33: 保存している間はボタンが「保存しているよ…」になって押せず、終わると元に戻る", async () => {
+  const user = userEvent.setup();
+  let finish = () => {};
+  const onSubmit = vi.fn(
+    () => new Promise<void>((resolve) => (finish = resolve)),
+  );
+  render(
+    <EntryForm
+      label="11月7日の日記"
+      initialBody="今日は晴れた。"
+      submitLabel="保存する"
+      onSubmit={onSubmit}
+      onCancel={vi.fn()}
+    />,
+  );
+
+  await user.click(screen.getByRole("button", { name: "保存する" }));
+  const saving = screen.getByRole("button", { name: "保存しているよ…" });
+  expect(saving).toBeDisabled();
+  await user.click(saving);
+  expect(onSubmit).toHaveBeenCalledTimes(1);
+
+  await act(async () => finish());
+  expect(screen.getByRole("button", { name: "保存する" })).toBeEnabled();
+});
 
 test("AC-6: 入力欄には今の本文と文字数が入り、入力欄にフォーカスがある", () => {
   const { textarea } = setup();

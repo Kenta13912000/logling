@@ -131,6 +131,72 @@ export async function updateEntryBody(
   return updated.length > 0 ? "ok" : "notFound";
 }
 
+/**
+ * Moves browser data (a character and all its entries) into the account in
+ * one transaction, keeping EXP, start date, written-later marks and
+ * bonuses exactly as they are (AC-14). "ifEmpty" refuses when the account
+ * already has a character; "replace" deletes it and its entries first.
+ */
+export async function importSaveData(
+  db: Db,
+  userId: string,
+  data: SaveData,
+  mode: "ifEmpty" | "replace",
+): Promise<"ok" | "exists"> {
+  const character = data.character;
+  if (character === null) {
+    throw new Error("importSaveData needs a character");
+  }
+  return db.transaction(async (tx) => {
+    if (mode === "replace") {
+      // Its entries go too (cascade).
+      await tx.delete(characters).where(eq(characters.userId, userId));
+    }
+    const created = await tx
+      .insert(characters)
+      .values({
+        userId,
+        name: character.name,
+        totalExp: character.totalExp,
+        startDate: character.startDate ?? null,
+      })
+      .onConflictDoNothing()
+      .returning({ userId: characters.userId });
+    if (created.length === 0) {
+      return "exists";
+    }
+    if (data.entries.length > 0) {
+      await tx.insert(diaryEntries).values(
+        data.entries.map((entry) => ({
+          userId,
+          date: entry.date,
+          body: entry.body,
+          createdAt: new Date(entry.createdAt),
+          writtenLater: entry.writtenLater === true,
+          bonus: entry.bonus ?? null,
+          bonusDays: entry.bonusDays ?? null,
+        })),
+      );
+    }
+    return "ok";
+  });
+}
+
+/**
+ * Records the start date of a character named in diary-exp (no start date
+ * yet). An existing start date is never changed, like withStartDate.
+ */
+export async function pinStartDate(
+  db: Db,
+  userId: string,
+  startDate: string,
+): Promise<void> {
+  await db
+    .update(characters)
+    .set({ startDate: sql`coalesce(${characters.startDate}, ${startDate})` })
+    .where(eq(characters.userId, userId));
+}
+
 /** Removes one entry and its EXP together. EXP never goes below 0. */
 export async function deleteEntry(
   db: Db,

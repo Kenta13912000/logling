@@ -12,7 +12,8 @@ type Props = {
   date: string;
   /** The character's current stage, shown beside the question. */
   stage: Stage;
-  onSave: (body: string) => void;
+  /** May return a promise while saving to the cloud. */
+  onSave: (body: string) => void | Promise<unknown>;
 };
 
 export function DiaryEditor({ date, stage, onSave }: Props) {
@@ -20,17 +21,27 @@ export function DiaryEditor({ date, stage, onSave }: Props) {
   const errorId = useId();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // account-sync AC-11: one save at a time while waiting for the cloud.
+  const [saving, setSaving] = useState(false);
   const length = countCharacters(value.trim());
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) {
+      return;
+    }
     const result = validateBody(value);
     if (!result.ok) {
       setError(bodyErrorMessage(result));
       return;
     }
     setError(null);
-    onSave(result.body);
+    setSaving(true);
+    try {
+      await onSave(result.body);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -66,9 +77,10 @@ export function DiaryEditor({ date, stage, onSave }: Props) {
       )}
       <button
         type="submit"
-        className="mt-4 min-h-12 rounded-xl bg-ember font-bold text-white"
+        disabled={saving}
+        className="mt-4 min-h-12 rounded-xl bg-ember font-bold text-white disabled:opacity-60"
       >
-        日記をのこす
+        {saving ? "保存しているよ…" : "日記をのこす"}
       </button>
     </form>
   );
