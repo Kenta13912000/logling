@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -87,6 +87,18 @@ describe("account-sync", () => {
       "href",
       "/account",
     );
+  });
+
+  test("AC-31: ホームの下に、アプリの説明と「日記の保存のしかた」へのリンクがある", () => {
+    render(<Home />);
+
+    const footer = screen.getByRole("contentinfo");
+    expect(footer).toHaveTextContent(
+      "logling：日記を書くとキャラクターが育つ、続けたくなる日記アプリ",
+    );
+    expect(
+      within(footer).getByRole("link", { name: "日記の保存のしかた" }),
+    ).toHaveAttribute("href", "/privacy");
   });
 
   test("AC-2: 名前を付ける前も、上の帯に「アカウント」のリンクがある", () => {

@@ -40,6 +40,102 @@ async function writeDiary(page: Page, body: string) {
 const storedInBrowser = (page: Page) =>
   page.evaluate(() => localStorage.getItem("logling:v1"));
 
+/** No horizontal scroll at the current viewport (AC-32). */
+async function expectNoHorizontalScroll(page: Page) {
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+}
+
+test("AC-30, AC-31: ログインしていなくても、ホームとアカウントの画面から説明ページが開け、ホームに戻れる", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("contentinfo")
+    .getByRole("link", { name: "日記の保存のしかた" })
+    .click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await expect(
+    page.getByRole("heading", { name: "ログインして使うとき" }),
+  ).toBeVisible();
+
+  await page.goto("/account");
+  await page.getByRole("link", { name: /日記の保存のしかた/ }).click();
+  await expect(page).toHaveURL(/\/privacy$/);
+  await page.getByRole("link", { name: /ホーム/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test.describe("スマホの幅（375px）", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("AC-32: ログインの入口・アカウントの画面・退会の確認・説明ページに、横スクロールが出ない", async ({
+    page,
+  }) => {
+    await page.goto("/account");
+    await expect(
+      page.getByRole("button", { name: "Google でログイン" }),
+    ).toBeVisible();
+    await expectNoHorizontalScroll(page);
+
+    await page.goto("/privacy");
+    await expect(
+      page.getByRole("heading", { name: "ログインして使うとき" }),
+    ).toBeVisible();
+    await expectNoHorizontalScroll(page);
+
+    await signUp(page);
+    await page.goto("/");
+    await nameCharacter(page, "とても長い名前のねこ");
+    await page.goto("/account");
+    await expect(page.getByText("ログイン中")).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await page.getByRole("button", { name: "退会する" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "退会する？" }),
+    ).toBeVisible();
+    await expectNoHorizontalScroll(page);
+  });
+
+  test("AC-32: 引き継ぎの選ぶ画面と確認に、横スクロールが出ない", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    const email = await signUp(page);
+    await page.goto("/");
+    await nameCharacter(page, "アカウント");
+    await expect(page.getByText("アカウント", { exact: true })).toBeVisible();
+
+    const other = await browser.newContext({
+      baseURL,
+      viewport: { width: 375, height: 667 },
+    });
+    const phone = await other.newPage();
+    await phone.goto("/");
+    await nameCharacter(phone, "とても長い名前のねこ");
+    await expect(phone.getByText("とても長い名前のねこ")).toBeVisible();
+    await phone.request.post("/api/auth/sign-in/email", {
+      data: { email, password: PASSWORD },
+    });
+    await phone.goto("/");
+
+    await expect(
+      phone.getByRole("heading", { name: "どちらのキャラクターで続ける？" }),
+    ).toBeVisible();
+    await expectNoHorizontalScroll(phone);
+    await phone
+      .getByRole("button", { name: "とても長い名前のねこ で続ける" })
+      .click();
+    await expect(phone.getByRole("dialog")).toBeVisible();
+    await expectNoHorizontalScroll(phone);
+    await other.close();
+  });
+});
+
 test.describe("ログイン中のクラウド保存", () => {
   test("AC-8, AC-10: ログイン中に名前を付けて日記を書くと、開き直しても残り、ブラウザの中には保存されない", async ({
     page,

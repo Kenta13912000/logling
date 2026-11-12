@@ -114,7 +114,7 @@ describe("ログイン中", () => {
     render(<AccountPage loginFailed={false} />);
 
     expect(
-      screen.getByText(/日記はクラウドに保存されているよ/),
+      screen.getByText(/日記はインターネット上の保管場所にしまわれているよ/),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -268,6 +268,27 @@ describe("退会", () => {
     expect(
       await screen.findByRole("dialog", { name: "退会する？" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("説明ページへの入口", () => {
+  test("AC-7, AC-31: ログインしていないときも、ログイン中も、「日記の保存のしかた」へ行ける", () => {
+    const { unmount } = render(<AccountPage loginFailed={false} />);
+    expect(
+      screen.getByRole("link", { name: /日記の保存のしかた/ }),
+    ).toHaveAttribute("href", "/privacy");
+    expect(
+      screen.getByText(
+        /日記はインターネット上の保管場所にしまわれ、あなたしか読めない/,
+      ),
+    ).toBeInTheDocument();
+    unmount();
+
+    auth.session = { user: { email: "you@example.com" } };
+    render(<AccountPage loginFailed={false} />);
+    expect(
+      screen.getByRole("link", { name: /日記の保存のしかた/ }),
+    ).toHaveAttribute("href", "/privacy");
   });
 });
 
