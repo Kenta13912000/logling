@@ -92,7 +92,8 @@ export function MigrationChoice({ browser, account, busy, onConfirm }: Props) {
     const keep = summarize(data[chosen]);
     const drop = summarize(data[other]);
     dialog = (
-      <div className="fixed inset-0 flex items-center justify-center bg-ink/45 p-6">
+      // z-20: in front of the tabs, which are dimmed too (tab-navigation AC-11).
+      <div className="fixed inset-0 z-20 flex items-center justify-center bg-ink/45 p-6">
         <div
           role="dialog"
           aria-modal="true"

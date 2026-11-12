@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { BookIcon, HomeIcon, MoreIcon } from "./icons";
 import { TABS, currentTab, type TabId } from "./tabs";
+import { useTyping } from "./typing";
 
 const ICONS: Record<TabId, typeof HomeIcon> = {
   home: HomeIcon,
@@ -15,11 +16,15 @@ const ICONS: Record<TabId, typeof HomeIcon> = {
 /** The tabs fixed to the bottom of every page (tab-navigation). */
 export function TabBar() {
   const current = currentTab(usePathname());
+  const typing = useTyping();
 
+  // AC-9: out of the way (and out of reach of screen readers) while typing.
+  // z-10 keeps the tabs over the page; dialogs sit above them at z-20.
   return (
     <nav
       aria-label="メインメニュー"
-      className="fixed inset-x-0 bottom-0 mx-auto grid w-full max-w-[480px] grid-cols-3 border-t border-line bg-white pb-[env(safe-area-inset-bottom)]"
+      hidden={typing}
+      className="fixed inset-x-0 bottom-0 z-10 mx-auto grid w-full max-w-[480px] grid-cols-3 border-t border-line bg-white pb-[env(safe-area-inset-bottom)]"
     >
       {TABS.map((tab) => {
         const active = tab.id === current;

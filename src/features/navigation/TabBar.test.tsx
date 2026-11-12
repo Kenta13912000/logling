@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -94,7 +94,22 @@ describe("文字を打っている間", () => {
     expect(tabsShown()).toBe(false);
 
     await user.click(screen.getByRole("button", { name: "のこす" }));
-    expect(tabsShown()).toBe(true);
+    // The tabs come back once the press has ended (see useTyping).
+    await waitFor(() => expect(tabsShown()).toBe(true));
+  });
+
+  test("AC-9: ボタンを押して入力欄から離れるときは、押し終わってからタブが出る（押す途中のボタンにかぶらない）", async () => {
+    const user = userEvent.setup();
+    renderWithFields();
+    await user.click(screen.getByLabelText("日記"));
+
+    const button = screen.getByRole("button", { name: "のこす" });
+    await user.pointer({ keys: "[MouseLeft>]", target: button });
+    expect(button).toHaveFocus();
+    expect(tabsShown()).toBe(false);
+
+    await user.pointer({ keys: "[/MouseLeft]", target: button });
+    await waitFor(() => expect(tabsShown()).toBe(true));
   });
 
   test("AC-9: 入力欄から別の入力欄に移っても、隠れたまま", async () => {

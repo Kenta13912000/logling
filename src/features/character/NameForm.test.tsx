@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { expect, test, vi } from "vitest";
 
 import { NameForm } from "./NameForm";
@@ -17,6 +18,16 @@ function setup() {
 test("AC-1: 名前の入力欄とあいさつが表示される", () => {
   setup();
   expect(screen.getByText(/名前をつけてくれる？/)).toBeInTheDocument();
+});
+
+test("tab-navigation AC-12: 開発中と同じく準備の処理を 2 回動かしても、開いたときに名前の入力欄は選ばれていない（下のタブが隠れない）", () => {
+  render(
+    <StrictMode>
+      <NameForm onSubmit={vi.fn()} />
+    </StrictMode>,
+  );
+
+  expect(screen.getByLabelText("名前（10 文字まで）")).not.toHaveFocus();
 });
 
 test("account-sync AC-2: ほかの端末で使っていた人は、名前を付ける前にログインの画面に行ける", () => {
