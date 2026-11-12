@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 
+import type * as accountActions from "@/features/account/actions";
 import type * as actions from "@/features/cloud/actions";
 import type * as migrationActions from "@/features/migration/actions";
 import type { CloudResult } from "@/features/cloud/actions";
@@ -37,7 +38,19 @@ export const migrationMock = {
   importCloudData: vi.fn<typeof migrationActions.importCloudData>(unauthorized),
 };
 
+export const accountMock = {
+  withdrawAccount: vi.fn<typeof accountActions.withdrawAccount>(async () => ({
+    ok: false,
+    reason: "unauthorized",
+  })),
+};
+
 export function resetMocks() {
+  accountMock.withdrawAccount.mockReset();
+  accountMock.withdrawAccount.mockResolvedValue({
+    ok: false,
+    reason: "unauthorized",
+  });
   migrationMock.importCloudData.mockReset();
   migrationMock.importCloudData.mockImplementation(unauthorized);
   authMock.session = null;

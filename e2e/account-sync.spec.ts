@@ -185,6 +185,36 @@ test.describe("ログイン中のクラウド保存", () => {
     await other.close();
   });
 
+  test("AC-25, AC-26, AC-27: 退会すると、名前を付ける画面になり、同じアドレスでまた作ると空のアカウントになる", async ({
+    page,
+  }) => {
+    const email = await signUp(page);
+    await page.goto("/");
+    await nameCharacter(page, "やめるぴよ");
+    await writeDiary(page, "退会で消える日記");
+    await expect(page.getByText("退会で消える日記")).toBeVisible();
+
+    await page.goto("/account");
+    await page.getByRole("button", { name: "退会する" }).click();
+    const dialog = page.getByRole("dialog", { name: "退会する？" });
+    await expect(dialog).toContainText(
+      "やめるぴよ（Lv. 1）と日記 1 件が、すべて消えるよ。",
+    );
+    await dialog.getByRole("button", { name: "退会する" }).click();
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByLabel("名前（10 文字まで）")).toBeVisible();
+
+    // The same address can sign up again: the old account is gone.
+    const again = await page.request.post("/api/auth/sign-up/email", {
+      data: { email, password: PASSWORD, name: "e2e" },
+    });
+    expect(again.ok()).toBe(true);
+    await page.goto("/");
+    await expect(page.getByLabel("名前（10 文字まで）")).toBeVisible();
+    await expect(page.getByText("やめるぴよ")).toHaveCount(0);
+  });
+
   test("AC-23: ログアウトすると、ホームでも振り返りでも、前のアカウントの日記もキャラクターも見えない", async ({
     page,
   }) => {

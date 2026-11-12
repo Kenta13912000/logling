@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { STORAGE_KEY } from "@/features/home/save-data";
+import { accountMock, cloudMock } from "@/test/mocks";
 
 import { AccountPage } from "./AccountPage";
 
@@ -174,6 +175,99 @@ describe("通信に失敗したとき", () => {
       "ログアウトできなかった",
     );
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("退会", () => {
+  const piyo = {
+    version: 1 as const,
+    character: { name: "ぴよ", totalExp: 0 },
+    entries: [],
+  };
+
+  beforeEach(() => {
+    auth.session = { user: { email: "you@example.com" } };
+    cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: piyo });
+  });
+
+  async function openWithdraw() {
+    const user = userEvent.setup();
+    render(<AccountPage loginFailed={false} />);
+    await user.click(await screen.findByRole("button", { name: "退会する" }));
+    return { user, dialog: screen.getByRole("dialog", { name: "退会する？" }) };
+  }
+
+  test("AC-25: ログイン中は「退会する」があり、押すと、そのアカウントのキャラクターと日記が消えることの確認が出る", async () => {
+    const { dialog } = await openWithdraw();
+
+    expect(dialog).toHaveTextContent(
+      "ぴよ（Lv. 1）と日記 0 件が、すべて消えるよ。",
+    );
+  });
+
+  test("AC-26: 確認で退会すると、退会してログインの記録を消し、ホームに戻る", async () => {
+    accountMock.withdrawAccount.mockResolvedValue({ ok: true });
+    const { user, dialog } = await openWithdraw();
+
+    await user.click(within(dialog).getByRole("button", { name: "退会する" }));
+
+    expect(accountMock.withdrawAccount).toHaveBeenCalled();
+    expect(auth.signOut).toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith("/");
+  });
+
+  test("AC-28: 確認でやめると、何もしない", async () => {
+    const { user, dialog } = await openWithdraw();
+
+    await user.click(within(dialog).getByRole("button", { name: "やめる" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(accountMock.withdrawAccount).not.toHaveBeenCalled();
+  });
+
+  test("AC-28: 退会できなかったときは、そのことがわかり、ホームに戻らない", async () => {
+    accountMock.withdrawAccount.mockResolvedValue({
+      ok: false,
+      reason: "failed",
+    });
+    const { user, dialog } = await openWithdraw();
+
+    await user.click(within(dialog).getByRole("button", { name: "退会する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "退会できなかった…通信できるところで、もう一度ためしてね",
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  test("AC-25: ログインして 1 日より前のときは、もう一度ログインするように出て、ログインし直すとアカウントの画面に戻る", async () => {
+    accountMock.withdrawAccount.mockResolvedValue({
+      ok: false,
+      reason: "reauth",
+    });
+    const { user, dialog } = await openWithdraw();
+
+    await user.click(within(dialog).getByRole("button", { name: "退会する" }));
+    expect(
+      await screen.findByText("本人の確認のため、もう一度ログインしてね"),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Google でログインし直す" }),
+    );
+
+    expect(auth.signInSocial).toHaveBeenCalledWith({
+      provider: "google",
+      callbackURL: "/account?withdraw=again",
+      errorCallbackURL: "/account?error=login",
+    });
+  });
+
+  test("AC-25: ログインし直して戻ってきたときは、退会の確認がまた出る", async () => {
+    render(<AccountPage loginFailed={false} withdrawAgain />);
+
+    expect(
+      await screen.findByRole("dialog", { name: "退会する？" }),
+    ).toBeInTheDocument();
   });
 });
 
