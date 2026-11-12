@@ -226,15 +226,15 @@ describe("account-sync：ログイン中", () => {
   });
 });
 
-test("AC-1: 上の帯に、ホームへ戻るリンクがある", () => {
-  store(withEntries([]));
+// tab-navigation: the way back home moved to the tabs (TabBar.test).
+test("tab-navigation AC-8: ふりかえりに、上の帯と「‹ ホーム」のリンクはない", () => {
+  store(withEntries([entry("2026-10-28", "今日の日記")]));
   render(<HistoryPage />);
 
-  // The arrow is decorative, so the link is announced as just "ホーム".
-  expect(screen.getByRole("link", { name: "ホーム" })).toHaveAttribute(
-    "href",
-    "/",
-  );
+  expect(
+    screen.queryByRole("link", { name: "ホーム" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("banner")).not.toBeInTheDocument();
 });
 
 test("AC-5: キャラクターがいないときは、ホームで名前を付けるよう案内する", () => {

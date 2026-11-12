@@ -39,14 +39,17 @@ export function NameForm({ onSubmit }: Props) {
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLParagraphElement>(null);
-  const isFirstRender = useRef(true);
+  // The step focus was last moved for. Comparing with it (not a "first
+  // render" flag) keeps the first view unfocused even when React runs the
+  // effect twice in development (tab-navigation AC-12: the tabs stay shown).
+  const focusedStep = useRef(pendingName);
 
   // Move focus with the step so screen readers announce the change.
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (focusedStep.current === pendingName) {
       return;
     }
+    focusedStep.current = pendingName;
     if (pendingName === null) {
       inputRef.current?.focus();
     } else {

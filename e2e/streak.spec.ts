@@ -126,7 +126,10 @@ test("AC-15, AC-16, AC-22: 振り返りでボーナスの付いた日記を消�
   await dialog.getByRole("button", { name: "消す" }).click();
   await expect(dialog).toBeHidden();
 
-  await page.getByRole("link", { name: "ホーム", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name: "ホーム" })
+    .click();
 
   await expect(band(page)).toContainText("🔥 6 日連続中。今日書くと 7 日！");
   // 70 - 30 = 40 = Lv2 (10 / 40).

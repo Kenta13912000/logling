@@ -49,14 +49,20 @@ test("AC-30: だれにでもわかるように、専門の言葉を使わない"
   }
 });
 
-test("AC-30: 問い合わせは GitHub のページから。ホームに戻れる", () => {
+test("AC-30: 問い合わせは GitHub のページから", () => {
   render(<PrivacyPage />);
 
   expect(
     screen.getByRole("link", { name: /GitHub の logling のページ/ }),
   ).toHaveAttribute("href", "https://github.com/Kenta13912000/logling/issues");
-  expect(screen.getByRole("link", { name: /ホーム/ })).toHaveAttribute(
-    "href",
-    "/",
-  );
+});
+
+// tab-navigation: the way back home moved to the tabs (TabBar.test).
+test("tab-navigation AC-8: 説明ページに、上の帯と「‹ ホーム」のリンクはない", () => {
+  render(<PrivacyPage />);
+
+  expect(
+    screen.queryByRole("link", { name: /ホーム/ }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("banner")).not.toBeInTheDocument();
 });

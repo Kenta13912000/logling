@@ -45,25 +45,43 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("diary-history", () => {
-  test("AC-1: キャラクターがいると、上の帯に「ふりかえる」のリンクがある", () => {
+describe("tab-navigation", () => {
+  // The links moved to the tabs, which the common layout shows (TabBar.test).
+  test("AC-8: キャラクターがいても、ホームに「ふりかえる」「アカウント」のリンクと上の帯はない", () => {
     store(piyo(0));
-    render(<Home />);
-
-    expect(screen.getByRole("link", { name: /ふりかえる/ })).toHaveAttribute(
-      "href",
-      "/history",
-    );
-  });
-
-  test("AC-1: 名前を付ける前は「ふりかえる」のリンクを出さない", () => {
     render(<Home />);
 
     expect(
       screen.queryByRole("link", { name: /ふりかえる/ }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /アカウント/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
   });
 
+  test("AC-8: ホームには、読み上げ用の見出し「ホーム」がある", () => {
+    store(piyo(0));
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "ホーム" }),
+    ).toBeInTheDocument();
+  });
+
+  test("AC-12: 名前を付ける前も、見出し「ホーム」と「ほかの端末で使っていた人は ログイン ›」がある", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "ホーム" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /ほかの端末で使っていた人は ログイン/ }),
+    ).toHaveAttribute("href", "/account");
+  });
+});
+
+describe("diary-history", () => {
   test("AC-24: 名前を付けると、朝 4 時で区切ったその日が始めた日として保存される", async () => {
     // 10/29 3:30 is still diary day 10/28.
     setNow(2026, 9, 29, 3, 30);
@@ -79,16 +97,6 @@ describe("diary-history", () => {
 });
 
 describe("account-sync", () => {
-  test("AC-2: キャラクターがいると、上の帯に「アカウント」のリンクがあり、アカウントの画面に行ける", () => {
-    store(piyo(0));
-    render(<Home />);
-
-    expect(screen.getByRole("link", { name: /アカウント/ })).toHaveAttribute(
-      "href",
-      "/account",
-    );
-  });
-
   test("AC-31: ホームの下に、アプリの説明と「日記の保存のしかた」へのリンクがある", () => {
     render(<Home />);
 
@@ -99,15 +107,6 @@ describe("account-sync", () => {
     expect(
       within(footer).getByRole("link", { name: "日記の保存のしかた" }),
     ).toHaveAttribute("href", "/privacy");
-  });
-
-  test("AC-2: 名前を付ける前も、上の帯に「アカウント」のリンクがある", () => {
-    render(<Home />);
-
-    expect(screen.getByRole("link", { name: /アカウント/ })).toHaveAttribute(
-      "href",
-      "/account",
-    );
   });
 
   describe("ログイン中", () => {
@@ -587,12 +586,11 @@ describe("streak", () => {
 });
 
 describe("初めて開いたとき", () => {
-  test("AC-1: アプリ名と名前の入力欄が表示される", () => {
+  // tab-navigation: the app's name moved to the common top bar, which is not
+  // a heading (AppHeader.test).
+  test("AC-1: 名前の入力欄が表示される", () => {
     render(<Home />);
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: "logling" }),
-    ).toBeInTheDocument();
     expect(screen.getByLabelText("名前（10 文字まで）")).toBeInTheDocument();
   });
 

@@ -100,7 +100,10 @@ test("AC-11, AC-12: 振り返りで日記を消して前の段階に戻るとき
   await dialog.getByRole("button", { name: "消す" }).click();
   await expect(dialog).toBeHidden();
 
-  await page.getByRole("link", { name: "ホーム", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name: "ホーム" })
+    .click();
 
   await expect(
     page.getByRole("img", { name: "ぴよ のすがた（ねこだま）" }),

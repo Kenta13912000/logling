@@ -53,12 +53,19 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date(2026, 10, 7, 21, 0));
 });
 
-test("AC-1, AC-2: ホームの「ふりかえる」から振り返りに移って一覧を読み、「ホーム」で戻れる", async ({
+/** A tab at the bottom of the page (tab-navigation). */
+function tab(page: Page, name: string) {
+  return page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name });
+}
+
+test("AC-1, AC-2: 下のタブの「ふりかえる」から振り返りに移って一覧を読み、「ホーム」で戻れる", async ({
   page,
 }) => {
   await seed(page, seedData(), "/");
 
-  await page.getByRole("link", { name: /ふりかえる/ }).click();
+  await tab(page, "ふりかえる").click();
 
   await expect(page).toHaveURL(/\/history$/);
   await expect(page).toHaveTitle("ふりかえり | logling");
@@ -72,7 +79,7 @@ test("AC-1, AC-2: ホームの「ふりかえる」から振り返りに移っ�
   ).toBeVisible();
   await expect(card(page, "10月25日（日）")).toContainText("ずっと前の日記");
 
-  await page.getByRole("link", { name: "ホーム", exact: true }).click();
+  await tab(page, "ホーム").click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText("Lv. 2")).toBeVisible();

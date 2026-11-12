@@ -22,7 +22,8 @@ export function WithdrawDialog({ data, busy, onConfirm, onCancel }: Props) {
       : `${character.name}（Lv. ${getLevelInfo(character.totalExp).level}）と日記 ${entries.length} 件が、すべて消えるよ。`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-ink/45 p-6">
+    // z-20: in front of the tabs, which are dimmed too (tab-navigation AC-11).
+    <div className="fixed inset-0 z-20 flex items-center justify-center bg-ink/45 p-6">
       <div
         role="dialog"
         aria-modal="true"
