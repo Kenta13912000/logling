@@ -6,7 +6,8 @@ import { createWebPushSender } from "./web-push-sender";
 vi.mock("server-only", () => ({}));
 
 const webpush = vi.hoisted(() => ({ sendNotification: vi.fn() }));
-vi.mock("web-push", () => ({ default: webpush, ...webpush }));
+// web-push 4 is an ES module with named exports only.
+vi.mock("web-push", () => webpush);
 
 const TARGET = {
   endpoint: "https://web.push.apple.com/phone",
