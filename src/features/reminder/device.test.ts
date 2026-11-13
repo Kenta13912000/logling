@@ -13,7 +13,7 @@ function withSubscription(
   Object.defineProperty(navigator, "serviceWorker", {
     configurable: true,
     value: {
-      ready: Promise.resolve({
+      getRegistration: async () => ({
         pushManager: { getSubscription: async () => sub },
       }),
     },

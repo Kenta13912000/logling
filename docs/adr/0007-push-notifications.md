@@ -29,7 +29,7 @@
 ### 宛先の保存と守り方
 
 - 宛先は、ログインしている人のアカウントに結びつけて、端末ごとに 1 行で保存する（表 `push_subscriptions`）。退会すると、アカウントと一緒に消える
-- 受け付ける宛先のアドレスは、`https` で、知られているお知らせのしくみのものだけにする（Apple：`*.push.apple.com`、Google：`fcm.googleapis.com`・`*.googleapis.com`、Mozilla：`*.push.services.mozilla.com`、Microsoft：`*.notify.windows.com`）。好きなアドレスを登録できると、logling のサーバーにそこへ通信させられてしまう（SSRF）ため
+- 受け付ける宛先のアドレスは、`https` で、知られているお知らせのしくみのものだけにする（Apple：`*.push.apple.com`、Google：`fcm.googleapis.com`・`android.googleapis.com` の 2 つだけ（`googleapis.com` の下にはほかのサービスもあるため、名前を決め打ちにする）、Mozilla：`*.push.services.mozilla.com`、Microsoft：`*.notify.windows.com`）。好きなアドレスを登録できると、logling のサーバーにそこへ通信させられてしまう（SSRF）ため
 - 宛先の持ち主は、サーバーのログイン情報から決める。ブラウザから送られてきた人の ID は使わない（`account-sync` と同じ）
 
 ## 検討した他の案

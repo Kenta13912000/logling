@@ -235,3 +235,8 @@ src/test/mocks.ts・vitest.setup.ts（変更）     # 画面のテストで、�
 - PR-1（#18）の取り込み後：公開中のサイトで E2E テスト 30 件が通り（ログインが要る 17 件は飛ばした）、開発者の iPhone でホーム画面に追加・アイコン・上の帯・「✓ ホーム画面から開いているよ」に問題がなかった
 - Bolt-3 ⑤ へのゲートでの判断：指摘なしで承認（ADR-0007：Web Push と `web-push`、Vercel Schedules で 30 分ごと、宛先はお知らせのしくみのアドレスだけ。ログアウトの前に、この端末の宛先を消す）
 - Bolt-3 ⑥ へのゲートでの判断：指摘なしで承認（ログアウトのときにこの端末の宛先を読んで止める部品 `device.ts` を、設計に足した）
+- Bolt-3 ⑦ の作成中に変えた点：
+  - ブラウザの登録を `serviceWorker.ready` で待つと、しくみを登録していないブラウザでは終わらず、ログアウトが止まる。`getRegistration` で「あるかないか」を確かめる形にし、`device.test.ts` の仮のブラウザも合わせた
+  - Google の宛先のアドレスを、`*.googleapis.com` から `fcm.googleapis.com`・`android.googleapis.com` の 2 つに絞った（ADR-0007 も直した）
+  - 表を作る SQL のファイル名を `0001_push_subscriptions.sql` にした。手元の `dev` の DB に当てた
+- Bolt-3 ⑦ へのゲートでの判断：指摘なしで承認

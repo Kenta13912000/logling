@@ -1,3 +1,6 @@
+import { and, eq, sql } from "drizzle-orm";
+
+import { pushSubscriptions } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 
 import type { ReminderInput } from "./validate";
@@ -11,20 +14,53 @@ export async function findReminder(
   userId: string,
   endpoint: string,
 ): Promise<StoredReminder | null> {
-  // Bolt-3 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, endpoint];
-  throw new Error("not yet");
+  const [row] = await db
+    .select({
+      minute: pushSubscriptions.remindMinute,
+      timeZone: pushSubscriptions.timeZone,
+    })
+    .from(pushSubscriptions)
+    .where(
+      and(
+        eq(pushSubscriptions.endpoint, endpoint),
+        eq(pushSubscriptions.userId, userId),
+      ),
+    );
+  return row ?? null;
 }
 
-/** Saves the device's reminder for this person (adds it or changes it). */
+/**
+ * Saves the device's reminder for this person: adds it, or changes its time.
+ * If someone else had turned it on in this browser before, it becomes this
+ * person's, and their "already reminded today" is cleared.
+ */
 export async function upsertReminder(
   db: Db,
   userId: string,
-  input: ReminderInput,
+  { subscription, minute, timeZone }: ReminderInput,
 ): Promise<void> {
-  // Bolt-3 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, input];
-  throw new Error("not yet");
+  await db
+    .insert(pushSubscriptions)
+    .values({
+      endpoint: subscription.endpoint,
+      userId,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+      remindMinute: minute,
+      timeZone,
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        userId,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+        remindMinute: minute,
+        timeZone,
+        lastSentOn: sql`case when ${pushSubscriptions.userId} = excluded.user_id then ${pushSubscriptions.lastSentOn} else null end`,
+        updatedAt: new Date(),
+      },
+    });
 }
 
 /** Deletes the device's reminder, only if it is this person's. */
@@ -33,7 +69,12 @@ export async function deleteReminder(
   userId: string,
   endpoint: string,
 ): Promise<void> {
-  // Bolt-3 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, endpoint];
-  throw new Error("not yet");
+  await db
+    .delete(pushSubscriptions)
+    .where(
+      and(
+        eq(pushSubscriptions.endpoint, endpoint),
+        eq(pushSubscriptions.userId, userId),
+      ),
+    );
 }

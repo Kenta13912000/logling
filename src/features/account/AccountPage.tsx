@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { loadCloudData } from "@/features/cloud/actions";
 import type { SaveData } from "@/features/home/save-data";
+import { forgetThisDevice } from "@/features/reminder/device";
 import { authClient } from "@/lib/auth-client";
 
 import { withdrawAccount } from "./actions";
@@ -116,6 +117,9 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
   }
 
   async function signOut() {
+    // pwa-reminder AC-16: stop this device's reminders first. Signing out
+    // goes ahead even if that fails.
+    await forgetThisDevice().catch(() => undefined);
     const { error } = await authClient.signOut();
     if (error) {
       setNotice("logoutFailed");
