@@ -37,7 +37,7 @@ describe("宛先のアドレス（ADR-0007）", () => {
     "https://web.push.apple.com/QGuQyavXutnMH",
     "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA",
     "https://wns2-par02p.notify.windows.com/w/?token=BQYAAAB",
-  ])("AC-8: お知らせのしくみのアドレス %s は受け付ける", (endpoint) => {
+  ])("AC-22: お知らせのしくみのアドレス %s は受け付ける", (endpoint) => {
     expect(validateReminder(withEndpoint(endpoint))).not.toBeNull();
   });
 
@@ -57,7 +57,7 @@ describe("宛先のアドレス（ADR-0007）", () => {
       "長すぎる（2,000 文字より長い）",
       `https://fcm.googleapis.com/${"x".repeat(2000)}`,
     ],
-  ])("AC-8: %s は受け付けない", (_, endpoint) => {
+  ])("AC-22: %s は受け付けない", (_, endpoint) => {
     expect(validateReminder(withEndpoint(endpoint))).toBeNull();
   });
 });
@@ -68,7 +68,7 @@ describe("鍵", () => {
     ["短すぎる鍵", "abc", AUTH],
     ["短すぎる auth", P256DH, "a"],
     ["長すぎる鍵", "B".repeat(200), AUTH],
-  ])("AC-8: %s は受け付けない", (_, p256dh, auth) => {
+  ])("AC-22: %s は受け付けない", (_, p256dh, auth) => {
     expect(validateReminder(withKeys(p256dh, auth))).toBeNull();
   });
 });
@@ -108,6 +108,6 @@ test("AC-8: 形の違うもの（なし・文字・宛先の抜け）は受け�
   expect(validateReminder(input({ subscription: undefined }))).toBeNull();
 });
 
-test("AC-8: 余分な値（ほかの人の ID など）は、受け付けた結果に残さない", () => {
+test("AC-8, AC-22: 余分な値（ほかの人の ID など）は、受け付けた結果に残さない", () => {
   expect(validateReminder(input({ userId: "user-b" }))).toStrictEqual(input());
 });

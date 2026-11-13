@@ -39,14 +39,14 @@ test.each([
   ["合言葉がない", undefined],
   ["合言葉が違う", "Bearer wrong-secret"],
   ["形が違う", SECRET],
-])("AC-11: %s ときは 401 で、何も送らない", async (_, authorization) => {
+])("AC-23: %s ときは 401 で、何も送らない", async (_, authorization) => {
   const response = await call(authorization);
 
   expect(response.status).toBe(401);
   expect(reminders.sendDueReminders).not.toHaveBeenCalled();
 });
 
-test("AC-11: サーバーに合言葉が設定されていなければ、だれが呼んでも 401", async () => {
+test("AC-23: サーバーに合言葉が設定されていなければ、だれが呼んでも 401", async () => {
   vi.stubEnv("CRON_SECRET", "");
 
   const response = await call("Bearer ");
@@ -55,7 +55,7 @@ test("AC-11: サーバーに合言葉が設定されていなければ、だれ�
   expect(reminders.sendDueReminders).not.toHaveBeenCalled();
 });
 
-test("AC-11: 合言葉が正しければ送る流れを動かし、数だけを返す", async () => {
+test("AC-23: 合言葉が正しければ送る流れを動かし、数だけを返す", async () => {
   const response = await call(`Bearer ${SECRET}`);
 
   expect(response.status).toBe(200);
@@ -63,7 +63,7 @@ test("AC-11: 合言葉が正しければ送る流れを動かし、数だけを�
   expect(reminders.sendDueReminders).toHaveBeenCalledTimes(1);
 });
 
-test("AC-11: お知らせの鍵がなければ、送らずに 503", async () => {
+test("AC-23: お知らせの鍵がなければ、送らずに 503", async () => {
   vi.stubEnv("VAPID_PRIVATE_KEY", "");
 
   const response = await call(`Bearer ${SECRET}`);

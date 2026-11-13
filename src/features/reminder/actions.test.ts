@@ -96,7 +96,7 @@ describe("ログイン中", () => {
     expect(await getReminder(PHONE)).toStrictEqual({ ok: true, minute: null });
   });
 
-  test("AC-8: 持ち主は、送られてきた値ではなく、サーバーのログイン情報で決まる", async () => {
+  test("AC-8, AC-22: 持ち主は、送られてきた値ではなく、サーバーのログイン情報で決まる", async () => {
     await saveReminder({ ...input(), userId: B });
 
     expect(await findReminder(testDb.db, A, PHONE)).not.toBeNull();
@@ -119,7 +119,7 @@ describe("ログイン中", () => {
     expect(await findReminder(testDb.db, A, PHONE)).toBeNull();
   });
 
-  test("AC-10: DB で失敗したときは「失敗」を返し、宛先を記録（ログ）に出さない", async () => {
+  test("AC-10, AC-22: DB で失敗したときは「失敗」を返し、宛先を記録（ログ）に出さない", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     // Any use of the database fails, with the address in the error text.
     server.db = new Proxy(
