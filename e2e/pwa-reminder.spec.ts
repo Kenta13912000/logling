@@ -1,4 +1,35 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function expectNoHorizontalScroll(page: Page) {
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+}
+
+test.describe("スマホの幅（375px）", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("AC-4, AC-21: 「その他」→「設定」で、ホーム画面に追加する手順が見え、横スクロールが出ない", async ({
+    page,
+  }) => {
+    await page.goto("/more");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "その他" }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: /設定/ }).click();
+
+    await expect(page).toHaveURL(/\/settings$/);
+    const install = page.getByRole("region", { name: "ホーム画面に追加" });
+    await expect(install).toContainText(
+      "ホーム画面に追加すると、アプリのように開けるよ",
+    );
+    await expect(install.getByText("iPhone（Safari）")).toBeVisible();
+    await expect(install.getByText("Android（Chrome）")).toBeVisible();
+    await expectNoHorizontalScroll(page);
+  });
+});
 
 test("AC-1, AC-2: ページにマニフェストと iPhone 用の設定・アイコンがあり、マニフェストとアイコンが届く", async ({
   page,
