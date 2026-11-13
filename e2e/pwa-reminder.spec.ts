@@ -31,6 +31,19 @@ test("AC-9, AC-18, AC-20: ログインしていないと「ログインすると
   expect(sw.headers()["cache-control"]).toContain("no-cache");
 });
 
+test("AC-11: 合言葉なし・違う合言葉で /api/reminders を呼ぶと 401 で断られる", async ({
+  request,
+}) => {
+  expect((await request.post("/api/reminders")).status()).toBe(401);
+  expect(
+    (
+      await request.post("/api/reminders", {
+        headers: { authorization: "Bearer not-the-secret" },
+      })
+    ).status(),
+  ).toBe(401);
+});
+
 test.describe("ログインしたとき", () => {
   test.skip(
     !!process.env.BASE_URL,
