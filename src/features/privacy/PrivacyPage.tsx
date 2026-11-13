@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /** The day this page's content last changed. */
-const UPDATED = "2026年11月12日";
+const UPDATED = "2026年11月13日";
 
 const ISSUES_URL = "https://github.com/Kenta13912000/logling/issues";
 
@@ -72,6 +72,23 @@ export function PrivacyPage() {
         <p>
           退会すると、保管場所にあるキャラクターと日記が、すべて消えます。元にはもどせません。退会は、ログインしてから
           1 日以内にできます（本人かどうかを確かめるため）。
+        </p>
+      </Section>
+
+      {/* pwa-reminder AC-19 */}
+      <Section title="お知らせ">
+        <p>
+          「設定」で「書き忘れのお知らせ」をオンにした人（ログイン中の人）だけが使えます。
+        </p>
+        <p>
+          オンにすると、この端末へのお知らせの宛先・選んだ時刻・タイムゾーンを預かり、まだ日記を書いていない日だけお知らせを送ります。
+        </p>
+        <p>
+          お知らせは Apple や Google
+          などのしくみを通って届きます。入るのはキャラクターの名前と決まった文だけで、日記の本文は入りません。
+        </p>
+        <p>
+          「設定」でオフにする・ログアウト・退会のどれかで、預かったものは消えます。
         </p>
       </Section>
 
