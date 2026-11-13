@@ -8,6 +8,33 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 }
 
+test("AC-18: ログインしていない人が、ホームから「その他」→「設定」まで開いても、同じオリジン以外へ通信しない", async ({
+  page,
+}) => {
+  const urls: string[] = [];
+  page.on("request", (request) => urls.push(request.url()));
+
+  await page.goto("/");
+  const origin = new URL(page.url()).origin;
+  await page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name: "その他" })
+    .click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "その他" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: /設定/ }).click();
+  await expect(page.getByRole("region", { name: "お知らせ" })).toContainText(
+    "ログインすると使えるよ",
+  );
+
+  const network = urls.filter((url) => /^https?:/.test(url));
+  expect(network.length).toBeGreaterThan(0);
+  for (const url of network) {
+    expect(new URL(url).origin, url).toBe(origin);
+  }
+});
+
 test("AC-9, AC-18, AC-20: ログインしていないと「ログインすると使えるよ」。ページを見ただけでは、お知らせのしくみは登録されない。/sw.js は毎回取り直す設定で届く", async ({
   page,
 }) => {
