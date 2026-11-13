@@ -8,12 +8,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "logling",
   description: "日記を書くとキャラクターが育つ、続けたくなる日記アプリ",
+  // pwa-reminder AC-1: on iPhone, opens from the home screen as an app.
+  appleWebApp: { capable: true, title: "logling", statusBarStyle: "default" },
 };
 
-// tab-navigation AC-10: lets env(safe-area-inset-bottom) report the room
-// the iPhone home indicator needs (it is 0 without this).
 export const viewport: Viewport = {
+  // tab-navigation AC-10: lets env(safe-area-inset-bottom) report the room
+  // the iPhone home indicator needs (it is 0 without this).
   viewportFit: "cover",
+  // pwa-reminder: the cream page background, also for the phone's top bar.
+  themeColor: "#fff8ec",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

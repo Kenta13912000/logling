@@ -145,7 +145,10 @@ test("AC-1, AC-3, AC-5, AC-12: 名前を付ける前から、下のタブで 3 �
   await openMore(page);
   await page.getByRole("link", { name: /設定/ }).click();
   await expectAt(page, /\/settings$/, "その他");
-  await expect(page.getByText("設定は、これから増えるよ")).toBeVisible();
+  // pwa-reminder replaced "これから増えるよ" with the settings themselves.
+  await expect(
+    page.getByRole("heading", { level: 1, name: "設定" }),
+  ).toBeVisible();
 
   await tab(page, "ホーム").click();
   await expectAt(page, /\/$/, "ホーム");
