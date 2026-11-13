@@ -81,7 +81,8 @@ describe("お知らせが届いたとき", () => {
   ])("AC-14: 開く場所が %s なら、ホーム（/）にする", async (_, url) => {
     await push(message({ title: "logling", body: "文", url }));
 
-    expect(showNotification.mock.calls[0][1].data).toStrictEqual({ url: "/" });
+    // toEqual, not toStrictEqual: the object comes from the vm's own realm.
+    expect(showNotification.mock.calls[0][1].data).toEqual({ url: "/" });
   });
 
   test("AC-11: 中身が読めないときは「logling」「今日の日記を書こう」", async () => {
@@ -95,7 +96,7 @@ describe("お知らせが届いたとき", () => {
     for (const [title, options] of showNotification.mock.calls) {
       expect(title).toBe("logling");
       expect(options.body).toBe("今日の日記を書こう");
-      expect(options.data).toStrictEqual({ url: "/" });
+      expect(options.data).toEqual({ url: "/" });
     }
     expect(showNotification).toHaveBeenCalledTimes(2);
   });

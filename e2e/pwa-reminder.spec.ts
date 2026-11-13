@@ -36,7 +36,6 @@ test.describe("ログインしたとき", () => {
     !!process.env.BASE_URL,
     "テスト用のログインは、手元の開発サーバーでだけ使える",
   );
-
   test("AC-6: 「設定」の「書き忘れのお知らせ」は、はじめはオフで、押せる", async ({
     page,
   }) => {
@@ -46,6 +45,13 @@ test.describe("ログインしたとき", () => {
     });
     expect(response.ok()).toBe(true);
 
+    // Headless Chromium always answers "denied" (it has nowhere to show
+    // notifications). A real browser starts at "default": not asked yet.
+    await page.addInitScript(() => {
+      Object.defineProperty(Notification, "permission", {
+        get: () => "default",
+      });
+    });
     await page.goto("/settings");
     const toggle = page.getByRole("switch", { name: "書き忘れのお知らせ" });
     await expect(toggle).toBeEnabled();
