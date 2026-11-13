@@ -8,6 +8,52 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 }
 
+test("AC-9, AC-18, AC-20: ログインしていないと「ログインすると使えるよ」。ページを見ただけでは、お知らせのしくみは登録されない。/sw.js は毎回取り直す設定で届く", async ({
+  page,
+}) => {
+  for (const path of ["/", "/history", "/more", "/settings"]) {
+    await page.goto(path);
+  }
+  const reminder = page.getByRole("region", { name: "お知らせ" });
+  await expect(reminder).toContainText("ログインすると使えるよ");
+  await expect(
+    page.getByRole("switch", { name: "書き忘れのお知らせ" }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(
+      async () => (await navigator.serviceWorker.getRegistration()) ?? null,
+    ),
+  ).toBeNull();
+
+  const sw = await page.request.get("/sw.js");
+  expect(sw.ok()).toBe(true);
+  expect(sw.headers()["content-type"]).toContain("javascript");
+  expect(sw.headers()["cache-control"]).toContain("no-cache");
+});
+
+test.describe("ログインしたとき", () => {
+  test.skip(
+    !!process.env.BASE_URL,
+    "テスト用のログインは、手元の開発サーバーでだけ使える",
+  );
+
+  test("AC-6: 「設定」の「書き忘れのお知らせ」は、はじめはオフで、押せる", async ({
+    page,
+  }) => {
+    const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+    const response = await page.request.post("/api/auth/sign-up/email", {
+      data: { email, password: "e2e-password-123", name: "e2e" },
+    });
+    expect(response.ok()).toBe(true);
+
+    await page.goto("/settings");
+    const toggle = page.getByRole("switch", { name: "書き忘れのお知らせ" });
+    await expect(toggle).toBeEnabled();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("combobox", { name: "時刻" })).toHaveCount(0);
+  });
+});
+
 test.describe("スマホの幅（375px）", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
