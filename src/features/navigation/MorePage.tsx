@@ -50,7 +50,7 @@ export function MorePage() {
   return (
     <main className="px-4 py-5">
       <h1 className="text-lg font-bold">その他</h1>
-      <ul className="mt-3 overflow-hidden rounded-2xl border border-line bg-white">
+      <ul className="mt-3 overflow-hidden rounded-2xl border border-line bg-surface">
         <Row
           href="/account"
           icon={UserIcon}

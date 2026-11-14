@@ -78,6 +78,23 @@ export async function createCharacter(
   return created.length > 0 ? "ok" : "exists";
 }
 
+/**
+ * Changes only the name of the person's character (settings AC-6, AC-8).
+ * "noCharacter" when another device removed it.
+ */
+export async function renameCharacter(
+  db: Db,
+  userId: string,
+  name: string,
+): Promise<WriteResult> {
+  const updated = await db
+    .update(characters)
+    .set({ name })
+    .where(eq(characters.userId, userId))
+    .returning({ userId: characters.userId });
+  return updated.length > 0 ? "ok" : "noCharacter";
+}
+
 /** Adds one entry and its EXP together. A second entry for a day is refused. */
 export async function insertEntry(
   db: Db,

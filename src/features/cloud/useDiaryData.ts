@@ -13,12 +13,14 @@ import {
   deleteCloudEntry,
   editCloudEntry,
   loadCloudData,
+  renameCloudCharacter,
   type CloudResult,
 } from "./actions";
 
 /** What the person did. The cloud saves this; the browser saves `next`. */
 export type Change =
   | { type: "createCharacter"; character: Character }
+  | { type: "renameCharacter"; name: string }
   | { type: "addEntry"; entry: DiaryEntry; exp: number }
   | { type: "editEntry"; date: string; body: string }
   | { type: "deleteEntry"; date: string; exp: number };
@@ -46,6 +48,8 @@ function send(change: Change, next: SaveData): Promise<CloudResult> {
   switch (change.type) {
     case "createCharacter":
       return createCloudCharacter(change.character);
+    case "renameCharacter":
+      return renameCloudCharacter(change.name);
     case "addEntry":
       return addCloudEntry(change.entry, change.exp, startDate);
     case "editEntry":

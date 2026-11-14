@@ -13,7 +13,7 @@ export function SettingsSection({ title, children }: Props) {
       <h2 id={headingId} className="mb-2 text-sm font-bold text-ink-muted">
         {title}
       </h2>
-      <div className="rounded-2xl border border-line bg-white px-4 py-3.5 text-sm">
+      <div className="rounded-2xl border border-line bg-surface px-4 py-3.5 text-sm">
         {children}
       </div>
     </section>

@@ -27,9 +27,7 @@ export function InstallGuide() {
   const standalone = useStandalone();
 
   if (standalone) {
-    return (
-      <p className="font-bold text-[#3f6b2a]">✓ ホーム画面から開いているよ</p>
-    );
+    return <p className="font-bold text-ok">✓ ホーム画面から開いているよ</p>;
   }
 
   return (

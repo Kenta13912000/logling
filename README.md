@@ -21,9 +21,9 @@
 
 ## できること
 
-「日記で経験値（`diary-exp`）」「日記の振り返り（`diary-history`）」「連続記録とボーナス（`streak`）」「キャラクターの成長（`character-evolution`）」「ログインとクラウド保存（`account-sync`）」「下のタブで画面を切り替える（`tab-navigation`）」「ホーム画面に追加と、書き忘れを防ぐお知らせ（`pwa-reminder`）」ができています。
+「日記で経験値（`diary-exp`）」「日記の振り返り（`diary-history`）」「連続記録とボーナス（`streak`）」「キャラクターの成長（`character-evolution`）」「ログインとクラウド保存（`account-sync`）」「下のタブで画面を切り替える（`tab-navigation`）」「ホーム画面に追加と、書き忘れを防ぐお知らせ（`pwa-reminder`）」「キャラの名前を変える・暗い色の画面（`settings`）」ができています。
 
-- キャラクター（ねこ）に名前を付ける（決める前に確認あり）
+- キャラクター（ねこ）に名前を付ける（決める前に確認あり）。名前はあとから「設定」で何度でも変えられる（経験値や日記はそのまま）
 - 1 日 1 件の日記を書くと、キャラクターに経験値が 10 入り、たまるとレベルが上がる
 - 1 日は朝 4 時で区切る（夜ふかしして書いた日記は前の日の日記になる）
 - 「ふりかえり」のページで、これまでの日記を新しい順に読み返せる
@@ -41,9 +41,10 @@
 - 画面の下の「ホーム」「ふりかえる」「その他」のタブで、どの画面にも移れる（アカウント・日記の保存のしかた・設定は「その他」の中）。文字を打っている間はタブが隠れる
 - スマホのホーム画面に追加して、アプリのように開ける（追加のしかたは「設定」に）
 - ログインしている人は、「設定」で「書き忘れのお知らせ」をオンにすると、選んだ時刻（30 分ごと）に、まだ日記を書いていない日だけお知らせが届く。お知らせはオンにした端末にだけ届き、日記の本文は入らない
+- 端末が暗い色の設定（ダークモード）のときは、画面も暗い色になる（文字の読みやすさは WCAG AA の目安を満たす）
 - スマホの画面幅で使えるように作っている
 
-要件の詳細は [要件定義：日記で経験値](docs/requirements/diary-exp.md) ・[要件定義：日記の振り返り](docs/requirements/diary-history.md)・[要件定義：連続記録とボーナス](docs/requirements/streak.md)・[要件定義：キャラクターの成長](docs/requirements/character-evolution.md)・[要件定義：ログインとクラウド保存](docs/requirements/account-sync.md)・[要件定義：下のタブで画面を切り替える](docs/requirements/tab-navigation.md)・[要件定義：ホーム画面に追加と、書き忘れを防ぐお知らせ](docs/requirements/pwa-reminder.md) にあります。
+要件の詳細は [要件定義：日記で経験値](docs/requirements/diary-exp.md) ・[要件定義：日記の振り返り](docs/requirements/diary-history.md)・[要件定義：連続記録とボーナス](docs/requirements/streak.md)・[要件定義：キャラクターの成長](docs/requirements/character-evolution.md)・[要件定義：ログインとクラウド保存](docs/requirements/account-sync.md)・[要件定義：下のタブで画面を切り替える](docs/requirements/tab-navigation.md)・[要件定義：ホーム画面に追加と、書き忘れを防ぐお知らせ](docs/requirements/pwa-reminder.md)・[要件定義：キャラの名前を変える・暗い色の画面](docs/requirements/settings.md) にあります。
 
 ## 技術スタック
 
@@ -60,7 +61,7 @@
 | DB             | Neon（PostgreSQL）＋ Drizzle ORM。テストは PGlite  |
 | 認証           | Better Auth（Google ログイン）                     |
 
-選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md)、[ADR-0003：公開先に Vercel を使う](docs/adr/0003-hosting-vercel.md)、[ADR-0004：Node.js を 26 に上げる](docs/adr/0004-node-26.md)、[ADR-0005：DB に Neon、認証に Better Auth を使う](docs/adr/0005-db-auth-neon-better-auth.md)、[ADR-0006：ログインの環境の分け方と、テスト用のログイン](docs/adr/0006-auth-environments-and-test-login.md) にまとめています。
+選定理由は [ADR-0001：技術スタック](docs/adr/0001-tech-stack.md)、[ADR-0003：公開先に Vercel を使う](docs/adr/0003-hosting-vercel.md)、[ADR-0004：Node.js を 26 に上げる](docs/adr/0004-node-26.md)、[ADR-0005：DB に Neon、認証に Better Auth を使う](docs/adr/0005-db-auth-neon-better-auth.md)、[ADR-0006：ログインの環境の分け方と、テスト用のログイン](docs/adr/0006-auth-environments-and-test-login.md) にまとめています。お知らせの送り方は [ADR-0007](docs/adr/0007-push-notifications.md)、暗い色の画面の作り方は [ADR-0008](docs/adr/0008-dark-mode.md) にあります。
 
 ## 起動方法
 

@@ -49,13 +49,22 @@ export function parseBody(value: unknown): string | null {
   return result.ok ? result.body : null;
 }
 
-export function parseCharacter(value: unknown): Character | null {
-  if (!isRecord(value) || typeof value.name !== "string") {
+/** The trimmed name, or null when it breaks the naming rules (settings AC-3). */
+export function parseName(value: unknown): string | null {
+  if (typeof value !== "string") {
     return null;
   }
-  const name = validateName(value.name);
+  const result = validateName(value);
+  return result.ok ? result.name : null;
+}
+
+export function parseCharacter(value: unknown): Character | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const name = parseName(value.name);
   if (
-    !name.ok ||
+    name === null ||
     !Number.isInteger(value.totalExp) ||
     (value.totalExp as number) < 0 ||
     (value.startDate !== undefined && !isDiaryDate(value.startDate))
@@ -63,7 +72,7 @@ export function parseCharacter(value: unknown): Character | null {
     return null;
   }
   return {
-    name: name.name,
+    name,
     totalExp: value.totalExp as number,
     ...(value.startDate !== undefined
       ? { startDate: value.startDate as string }

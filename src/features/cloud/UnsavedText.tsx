@@ -20,7 +20,7 @@ export function UnsavedText({
       <h2 id={titleId} className="text-sm font-bold">
         この端末で書いていた文（保存されていないよ）
       </h2>
-      <p className="mt-2 rounded-xl border border-dashed border-line bg-white px-3 py-2.5 text-sm whitespace-pre-wrap">
+      <p className="mt-2 rounded-xl border border-dashed border-line bg-surface px-3 py-2.5 text-sm whitespace-pre-wrap">
         {body}
       </p>
       <p className="mt-1 text-sm text-ink-muted">{hint}</p>

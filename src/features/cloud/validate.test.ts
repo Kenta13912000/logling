@@ -9,6 +9,7 @@ import {
   parseBody,
   parseCharacter,
   parseEntry,
+  parseName,
 } from "./validate";
 
 // AC-8: the server stores only well-formed data sent from the browser.
@@ -61,6 +62,21 @@ describe("キャラクター", () => {
       parseCharacter({ name: "ぴよ", totalExp: 0, startDate: "11/12" }),
     ).toBeNull();
     expect(parseCharacter(null)).toBeNull();
+  });
+});
+
+describe("新しい名前", () => {
+  test("settings AC-3: 名前を付けるときと同じ決まりで、前後の空白を落とした名前を受け付ける", () => {
+    expect(parseName(" ちびすけ ")).toBe("ちびすけ");
+    expect(parseName("あ".repeat(10))).toBe("あ".repeat(10));
+  });
+
+  test("settings AC-3: 空・空白だけ・11 文字以上・文字でない名前は受け付けない", () => {
+    expect(parseName("")).toBeNull();
+    expect(parseName("   ")).toBeNull();
+    expect(parseName("あ".repeat(11))).toBeNull();
+    expect(parseName(42)).toBeNull();
+    expect(parseName(null)).toBeNull();
   });
 });
 

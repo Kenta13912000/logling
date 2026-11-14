@@ -125,7 +125,7 @@ export function ReminderSettings() {
     note = (
       <>
         ログインすると使えるよ。
-        <Link href="/account" className="font-bold text-ember underline">
+        <Link href="/account" className="font-bold text-link underline">
           ログインする<span aria-hidden="true">&nbsp;›</span>
         </Link>
       </>
@@ -162,7 +162,7 @@ export function ReminderSettings() {
           <span
             aria-hidden="true"
             className={`relative h-8 w-[52px] rounded-full transition-colors ${
-              on ? "bg-ember" : "bg-[#d8cbb8]"
+              on ? "bg-ember" : "bg-switch-off"
             }`}
           >
             <span
@@ -185,7 +185,7 @@ export function ReminderSettings() {
               value={String(minute)}
               disabled={busy}
               onChange={change}
-              className="min-h-11 min-w-[104px] rounded-xl border border-[#d8c4a6] bg-white px-3 text-center font-bold disabled:opacity-60"
+              className="min-h-11 min-w-[104px] rounded-xl border border-line-strong bg-surface px-3 text-center font-bold disabled:opacity-60"
             >
               {REMINDER_MINUTES.map((value) => (
                 <option key={value} value={String(value)}>
@@ -200,7 +200,7 @@ export function ReminderSettings() {
         </>
       )}
       {note && (
-        <p className="mt-2.5 rounded-xl bg-[#fde7d6] px-3 py-2.5">{note}</p>
+        <p className="mt-2.5 rounded-xl bg-ember-soft px-3 py-2.5">{note}</p>
       )}
       {failed && (
         <p role="alert" className="mt-2 text-alert">

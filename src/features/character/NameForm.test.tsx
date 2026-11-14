@@ -97,7 +97,13 @@ test("AC-23: 名前を決定すると確認が表示され、まだ名前は渡�
   await user.click(button);
 
   expect(screen.getByText("「ぴよ」でいい？")).toBeInTheDocument();
-  expect(screen.getByText("名前はあとから変えられないよ")).toBeInTheDocument();
+  // settings AC-5: the name can now be changed later in 「設定」.
+  expect(
+    screen.getByText("名前はあとから『設定』で変えられるよ"),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText("名前はあとから変えられないよ"),
+  ).not.toBeInTheDocument();
   expect(screen.getByText("「ぴよ」でいい？")).toHaveFocus();
   expect(
     screen.queryByLabelText("名前（10 文字まで）"),

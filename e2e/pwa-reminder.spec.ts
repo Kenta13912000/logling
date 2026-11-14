@@ -132,10 +132,12 @@ test("AC-1, AC-2: ページにマニフェストと iPhone 用の設定・アイ
   await expect(
     page.locator('meta[name="apple-mobile-web-app-title"]'),
   ).toHaveAttribute("content", "logling");
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
-    "content",
-    "#fff8ec",
-  );
+  // settings AC-14 added a dark one, so pick the light one.
+  await expect(
+    page.locator(
+      'meta[name="theme-color"][media="(prefers-color-scheme: light)"]',
+    ),
+  ).toHaveAttribute("content", "#fff8ec");
   const appleIcon = await page
     .locator('link[rel="apple-touch-icon"]')
     .getAttribute("href");

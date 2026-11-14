@@ -24,7 +24,7 @@ export function TabBar() {
     <nav
       aria-label="メインメニュー"
       hidden={typing}
-      className="fixed inset-x-0 bottom-0 z-10 mx-auto grid w-full max-w-[480px] grid-cols-3 border-t border-line bg-white pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-10 mx-auto grid w-full max-w-[480px] grid-cols-3 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       {TABS.map((tab) => {
         const active = tab.id === current;
@@ -35,11 +35,11 @@ export function TabBar() {
             href={tab.href}
             aria-current={active ? "page" : undefined}
             className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-bold ${
-              active ? "text-ember" : "text-ink-muted"
+              active ? "text-link" : "text-ink-muted"
             }`}
           >
             <Icon
-              className={`size-[26px] ${active ? "fill-[#fde7d6]" : "fill-none"}`}
+              className={`size-[26px] ${active ? "fill-ember-soft" : "fill-none"}`}
             />
             {tab.label}
           </Link>

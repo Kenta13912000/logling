@@ -4,15 +4,7 @@ import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 import { CharacterArt } from "@/features/evolution/CharacterArt";
 import { STAGES } from "@/features/evolution/stages";
 
-import { validateName, type NameValidation } from "./name";
-
-const ERROR_MESSAGES: Record<
-  Extract<NameValidation, { ok: false }>["reason"],
-  string
-> = {
-  empty: "名前を入れてね",
-  tooLong: "名前は 10 文字までにしてね",
-};
+import { NAME_ERROR_MESSAGES, validateName } from "./name";
 
 type Props = {
   /** May return a promise while saving to the cloud. */
@@ -73,7 +65,7 @@ export function NameForm({ onSubmit }: Props) {
     event.preventDefault();
     const result = validateName(value);
     if (!result.ok) {
-      setError(ERROR_MESSAGES[result.reason]);
+      setError(NAME_ERROR_MESSAGES[result.reason]);
       return;
     }
     setError(null);
@@ -92,7 +84,7 @@ export function NameForm({ onSubmit }: Props) {
           {`「${pendingName}」でいい？`}
         </p>
         <p className="mt-2 text-center text-sm text-ink-muted">
-          名前はあとから変えられないよ
+          名前はあとから『設定』で変えられるよ
         </p>
         <button
           type="button"
@@ -106,7 +98,7 @@ export function NameForm({ onSubmit }: Props) {
           type="button"
           disabled={saving}
           onClick={() => setPendingName(null)}
-          className="mt-3 min-h-12 rounded-xl border border-line bg-white font-bold disabled:opacity-60"
+          className="mt-3 min-h-12 rounded-xl border border-line bg-surface font-bold disabled:opacity-60"
         >
           えらびなおす
         </button>
@@ -134,7 +126,7 @@ export function NameForm({ onSubmit }: Props) {
         autoComplete="off"
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-11 rounded-xl border border-line bg-white px-3 py-2.5"
+        className="min-h-11 rounded-xl border border-line bg-surface px-3 py-2.5"
       />
       {error && (
         <p id={errorId} role="alert" className="mt-1.5 text-sm text-alert">
@@ -150,7 +142,7 @@ export function NameForm({ onSubmit }: Props) {
       {/* account-sync AC-2: a new device can sign in before naming. */}
       <Link
         href="/account"
-        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-link underline"
       >
         ほかの端末で使っていた人は ログイン
         <span aria-hidden="true">&nbsp;›</span>

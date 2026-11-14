@@ -30,6 +30,8 @@ export const cloudMock = {
   loadCloudData: vi.fn<typeof actions.loadCloudData>(unauthorized),
   createCloudCharacter:
     vi.fn<typeof actions.createCloudCharacter>(unauthorized),
+  renameCloudCharacter:
+    vi.fn<typeof actions.renameCloudCharacter>(unauthorized),
   addCloudEntry: vi.fn<typeof actions.addCloudEntry>(unauthorized),
   editCloudEntry: vi.fn<typeof actions.editCloudEntry>(unauthorized),
   deleteCloudEntry: vi.fn<typeof actions.deleteCloudEntry>(unauthorized),

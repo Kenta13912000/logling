@@ -144,6 +144,58 @@ describe("ログイン中", () => {
     );
   });
 
+  test("settings AC-8: 名前を変えると、新しい名前だけをサーバーの処理に送り、返ってきた最新のデータになる", async () => {
+    const renamed: SaveData = {
+      ...before,
+      character: { ...before.character!, name: "ちびすけ" },
+    };
+    cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: before });
+    cloudMock.renameCloudCharacter.mockResolvedValue({
+      ok: true,
+      data: renamed,
+    });
+    const { result } = renderHook(() => useDiaryData());
+    await waitFor(() => expect(result.current.state.status).toBe("ok"));
+
+    let outcome;
+    await act(async () => {
+      outcome = await result.current.save(
+        { type: "renameCharacter", name: "ちびすけ" },
+        renamed,
+      );
+    });
+
+    expect(outcome).toBe("saved");
+    expect(cloudMock.renameCloudCharacter).toHaveBeenCalledWith("ちびすけ");
+    expect(result.current.state).toMatchObject({ data: renamed });
+    expect(
+      JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null"),
+    ).toStrictEqual(before);
+  });
+
+  test("settings AC-10: キャラクターがなくなっていて断られたときは「ほかの端末で変わっていた」を返し、データを最新にする", async () => {
+    const empty: SaveData = { version: 1, character: null, entries: [] };
+    cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: before });
+    cloudMock.renameCloudCharacter.mockResolvedValue({
+      ok: false,
+      reason: "noCharacter",
+      data: empty,
+    });
+    const { result } = renderHook(() => useDiaryData());
+    await waitFor(() => expect(result.current.state.status).toBe("ok"));
+
+    let outcome;
+    await act(async () => {
+      outcome = await result.current.save(
+        { type: "renameCharacter", name: "ちびすけ" },
+        before,
+      );
+    });
+
+    expect(outcome).toBe("conflict");
+    expect(result.current.state).toMatchObject({ data: empty });
+  });
+
   test("AC-11: 保存できなかったときは「保存できなかった」を返し、データは変わらない", async () => {
     cloudMock.loadCloudData.mockResolvedValue({ ok: true, data: before });
     cloudMock.addCloudEntry.mockResolvedValue({ ok: false, reason: "failed" });

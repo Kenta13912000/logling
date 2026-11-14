@@ -13,6 +13,7 @@ import {
   getSaveData,
   importSaveData,
   insertEntry,
+  renameCharacter,
   updateEntryBody,
 } from "./repository";
 
@@ -276,5 +277,39 @@ describe("読み書きの結果", () => {
     await deleteEntry(db, A, "2026-11-05", 10);
 
     expect((await getSaveData(db, A)).character?.totalExp).toBe(0);
+  });
+});
+
+describe("名前を変える（settings）", () => {
+  test("settings AC-6, AC-8: 名前だけが変わり、経験値・始めた日・日記はそのまま", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+    await insertEntry(db, A, entry("2026-11-05", "日記"), 10);
+
+    expect(await renameCharacter(db, A, "ちびすけ")).toBe("ok");
+
+    expect(await getSaveData(db, A)).toStrictEqual({
+      version: 1,
+      character: { name: "ちびすけ", totalExp: 10, startDate: "2026-11-01" },
+      entries: [entry("2026-11-05", "日記")],
+    });
+  });
+
+  test("settings AC-8: 人 A が名前を変えても、人 B のキャラクターは変わらない", async () => {
+    const { db } = testDb;
+    await createCharacter(db, A, PIYO);
+    await createCharacter(db, B, TAMA);
+
+    await renameCharacter(db, A, "ちびすけ");
+
+    expect((await getSaveData(db, B)).character?.name).toBe("たま");
+  });
+
+  test("settings AC-10: キャラクターがないときは「キャラクターがない」を返し、何も作らない", async () => {
+    const { db } = testDb;
+
+    expect(await renameCharacter(db, A, "ちびすけ")).toBe("noCharacter");
+
+    expect((await getSaveData(db, A)).character).toBeNull();
   });
 });

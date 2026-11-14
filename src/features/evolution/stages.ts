@@ -13,6 +13,12 @@ export type Stage = {
    * show it larger in small frames (checked in the mockup, screen 2b).
    */
   crop: { x: number; y: number; side: number };
+  /**
+   * The smallest circle (in the 400 x 400 art) that holds everything drawn,
+   * plus a small margin. In dark mode a cream circle is drawn here so the
+   * whole character sits on it (settings 案 B). Measured from the SVGs.
+   */
+  backing: { x: number; y: number; r: number };
 };
 
 /** The single place to change the levels, names or art of the stages. */
@@ -23,6 +29,7 @@ export const STAGES: readonly Stage[] = [
     name: "ねこだま",
     src: "/characters/stage-1.svg",
     crop: { x: 83, y: 132, side: 240 },
+    backing: { x: 204, y: 262, r: 128 },
   },
   {
     stage: 2,
@@ -30,6 +37,7 @@ export const STAGES: readonly Stage[] = [
     name: "ころねこ",
     src: "/characters/stage-2.svg",
     crop: { x: 85, y: 126, side: 240 },
+    backing: { x: 201, y: 259, r: 122 },
   },
   {
     stage: 3,
@@ -37,6 +45,7 @@ export const STAGES: readonly Stage[] = [
     name: "ちびねこ",
     src: "/characters/stage-3.svg",
     crop: { x: 71, y: 90, side: 270 },
+    backing: { x: 200, y: 227, r: 157 },
   },
   {
     stage: 4,
@@ -44,6 +53,7 @@ export const STAGES: readonly Stage[] = [
     name: "えらそうねこ",
     src: "/characters/stage-4.svg",
     crop: { x: 79, y: 56, side: 300 },
+    backing: { x: 217, y: 209, r: 182 },
   },
   {
     stage: 5,
@@ -51,6 +61,7 @@ export const STAGES: readonly Stage[] = [
     name: "ねこ像",
     src: "/characters/stage-5.svg",
     crop: { x: 50, y: 56, side: 300 },
+    backing: { x: 200, y: 208, r: 178 },
   },
 ];
 

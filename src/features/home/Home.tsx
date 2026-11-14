@@ -228,7 +228,7 @@ export function Home() {
         <p>logling：日記を書くとキャラクターが育つ、続けたくなる日記アプリ</p>
         <Link
           href="/privacy"
-          className="mt-1 inline-flex min-h-11 items-center font-bold text-ember underline"
+          className="mt-1 inline-flex min-h-11 items-center font-bold text-link underline"
         >
           日記の保存のしかた
         </Link>

@@ -31,6 +31,7 @@ const {
   deleteCloudEntry,
   editCloudEntry,
   loadCloudData,
+  renameCloudCharacter,
 } = await import("./actions");
 
 const A = "user-a";
@@ -202,6 +203,57 @@ describe("ログイン中", () => {
     expect(later).toMatchObject({
       ok: true,
       data: { character: { startDate: "2026-11-05" } },
+    });
+  });
+});
+
+describe("名前を変える（settings）", () => {
+  test("settings AC-8: ログインしていないときは「ログインしていない」を返し、名前を変えない", async () => {
+    await createCloudCharacter({ name: "ぴよ", totalExp: 0 });
+    server.userId = null;
+
+    expect(await renameCloudCharacter("ちびすけ")).toStrictEqual({
+      ok: false,
+      reason: "unauthorized",
+    });
+    expect((await getSaveData(testDb.db, A)).character?.name).toBe("ぴよ");
+  });
+
+  test("settings AC-6, AC-8: ログイン中の人のキャラクターの名前だけが変わり、最新のデータが返る", async () => {
+    await createCloudCharacter({
+      name: "ぴよ",
+      totalExp: 0,
+      startDate: "2026-11-10",
+    });
+    await addCloudEntry(entry("2026-11-11", "日記"), 10);
+
+    expect(await renameCloudCharacter(" ちびすけ ")).toStrictEqual({
+      ok: true,
+      data: {
+        version: 1,
+        character: { name: "ちびすけ", totalExp: 10, startDate: "2026-11-10" },
+        entries: [entry("2026-11-11", "日記")],
+      },
+    });
+  });
+
+  test("settings AC-3: 決まりに合わない名前は変えず、「入力が正しくない」を返す", async () => {
+    await createCloudCharacter({ name: "ぴよ", totalExp: 0 });
+
+    for (const name of ["", "   ", "あ".repeat(11), 42 as unknown as string]) {
+      expect(await renameCloudCharacter(name)).toStrictEqual({
+        ok: false,
+        reason: "invalid",
+      });
+    }
+    expect((await getSaveData(testDb.db, A)).character?.name).toBe("ぴよ");
+  });
+
+  test("settings AC-10: キャラクターがないときは、その理由と最新のデータを返す", async () => {
+    expect(await renameCloudCharacter("ちびすけ")).toStrictEqual({
+      ok: false,
+      reason: "noCharacter",
+      data: { version: 1, character: null, entries: [] },
     });
   });
 });
