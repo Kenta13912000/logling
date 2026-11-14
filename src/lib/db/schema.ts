@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   date,
+  index,
   integer,
   pgTable,
   primaryKey,
@@ -63,5 +64,42 @@ export const diaryEntries = pgTable(
       "diary_entries_bonus_check",
       sql`(${table.bonus} is null and ${table.bonusDays} is null) or (${table.bonus} >= 1 and ${table.bonusDays} >= 1)`,
     ),
+  ],
+);
+
+/**
+ * pwa-reminder (ADR-0007): one row per device that turned reminders on.
+ * Turning them off deletes the row; deleting the person deletes them all.
+ */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    /** The push service address the browser gave; one per device. */
+    endpoint: text("endpoint").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** The device's keys for encrypting what is sent to it. */
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    /** Minutes after midnight in `timeZone`: 0 to 1410, every 30. */
+    remindMinute: integer("remind_minute").notNull(),
+    timeZone: text("time_zone").notNull(),
+    /** The diary date (split at 4 AM) last reminded, at most once a day. */
+    lastSentOn: date("last_sent_on", { mode: "string" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    check(
+      "push_subscriptions_minute_check",
+      sql`${table.remindMinute} >= 0 and ${table.remindMinute} <= 1410 and ${table.remindMinute} % 30 = 0`,
+    ),
+    index("push_subscriptions_user_id_idx").on(table.userId),
   ],
 );

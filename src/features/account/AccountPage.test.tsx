@@ -30,7 +30,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
 }));
 
+// pwa-reminder: stopping this device's reminders before signing out.
+const device = vi.hoisted(() => ({ forgetThisDevice: vi.fn() }));
+vi.mock("@/features/reminder/device", () => device);
+
 beforeEach(() => {
+  device.forgetThisDevice.mockReset();
+  device.forgetThisDevice.mockResolvedValue(undefined);
   auth.session = null;
   auth.isPending = false;
   auth.signInSocial.mockResolvedValue({ data: null, error: null });
@@ -134,6 +140,29 @@ describe("ログイン中", () => {
   });
 
   test("AC-22: 「ログアウト」を押すとログアウトして、ホームに戻る", async () => {
+    const user = userEvent.setup();
+    render(<AccountPage loginFailed={false} />);
+
+    await user.click(screen.getByRole("button", { name: "ログアウト" }));
+
+    expect(auth.signOut).toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith("/");
+  });
+
+  test("pwa-reminder AC-16: ログアウトする前に、この端末のお知らせを止める", async () => {
+    const user = userEvent.setup();
+    render(<AccountPage loginFailed={false} />);
+
+    await user.click(screen.getByRole("button", { name: "ログアウト" }));
+
+    expect(device.forgetThisDevice).toHaveBeenCalled();
+    expect(device.forgetThisDevice.mock.invocationCallOrder[0]).toBeLessThan(
+      auth.signOut.mock.invocationCallOrder[0],
+    );
+  });
+
+  test("pwa-reminder AC-16: お知らせを止められなくても、ログアウトする", async () => {
+    device.forgetThisDevice.mockRejectedValue(new Error("offline"));
     const user = userEvent.setup();
     render(<AccountPage loginFailed={false} />);
 

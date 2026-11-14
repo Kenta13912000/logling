@@ -1,4 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "schedules": {
+    "reminders": {
+      "schedule": "0,30 * * * *",
+      "path": "/api/reminders"
+    }
+  }
 }

@@ -7,6 +7,7 @@ import {
   authMock,
   cloudMock,
   migrationMock,
+  reminderMock,
   resetMocks,
 } from "@/test/mocks";
 
@@ -30,6 +31,7 @@ vi.mock("@/lib/auth-client", () => ({
 vi.mock("@/features/cloud/actions", () => cloudMock);
 vi.mock("@/features/migration/actions", () => migrationMock);
 vi.mock("@/features/account/actions", () => accountMock);
+vi.mock("@/features/reminder/actions", () => reminderMock);
 
 beforeEach(() => {
   resetMocks();

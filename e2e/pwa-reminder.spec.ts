@@ -8,6 +8,98 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 }
 
+test("AC-18: ログインしていない人が、ホームから「その他」→「設定」まで開いても、同じオリジン以外へ通信しない", async ({
+  page,
+}) => {
+  const urls: string[] = [];
+  page.on("request", (request) => urls.push(request.url()));
+
+  await page.goto("/");
+  const origin = new URL(page.url()).origin;
+  await page
+    .getByRole("navigation", { name: "メインメニュー" })
+    .getByRole("link", { name: "その他" })
+    .click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "その他" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: /設定/ }).click();
+  await expect(page.getByRole("region", { name: "お知らせ" })).toContainText(
+    "ログインすると使えるよ",
+  );
+
+  const network = urls.filter((url) => /^https?:/.test(url));
+  expect(network.length).toBeGreaterThan(0);
+  for (const url of network) {
+    expect(new URL(url).origin, url).toBe(origin);
+  }
+});
+
+test("AC-9, AC-18, AC-20: ログインしていないと「ログインすると使えるよ」。ページを見ただけでは、お知らせのしくみは登録されない。/sw.js は毎回取り直す設定で届く", async ({
+  page,
+}) => {
+  for (const path of ["/", "/history", "/more", "/settings"]) {
+    await page.goto(path);
+  }
+  const reminder = page.getByRole("region", { name: "お知らせ" });
+  await expect(reminder).toContainText("ログインすると使えるよ");
+  await expect(
+    page.getByRole("switch", { name: "書き忘れのお知らせ" }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(
+      async () => (await navigator.serviceWorker.getRegistration()) ?? null,
+    ),
+  ).toBeNull();
+
+  const sw = await page.request.get("/sw.js");
+  expect(sw.ok()).toBe(true);
+  expect(sw.headers()["content-type"]).toContain("javascript");
+  expect(sw.headers()["cache-control"]).toContain("no-cache");
+});
+
+test("AC-23: 合言葉なし・違う合言葉で /api/reminders を呼ぶと 401 で断られる", async ({
+  request,
+}) => {
+  expect((await request.post("/api/reminders")).status()).toBe(401);
+  expect(
+    (
+      await request.post("/api/reminders", {
+        headers: { authorization: "Bearer not-the-secret" },
+      })
+    ).status(),
+  ).toBe(401);
+});
+
+test.describe("ログインしたとき", () => {
+  test.skip(
+    !!process.env.BASE_URL,
+    "テスト用のログインは、手元の開発サーバーでだけ使える",
+  );
+  test("AC-6: 「設定」の「書き忘れのお知らせ」は、はじめはオフで、押せる", async ({
+    page,
+  }) => {
+    const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+    const response = await page.request.post("/api/auth/sign-up/email", {
+      data: { email, password: "e2e-password-123", name: "e2e" },
+    });
+    expect(response.ok()).toBe(true);
+
+    // Headless Chromium always answers "denied" (it has nowhere to show
+    // notifications). A real browser starts at "default": not asked yet.
+    await page.addInitScript(() => {
+      Object.defineProperty(Notification, "permission", {
+        get: () => "default",
+      });
+    });
+    await page.goto("/settings");
+    const toggle = page.getByRole("switch", { name: "書き忘れのお知らせ" });
+    await expect(toggle).toBeEnabled();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("combobox", { name: "時刻" })).toHaveCount(0);
+  });
+});
+
 test.describe("スマホの幅（375px）", () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
