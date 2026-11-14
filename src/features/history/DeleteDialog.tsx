@@ -46,7 +46,7 @@ export function DeleteDialog({
       ref={dialogRef}
       aria-labelledby={titleId}
       onClose={onCancel}
-      className="m-auto w-[calc(100%-3rem)] max-w-sm rounded-2xl bg-white p-6 text-center text-ink backdrop:bg-ink/45"
+      className="m-auto w-[calc(100%-3rem)] max-w-sm rounded-2xl bg-surface p-6 text-center text-ink backdrop:bg-scrim"
     >
       <p id={titleId} className="mb-2 text-lg font-bold">
         {`${formatMonthDay(date)}の日記を消す？`}
@@ -70,7 +70,7 @@ export function DeleteDialog({
       <button
         type="button"
         onClick={onConfirm}
-        className="mt-4 min-h-12 w-full rounded-xl bg-alert font-bold text-white"
+        className="mt-4 min-h-12 w-full rounded-xl bg-danger font-bold text-white"
       >
         消す
       </button>
@@ -79,7 +79,7 @@ export function DeleteDialog({
         type="button"
         autoFocus
         onClick={() => dialogRef.current?.close()}
-        className="mt-2 min-h-12 w-full rounded-xl border border-line bg-white font-bold"
+        className="mt-2 min-h-12 w-full rounded-xl border border-line bg-surface font-bold"
       >
         やめる
       </button>

@@ -49,7 +49,7 @@ export function DiaryEditor({ date, stage, onSave }: Props) {
       <p className="font-bold">{formatDiaryDate(date)}</p>
       <div className="mt-2 mb-3 flex items-start gap-2">
         <CharacterArt stage={stage} size={48} crop />
-        <p className="rounded-2xl border border-line bg-white px-3 py-2">
+        <p className="rounded-2xl border border-line bg-surface px-3 py-2">
           今日はどんな一日だった？きかせて！
         </p>
       </div>
@@ -63,7 +63,7 @@ export function DiaryEditor({ date, stage, onSave }: Props) {
         placeholder="今日あったこと、思ったことを書いてみよう"
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-50 rounded-xl border border-line bg-white px-3 py-2.5"
+        className="min-h-50 rounded-xl border border-line bg-surface px-3 py-2.5"
       />
       <p
         className={`mt-1 text-right text-sm ${length > BODY_MAX_LENGTH ? "text-alert" : "text-ink-muted"}`}

@@ -50,7 +50,7 @@ function Card({
   return (
     <section
       aria-labelledby={titleId}
-      className="rounded-2xl border border-line bg-white p-4"
+      className="rounded-2xl border border-line bg-surface p-4"
     >
       <p id={titleId} className="text-xs font-bold text-ink-muted">
         {LABELS[side]}
@@ -93,12 +93,12 @@ export function MigrationChoice({ browser, account, busy, onConfirm }: Props) {
     const drop = summarize(data[other]);
     dialog = (
       // z-20: in front of the tabs, which are dimmed too (tab-navigation AC-11).
-      <div className="fixed inset-0 z-20 flex items-center justify-center bg-ink/45 p-6">
+      <div className="fixed inset-0 z-20 flex items-center justify-center bg-scrim p-6">
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby={dialogTitleId}
-          className="w-full max-w-[420px] rounded-3xl bg-white p-6 text-center"
+          className="w-full max-w-[420px] rounded-3xl bg-surface p-6 text-center"
         >
           <p id={dialogTitleId} className="text-lg font-bold">
             {`${keep.name} で続ける？`}
@@ -111,7 +111,7 @@ export function MigrationChoice({ browser, account, busy, onConfirm }: Props) {
             type="button"
             disabled={busy}
             onClick={() => onConfirm(chosen)}
-            className="mt-6 min-h-12 w-full rounded-xl bg-alert font-bold text-white disabled:opacity-60"
+            className="mt-6 min-h-12 w-full rounded-xl bg-danger font-bold text-white disabled:opacity-60"
           >
             {busy
               ? "移しているよ…"
@@ -122,7 +122,7 @@ export function MigrationChoice({ browser, account, busy, onConfirm }: Props) {
             autoFocus
             disabled={busy}
             onClick={() => setChosen(null)}
-            className="mt-3 min-h-12 w-full rounded-xl border border-line bg-white font-bold disabled:opacity-60"
+            className="mt-3 min-h-12 w-full rounded-xl border border-line bg-surface font-bold disabled:opacity-60"
           >
             えらびなおす
           </button>

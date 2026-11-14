@@ -20,7 +20,7 @@ export function CharacterStatus({ character, children }: Props) {
   return (
     <section
       aria-label="キャラクターのステータス"
-      className="border-b border-line bg-white px-4 py-3"
+      className="border-b border-line bg-surface px-4 py-3"
     >
       <div className="flex items-center gap-3">
         <CharacterArt

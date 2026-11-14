@@ -31,7 +31,7 @@ function isOld(item: HistoryItem): boolean {
 }
 
 const smallButton =
-  "min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-bold";
+  "min-h-11 rounded-xl border border-line bg-surface px-4 text-sm font-bold";
 
 type MissingCardProps = {
   date: string;
@@ -110,7 +110,7 @@ function EntryCard({
   onDelete,
 }: EntryCardProps) {
   return (
-    <li className="rounded-xl border border-line bg-white p-3">
+    <li className="rounded-xl border border-line bg-surface p-3">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex-1 font-bold">
           {formatShortDiaryDate(entry.date)}

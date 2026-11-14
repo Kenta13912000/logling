@@ -16,11 +16,11 @@ export function TodayEntry({ entry, stage }: Props) {
       <p className="font-bold">{formatDiaryDate(entry.date)}</p>
       <div className="mt-2 mb-3 flex items-start gap-2">
         <CharacterArt stage={stage} size={48} crop />
-        <p className="rounded-2xl border border-line bg-white px-3 py-2">
+        <p className="rounded-2xl border border-line bg-surface px-3 py-2">
           今日も書いてくれてありがとう！また明日ね
         </p>
       </div>
-      <p className="rounded-xl border border-line bg-white p-3 whitespace-pre-wrap">
+      <p className="rounded-xl border border-line bg-surface p-3 whitespace-pre-wrap">
         {entry.body}
       </p>
       <p className="mt-3 text-sm text-ink-muted">

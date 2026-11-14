@@ -41,6 +41,15 @@ describe("getStage", () => {
     ]);
   });
 
+  test("settings AC-13: 暗い色のときの丸は、400 × 400 の絵の中に収まる", () => {
+    for (const { stage, backing } of STAGES) {
+      expect(backing.x - backing.r, `段階 ${stage}`).toBeGreaterThanOrEqual(0);
+      expect(backing.y - backing.r, `段階 ${stage}`).toBeGreaterThanOrEqual(0);
+      expect(backing.x + backing.r, `段階 ${stage}`).toBeLessThanOrEqual(400);
+      expect(backing.y + backing.r, `段階 ${stage}`).toBeLessThanOrEqual(400);
+    }
+  });
+
   test("切り取る範囲は、400 × 400 の絵の中に収まる", () => {
     for (const { stage, crop } of STAGES) {
       expect(crop.x, `段階 ${stage}`).toBeGreaterThanOrEqual(0);

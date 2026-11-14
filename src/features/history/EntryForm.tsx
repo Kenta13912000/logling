@@ -83,7 +83,7 @@ export function EntryForm({
         onChange={(event) => setValue(event.target.value)}
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-32 rounded-xl border border-line bg-white px-3 py-2.5"
+        className="min-h-32 rounded-xl border border-line bg-surface px-3 py-2.5"
       />
       <p
         className={`mt-1 text-right text-sm ${length > BODY_MAX_LENGTH ? "text-alert" : "text-ink-muted"}`}
@@ -106,7 +106,7 @@ export function EntryForm({
         <button
           type="button"
           onClick={onCancel}
-          className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-bold"
+          className="min-h-11 rounded-xl border border-line bg-surface px-4 text-sm font-bold"
         >
           やめる
         </button>

@@ -1,20 +1,60 @@
 @import "tailwindcss";
 
-/* Palette from docs/aidlc/diary-exp/mockup.md */
+/*
+ * Palette from docs/aidlc/diary-exp/mockup.md. In dark mode the same names
+ * get the values below (ADR-0008, docs/aidlc/settings/mockup.md), so "cream"
+ * is the page background and "ink" the text color in both schemes.
+ */
 @theme {
   --color-cream: #fff8ec;
   --color-ink: #3f2d1c;
   --color-ink-muted: #7a6450;
   --color-line: #ecdcc4;
+  /* Fill of the orange buttons (white text on it). Text uses link. */
   --color-ember: #c2410c;
   --color-honey: #d97706;
   --color-honey-track: #f6e7cf;
+  /* Warning text. Fill of the red buttons uses danger. */
   --color-alert: #b42318;
+
+  /* settings: colors that were written directly in the components. */
+  --color-surface: #ffffff;
+  --color-link: #c2410c;
+  --color-danger: #b42318;
+  --color-ember-soft: #fde7d6;
+  --color-switch-off: #d8cbb8;
+  --color-line-strong: #d8c4a6;
+  --color-ok: #3f6b2a;
+  --color-scrim: rgb(63 45 28 / 0.45);
 
   /* Use the device's own Japanese fonts; nothing is downloaded. */
   --font-sans:
     system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
     "Yu Gothic UI", "Meiryo", sans-serif;
+}
+
+:root {
+  /* Form controls and scrollbars follow the device too. */
+  color-scheme: light dark;
+}
+
+/* settings AC-11: follows the device setting; nothing is stored. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-cream: #1f1813;
+    --color-ink: #f3e8d8;
+    --color-ink-muted: #c4b09a;
+    --color-line: #3d3027;
+    --color-honey-track: #3a2e22;
+    --color-alert: #f87171;
+    --color-surface: #2a211b;
+    --color-link: #fb8c4a;
+    --color-ember-soft: #4a2c1a;
+    --color-switch-off: #5a4a3d;
+    --color-line-strong: #6b5a4a;
+    --color-ok: #9ccc84;
+    --color-scrim: rgb(0 0 0 / 0.6);
+  }
 }
 
 body {
@@ -23,4 +63,27 @@ body {
   font-family: var(--font-sans);
   /* Long unbroken text (e.g. pasted URLs) must not widen the page. */
   overflow-wrap: anywhere;
+}
+
+/*
+ * settings 案 B: in dark mode, a cream circle behind the character art so
+ * its brown outline and whiskers stay visible. CharacterArt sets where the
+ * circle goes (--art-x, --art-y, --art-r) from each stage's measured size.
+ */
+@utility art-backing {
+  @media (prefers-color-scheme: dark) {
+    background-image: radial-gradient(
+      circle var(--art-r) at var(--art-x) var(--art-y),
+      #fff8ec calc(100% - 1px),
+      transparent 100%
+    );
+  }
+}
+
+/* In a tight frame, dark mode shrinks the art so it fits its circle. */
+@utility art-fit {
+  @media (prefers-color-scheme: dark) {
+    transform: var(--art-fit);
+    transform-origin: var(--art-origin);
+  }
 }

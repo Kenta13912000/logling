@@ -28,7 +28,7 @@ export function LevelUpDialog({ name, level, evolvedTo, onClose }: Props) {
       ref={dialogRef}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto w-[calc(100%-3rem)] max-w-sm rounded-2xl bg-white p-6 text-center text-ink backdrop:bg-ink/45"
+      className="m-auto w-[calc(100%-3rem)] max-w-sm rounded-2xl bg-surface p-6 text-center text-ink backdrop:bg-scrim"
     >
       {evolvedTo ? (
         // The title below says the same, so the art is decorative.

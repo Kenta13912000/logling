@@ -131,7 +131,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
   let content = null;
   if (!isPending) {
     content = session ? (
-      <div className="rounded-2xl border border-line bg-white p-4">
+      <div className="rounded-2xl border border-line bg-surface p-4">
         <p className="text-xs font-bold text-ink-muted">ログイン中</p>
         <p className="mt-1 font-bold break-all">{session.user.email}</p>
         <p className="mt-1 text-sm text-ink-muted">
@@ -142,7 +142,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
         <button
           type="button"
           onClick={signOut}
-          className="mt-4 min-h-12 w-full rounded-xl border border-line bg-white font-bold"
+          className="mt-4 min-h-12 w-full rounded-xl border border-line bg-surface font-bold"
         >
           ログアウト
         </button>
@@ -152,7 +152,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
       </div>
     ) : (
       <>
-        <div className="rounded-2xl border border-line bg-white p-4">
+        <div className="rounded-2xl border border-line bg-surface p-4">
           <p className="font-bold">
             ログインすると、スマホでも PC
             でも、同じキャラクターと日記で続きが書けるよ
@@ -166,7 +166,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
           <button
             type="button"
             onClick={signIn}
-            className="mt-4 flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#747775] bg-white font-medium text-[#1f1f1f]"
+            className="mt-4 flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#747775] bg-white font-medium text-[#1f1f1f] dark:border-[#8e918f] dark:bg-[#131314] dark:text-[#e3e3e3]"
           >
             <GoogleMark />
             Google でログイン
@@ -200,7 +200,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
           </p>
         )}
         {notice === "reauth" && (
-          <div className="mb-4 rounded-2xl border border-line bg-white p-4 text-sm">
+          <div className="mb-4 rounded-2xl border border-line bg-surface p-4 text-sm">
             <p>本人の確認のため、もう一度ログインしてね</p>
             <p className="mt-1 text-ink-muted">
               ログインし直すと、退会の確認がもう一度出るよ
@@ -208,7 +208,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
             <button
               type="button"
               onClick={signInAgain}
-              className="mt-3 min-h-11 w-full rounded-xl border border-[#747775] bg-white font-medium text-[#1f1f1f]"
+              className="mt-3 min-h-11 w-full rounded-xl border border-[#747775] bg-white font-medium text-[#1f1f1f] dark:border-[#8e918f] dark:bg-[#131314] dark:text-[#e3e3e3]"
             >
               Google でログインし直す
             </button>
@@ -219,7 +219,7 @@ export function AccountPage({ loginFailed, withdrawAgain = false }: Props) {
         {!isPending && (
           <Link
             href="/privacy"
-            className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+            className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-link underline"
           >
             日記の保存のしかた<span aria-hidden="true">&nbsp;›</span>
           </Link>

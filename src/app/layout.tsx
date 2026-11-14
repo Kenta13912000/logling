@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { AppHeader } from "@/features/navigation/AppHeader";
 import { TabBar } from "@/features/navigation/TabBar";
+import { THEME_COLORS } from "@/features/theme/theme-color";
 
 import "./globals.css";
 
@@ -16,8 +17,12 @@ export const viewport: Viewport = {
   // tab-navigation AC-10: lets env(safe-area-inset-bottom) report the room
   // the iPhone home indicator needs (it is 0 without this).
   viewportFit: "cover",
-  // pwa-reminder: the cream page background, also for the phone's top bar.
-  themeColor: "#fff8ec",
+  // pwa-reminder: the page background, also for the phone's top bar. Dark in
+  // dark mode (settings AC-14).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLORS.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLORS.dark },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

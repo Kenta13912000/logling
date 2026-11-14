@@ -98,7 +98,7 @@ export function NameForm({ onSubmit }: Props) {
           type="button"
           disabled={saving}
           onClick={() => setPendingName(null)}
-          className="mt-3 min-h-12 rounded-xl border border-line bg-white font-bold disabled:opacity-60"
+          className="mt-3 min-h-12 rounded-xl border border-line bg-surface font-bold disabled:opacity-60"
         >
           えらびなおす
         </button>
@@ -126,7 +126,7 @@ export function NameForm({ onSubmit }: Props) {
         autoComplete="off"
         aria-invalid={error !== null}
         aria-describedby={error ? errorId : undefined}
-        className="min-h-11 rounded-xl border border-line bg-white px-3 py-2.5"
+        className="min-h-11 rounded-xl border border-line bg-surface px-3 py-2.5"
       />
       {error && (
         <p id={errorId} role="alert" className="mt-1.5 text-sm text-alert">
@@ -142,7 +142,7 @@ export function NameForm({ onSubmit }: Props) {
       {/* account-sync AC-2: a new device can sign in before naming. */}
       <Link
         href="/account"
-        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-ember underline"
+        className="mt-4 flex min-h-11 items-center justify-center text-sm font-bold text-link underline"
       >
         ほかの端末で使っていた人は ログイン
         <span aria-hidden="true">&nbsp;›</span>

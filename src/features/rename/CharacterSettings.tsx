@@ -24,11 +24,11 @@ type Notice = "saveFailed" | "gone" | null;
 const PRIMARY =
   "mt-3 min-h-12 w-full rounded-xl bg-ember font-bold text-white disabled:opacity-60";
 const SECONDARY =
-  "mt-3 min-h-12 w-full rounded-xl border border-line bg-white font-bold disabled:opacity-60";
+  "mt-3 min-h-12 w-full rounded-xl border border-line bg-surface font-bold disabled:opacity-60";
 
 function HomeLink({ children }: { children: string }) {
   return (
-    <Link href="/" className="font-bold text-ember underline">
+    <Link href="/" className="font-bold text-link underline">
       {children}
       <span aria-hidden="true">&nbsp;›</span>
     </Link>
@@ -169,7 +169,7 @@ export function CharacterSettings() {
           autoComplete="off"
           aria-invalid={step.error !== null}
           aria-describedby={step.error ? errorId : undefined}
-          className="min-h-11 rounded-xl border border-line bg-white px-3 py-2.5 text-base"
+          className="min-h-11 rounded-xl border border-line bg-surface px-3 py-2.5 text-base"
         />
         {step.error && (
           <p id={errorId} role="alert" className="mt-1.5 text-alert">
@@ -239,7 +239,7 @@ export function CharacterSettings() {
             setNotice(null);
             setStep({ kind: "edit", value: character.name, error: null });
           }}
-          className="min-h-11 flex-none rounded-xl border border-line bg-white px-3.5 font-bold"
+          className="min-h-11 flex-none rounded-xl border border-line bg-surface px-3.5 font-bold"
         >
           名前を変える
         </button>

@@ -25,7 +25,7 @@ export function ExpGainToast({ amount, bonus, onDone }: Props) {
   return (
     <p
       role="status"
-      className="fixed top-14 left-1/2 -translate-x-1/2 rounded-2xl bg-ink px-4 py-1.5 text-center text-sm whitespace-nowrap text-white"
+      className="fixed top-14 left-1/2 -translate-x-1/2 rounded-2xl bg-ink px-4 py-1.5 text-center text-sm whitespace-nowrap text-surface"
     >
       {`✨ +${amount} 経験値！`}
       {bonus && (

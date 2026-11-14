@@ -105,7 +105,7 @@ export function PrivacyPage() {
         <p>
           <a
             href={ISSUES_URL}
-            className="font-bold text-ember underline"
+            className="font-bold text-link underline"
             rel="noopener noreferrer"
             target="_blank"
           >
