@@ -108,6 +108,85 @@ test("AC-4: 名前を付ける前は、ホームへの案内が出て、ホー�
   await expect(page.getByLabel("名前（10 文字まで）")).toBeVisible();
 });
 
+test.describe("端末が暗い色の設定のとき", () => {
+  test.use({ colorScheme: "dark" });
+
+  // The colors from docs/aidlc/settings/mockup.md, as the browser reports them.
+  const DARK = { page: "rgb(31, 24, 19)", card: "rgb(42, 33, 27)" };
+  const LIGHT = { page: "rgb(255, 248, 236)", card: "rgb(255, 255, 255)" };
+
+  const background = (page: Page, selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+
+  /** The circle behind the character art, drawn only in dark mode. */
+  const artBacking = (page: Page) =>
+    main(page)
+      .getByRole("img", { name: /のすがた/ })
+      .evaluate(
+        (image) => getComputedStyle(image.parentElement!).backgroundImage,
+      );
+
+  test("AC-11, AC-13: 背景・帯・タブが暗い色になり、絵の後ろに丸が出る。開いたまま明るい設定にすると、今の色に戻る", async ({
+    page,
+  }) => {
+    await seed(page, piyo, "/");
+    await expect(main(page).getByText("ぴよ", { exact: true })).toBeVisible();
+
+    expect(await background(page, "body")).toBe(DARK.page);
+    expect(await background(page, 'nav[aria-label="メインメニュー"]')).toBe(
+      DARK.card,
+    );
+    expect(await artBacking(page)).toContain("radial-gradient");
+
+    await page.emulateMedia({ colorScheme: "light" });
+
+    expect(await background(page, "body")).toBe(LIGHT.page);
+    expect(await background(page, 'nav[aria-label="メインメニュー"]')).toBe(
+      LIGHT.card,
+    );
+    expect(await artBacking(page)).toBe("none");
+  });
+
+  test("AC-14: ブラウザの上の帯の色が、暗い色の設定では暗い色になる", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await expect(
+      page.locator(
+        'meta[name="theme-color"][media="(prefers-color-scheme: dark)"]',
+      ),
+    ).toHaveAttribute("content", "#1f1813");
+    await expect(
+      page.locator(
+        'meta[name="theme-color"][media="(prefers-color-scheme: light)"]',
+      ),
+    ).toHaveAttribute("content", "#fff8ec");
+  });
+
+  test("AC-12, AC-15: 「設定」のカードが暗い色で、名前を変える流れを通して、幅 375px で横スクロールが出ない", async ({
+    page,
+  }) => {
+    await seed(page, piyo, "/settings");
+    await expect(
+      character(page).getByText("ぴよ", { exact: true }),
+    ).toBeVisible();
+    expect(
+      await character(page)
+        .locator("div")
+        .first()
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    ).toBe(DARK.card);
+    await expectNoHorizontalScroll(page);
+
+    await rename(page, "ちびすけ");
+    await expectNoHorizontalScroll(page);
+  });
+});
+
 /*
  * Signed-in flows use the test-only email/password login (ADR-0006), which
  * exists only on the local dev server Playwright starts.
