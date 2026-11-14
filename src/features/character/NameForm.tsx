@@ -4,15 +4,7 @@ import { useEffect, useId, useRef, useState, type SubmitEvent } from "react";
 import { CharacterArt } from "@/features/evolution/CharacterArt";
 import { STAGES } from "@/features/evolution/stages";
 
-import { validateName, type NameValidation } from "./name";
-
-const ERROR_MESSAGES: Record<
-  Extract<NameValidation, { ok: false }>["reason"],
-  string
-> = {
-  empty: "名前を入れてね",
-  tooLong: "名前は 10 文字までにしてね",
-};
+import { NAME_ERROR_MESSAGES, validateName } from "./name";
 
 type Props = {
   /** May return a promise while saving to the cloud. */
@@ -73,7 +65,7 @@ export function NameForm({ onSubmit }: Props) {
     event.preventDefault();
     const result = validateName(value);
     if (!result.ok) {
-      setError(ERROR_MESSAGES[result.reason]);
+      setError(NAME_ERROR_MESSAGES[result.reason]);
       return;
     }
     setError(null);
@@ -92,7 +84,7 @@ export function NameForm({ onSubmit }: Props) {
           {`「${pendingName}」でいい？`}
         </p>
         <p className="mt-2 text-center text-sm text-ink-muted">
-          名前はあとから変えられないよ
+          名前はあとから『設定』で変えられるよ
         </p>
         <button
           type="button"

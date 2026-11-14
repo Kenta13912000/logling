@@ -8,6 +8,7 @@ import {
   deleteEntry,
   getSaveData,
   insertEntry,
+  renameCharacter,
   updateEntryBody,
 } from "./repository";
 import { fail, latest, withUser, type CloudResult } from "./session";
@@ -17,6 +18,7 @@ import {
   parseBody,
   parseCharacter,
   parseEntry,
+  parseName,
 } from "./validate";
 
 export type { CloudConflict, CloudFailure, CloudResult } from "./session";
@@ -52,9 +54,13 @@ export async function createCloudCharacter(
 
 /** Changes only the character's name (settings AC-8, AC-10). */
 export async function renameCloudCharacter(name: string): Promise<CloudResult> {
-  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
-  void name;
-  return fail("failed");
+  return withUser(async (db, userId) => {
+    const parsed = parseName(name);
+    if (parsed === null) {
+      return fail("invalid");
+    }
+    return latest(db, userId, await renameCharacter(db, userId, parsed));
+  });
 }
 
 export async function addCloudEntry(

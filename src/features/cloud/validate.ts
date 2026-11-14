@@ -51,18 +51,20 @@ export function parseBody(value: unknown): string | null {
 
 /** The trimmed name, or null when it breaks the naming rules (settings AC-3). */
 export function parseName(value: unknown): string | null {
-  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
-  void value;
-  return null;
+  if (typeof value !== "string") {
+    return null;
+  }
+  const result = validateName(value);
+  return result.ok ? result.name : null;
 }
 
 export function parseCharacter(value: unknown): Character | null {
-  if (!isRecord(value) || typeof value.name !== "string") {
+  if (!isRecord(value)) {
     return null;
   }
-  const name = validateName(value.name);
+  const name = parseName(value.name);
   if (
-    !name.ok ||
+    name === null ||
     !Number.isInteger(value.totalExp) ||
     (value.totalExp as number) < 0 ||
     (value.startDate !== undefined && !isDiaryDate(value.startDate))
@@ -70,7 +72,7 @@ export function parseCharacter(value: unknown): Character | null {
     return null;
   }
   return {
-    name: name.name,
+    name,
     totalExp: value.totalExp as number,
     ...(value.startDate !== undefined
       ? { startDate: value.startDate as string }

@@ -13,6 +13,7 @@ import {
   deleteCloudEntry,
   editCloudEntry,
   loadCloudData,
+  renameCloudCharacter,
   type CloudResult,
 } from "./actions";
 
@@ -48,8 +49,7 @@ function send(change: Change, next: SaveData): Promise<CloudResult> {
     case "createCharacter":
       return createCloudCharacter(change.character);
     case "renameCharacter":
-      // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
-      throw new Error("not yet");
+      return renameCloudCharacter(change.name);
     case "addEntry":
       return addCloudEntry(change.entry, change.exp, startDate);
     case "editEntry":

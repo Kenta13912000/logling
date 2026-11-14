@@ -87,9 +87,12 @@ export async function renameCharacter(
   userId: string,
   name: string,
 ): Promise<WriteResult> {
-  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, name];
-  throw new Error("not yet");
+  const updated = await db
+    .update(characters)
+    .set({ name })
+    .where(eq(characters.userId, userId))
+    .returning({ userId: characters.userId });
+  return updated.length > 0 ? "ok" : "noCharacter";
 }
 
 /** Adds one entry and its EXP together. A second entry for a day is refused. */
