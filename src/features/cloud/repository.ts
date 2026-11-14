@@ -78,6 +78,20 @@ export async function createCharacter(
   return created.length > 0 ? "ok" : "exists";
 }
 
+/**
+ * Changes only the name of the person's character (settings AC-6, AC-8).
+ * "noCharacter" when another device removed it.
+ */
+export async function renameCharacter(
+  db: Db,
+  userId: string,
+  name: string,
+): Promise<WriteResult> {
+  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
+  void [db, userId, name];
+  throw new Error("not yet");
+}
+
 /** Adds one entry and its EXP together. A second entry for a day is refused. */
 export async function insertEntry(
   db: Db,

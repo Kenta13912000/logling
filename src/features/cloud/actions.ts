@@ -50,6 +50,13 @@ export async function createCloudCharacter(
   });
 }
 
+/** Changes only the character's name (settings AC-8, AC-10). */
+export async function renameCloudCharacter(name: string): Promise<CloudResult> {
+  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
+  void name;
+  return fail("failed");
+}
+
 export async function addCloudEntry(
   entry: DiaryEntry,
   exp: number,

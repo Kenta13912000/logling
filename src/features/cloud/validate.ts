@@ -49,6 +49,13 @@ export function parseBody(value: unknown): string | null {
   return result.ok ? result.body : null;
 }
 
+/** The trimmed name, or null when it breaks the naming rules (settings AC-3). */
+export function parseName(value: unknown): string | null {
+  // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
+  void value;
+  return null;
+}
+
 export function parseCharacter(value: unknown): Character | null {
   if (!isRecord(value) || typeof value.name !== "string") {
     return null;

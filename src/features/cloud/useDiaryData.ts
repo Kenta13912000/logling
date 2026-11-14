@@ -19,6 +19,7 @@ import {
 /** What the person did. The cloud saves this; the browser saves `next`. */
 export type Change =
   | { type: "createCharacter"; character: Character }
+  | { type: "renameCharacter"; name: string }
   | { type: "addEntry"; entry: DiaryEntry; exp: number }
   | { type: "editEntry"; date: string; body: string }
   | { type: "deleteEntry"; date: string; exp: number };
@@ -46,6 +47,9 @@ function send(change: Change, next: SaveData): Promise<CloudResult> {
   switch (change.type) {
     case "createCharacter":
       return createCloudCharacter(change.character);
+    case "renameCharacter":
+      // settings Bolt-1 ⑥: placeholder until ⑦ fills it in.
+      throw new Error("not yet");
     case "addEntry":
       return addCloudEntry(change.entry, change.exp, startDate);
     case "editEntry":

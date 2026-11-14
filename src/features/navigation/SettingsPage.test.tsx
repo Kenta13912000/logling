@@ -35,6 +35,24 @@ test("pwa-reminder AC-4, AC-21: 「設定」に「ホーム画面に追加」の
   ).not.toBeInTheDocument();
 });
 
+test("settings AC-1: 「キャラクター」のまとまりが、「設定」のいちばん上（「お知らせ」の上）にある", () => {
+  render(<SettingsPage />);
+
+  const regions = screen.getAllByRole("region");
+  const character = screen.getByRole("region", { name: "キャラクター" });
+  expect(regions[0]).toBe(character);
+  expect(
+    within(character).getByRole("heading", { level: 2, name: "キャラクター" }),
+  ).toBeInTheDocument();
+  // Before naming (empty browser storage), it points to home (AC-4).
+  expect(character).toHaveTextContent("まだ名前がないよ。");
+  const reminder = screen.getByRole("region", { name: "お知らせ" });
+  expect(
+    character.compareDocumentPosition(reminder) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
 test("pwa-reminder AC-6, AC-9: 「お知らせ」のまとまりが「ホーム画面に追加」の上にあり、ログインしていなければ「ログインすると使えるよ」", async () => {
   render(<SettingsPage />);
 
