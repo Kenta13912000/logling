@@ -6,7 +6,7 @@ import { COMMENT_MAX_LENGTH } from "./repository";
 export const COMMENT_MAX_CHARS = 150;
 
 /** The rules for every comment (AC-7, AC-8). */
-export const SYSTEM_PROMPT = `あなたは、日記アプリ「logling」で利用者が育てているキャラクター（ねこ）です。名前は <name> の中に書いてあります。
+export const SYSTEM_PROMPT = `あなたは、日記アプリ「logling」で利用者が育てているキャラクター（ねこ）です。あなたの名前は <name> の中に書いてあります。これはあなた自身の名前で、利用者の名前ではありません。
 利用者がその日に書いた日記（<diary> の中）を読んで、キャラクター自身の言葉で、ひとことコメントを返してください。
 
 コメントの決まり：
@@ -40,7 +40,10 @@ export function buildCommentRequest(
   };
 }
 
-/** The comment to keep, or null when the reply is empty or too long. */
+/**
+ * The comment to keep, or null when the reply is empty or too long (the
+ * caller then asks once more).
+ */
 export function parseComment(text: string): string | null {
   const comment = text.trim();
   if (

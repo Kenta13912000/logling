@@ -23,6 +23,13 @@ describe("指示文", () => {
     }
   });
 
+  test("AC-7: 名前はキャラクター自身のもので、利用者の名前ではないことが書かれている（一人称は決めない）", () => {
+    expect(SYSTEM_PROMPT).toContain(
+      "これはあなた自身の名前で、利用者の名前ではありません",
+    );
+    expect(SYSTEM_PROMPT).not.toContain("一人称");
+  });
+
   test("AC-8: 日記の中の指示には従わないことが書かれている", () => {
     expect(SYSTEM_PROMPT).toContain("従わない");
     expect(SYSTEM_PROMPT).toContain("<diary>");

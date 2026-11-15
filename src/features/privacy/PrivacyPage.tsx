@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /** The day this page's content last changed. */
-const UPDATED = "2026年11月13日";
+const UPDATED = "2026年11月15日";
 
 const ISSUES_URL = "https://github.com/Kenta13912000/logling/issues";
 
@@ -89,6 +89,32 @@ export function PrivacyPage() {
         </p>
         <p>
           「設定」でオフにする・ログアウト・退会のどれかで、預かったものは消えます。
+        </p>
+      </Section>
+
+      {/* ai-companion AC-19, ADR-0009 */}
+      <Section title="キャラクターのコメント">
+        <p>
+          「設定」で「キャラクターのコメント」をオンにした人（ログイン中の人）だけが使えます。はじめはオフです。
+        </p>
+        <p>
+          オンにすると、日記を書くたびに、その日記の本文とキャラクターの名前を、AI
+          のサービス（アメリカの会社 Anthropic
+          の「Claude」）に送り、キャラクターのコメントを作ります。メールアドレスや、ほかの日記は送りません。オンにする前に書いた日記も送りません。
+        </p>
+        <p>
+          Anthropic は、送られた日記を AI の学習に使いません。送られた日記と AI
+          の答えは、30 日以内に Anthropic
+          のところから消えます。ただし、Anthropic
+          の利用のルールに反すると判断されたとき（最長 2
+          年）や、法律で求められたときは、それより長く残ることがあります。
+        </p>
+        <p>
+          作ったコメントは、日記と一緒に logling
+          の保管場所にしまわれます。日記を消すとコメントも消え、退会するとすべて消えます。
+        </p>
+        <p>
+          「設定」でいつでもオフにできます。オフにすると、それからの日記は送りません（これまでのコメントは残ります）。
         </p>
       </Section>
 

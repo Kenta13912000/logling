@@ -88,6 +88,37 @@ describe("作れなかったとき", () => {
     }
   });
 
+  test("AC-7: 使えない答え（空・長すぎる）は使わず、もう 1 回だけ頼み直す。使ったトークンは 2 回分を足す", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(reply("あ".repeat(151)))
+      .mockResolvedValueOnce(reply("ちびすけもうれしいよ"));
+    const client = { messages: { create } } as unknown as Pick<
+      Anthropic,
+      "messages"
+    >;
+
+    expect(await createClaudeGenerator(client)(INPUT)).toStrictEqual({
+      ok: true,
+      text: "ちびすけもうれしいよ",
+      usage: { inputTokens: 1640, outputTokens: 128 },
+    });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  test("AC-7, AC-13: 頼み直しは 1 回まで。2 回とも合わなければ「作れなかった」。途中で切れた・断られた答えは頼み直さない", async () => {
+    const twice = fakeClient(reply("   "));
+    expect(await createClaudeGenerator(twice.client)(INPUT)).toStrictEqual({
+      ok: false,
+      usage: { inputTokens: 1640, outputTokens: 128 },
+    });
+    expect(twice.create).toHaveBeenCalledTimes(2);
+
+    const refused = fakeClient(reply("とちゅう", "refusal"));
+    await createClaudeGenerator(refused.client)(INPUT);
+    expect(refused.create).toHaveBeenCalledTimes(1);
+  });
+
   test("AC-13: 通信の失敗は、そのまま投げる（呼び出し側で「作れなかった」にする）", async () => {
     const { client } = fakeClient(new Error("connection reset"));
 

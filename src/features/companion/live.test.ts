@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 
 import Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, test, vi } from "vitest";
@@ -71,10 +71,14 @@ describe.skipIf(apiKey === undefined)("本物の AI での確かめ", () => {
     test(`AC-7, AC-8: ${sample.label}`, async () => {
       const result = await generate({ name: sample.name, body: sample.body });
 
-      // Shown for the developer to read (made-up diaries, no real data).
-      console.log(
-        `\n[${sample.label}] ${result.ok ? result.text : "（作れなかった）"}\n  使ったトークン：入力 ${result.usage.inputTokens}・出力 ${result.usage.outputTokens}`,
-      );
+      // For the developer to read (made-up diaries, no real data). The test
+      // runner hides the console of passed tests, so LOGLING_LIVE_OUT can
+      // name a file to append the replies to.
+      const line = `[${sample.label}] ${result.ok ? result.text : "（作れなかった）"}\n  使ったトークン：入力 ${result.usage.inputTokens}・出力 ${result.usage.outputTokens}\n`;
+      console.log(line);
+      if (process.env.LOGLING_LIVE_OUT) {
+        appendFileSync(process.env.LOGLING_LIVE_OUT, line, "utf8");
+      }
       expect(result.ok).toBe(true);
       if (!result.ok) {
         return;
@@ -83,6 +87,10 @@ describe.skipIf(apiKey === undefined)("本物の AI での確かめ", () => {
         [...new Intl.Segmenter("ja").segment(result.text)].length,
       ).toBeLessThanOrEqual(COMMENT_MAX_CHARS);
       expect(result.text).toMatch(/[ぁ-ん]/);
+      // The name is the character's own: it does not call the person by it.
+      expect(result.text).not.toMatch(/^(ぴよ|ちびすけ)、/);
+      // No talk about the rules or the tags.
+      expect(result.text).not.toMatch(/name|diary|タグ|＜|</i);
       if (sample.label === "指示が紛れた日") {
         // Not an English sentence, and no insults.
         expect(result.text).not.toMatch(/[A-Za-z]{4,}\s+[A-Za-z]{3,}/);
