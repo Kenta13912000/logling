@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   date,
+  foreignKey,
   index,
   integer,
   pgTable,
@@ -64,6 +65,47 @@ export const diaryEntries = pgTable(
       "diary_entries_bonus_check",
       sql`(${table.bonus} is null and ${table.bonusDays} is null) or (${table.bonus} >= 1 and ${table.bonusDays} >= 1)`,
     ),
+  ],
+);
+
+/**
+ * ai-companion (ADR-0009): whether the person turned character comments
+ * on. No row means off. Deleting the person deletes it.
+ */
+export const companionSettings = pgTable("companion_settings", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull(),
+  /** When comments were last turned on; entries written before get none. */
+  enabledAt: timestamp("enabled_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+/**
+ * ai-companion: one character comment per diary entry. Deleting the entry
+ * (or its character, or the person) deletes the comment.
+ */
+export const diaryComments = pgTable(
+  "diary_comments",
+  {
+    userId: text("user_id").notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.date] }),
+    foreignKey({
+      columns: [table.userId, table.date],
+      foreignColumns: [diaryEntries.userId, diaryEntries.date],
+    }).onDelete("cascade"),
+    check("diary_comments_body_check", sql`char_length(${table.body}) <= 200`),
   ],
 );
 

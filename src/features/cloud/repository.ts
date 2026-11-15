@@ -3,7 +3,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import type { Character } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
 import type { SaveData } from "@/features/home/save-data";
-import { characters, diaryEntries } from "@/lib/db/schema";
+import { characters, diaryComments, diaryEntries } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 
 /*
@@ -26,7 +26,7 @@ function toCharacter(row: CharacterRow): Character {
   };
 }
 
-function toEntry(row: EntryRow): DiaryEntry {
+function toEntry(row: EntryRow, comment: string | null): DiaryEntry {
   return {
     date: row.date,
     body: row.body,
@@ -35,6 +35,8 @@ function toEntry(row: EntryRow): DiaryEntry {
     ...(row.bonus !== null && row.bonusDays !== null
       ? { bonus: row.bonus, bonusDays: row.bonusDays }
       : {}),
+    // ai-companion AC-10: the character's comment, read with its entry.
+    ...(comment !== null ? { comment } : {}),
   };
 }
 
@@ -47,15 +49,22 @@ export async function getSaveData(db: Db, userId: string): Promise<SaveData> {
   if (character === undefined) {
     return { version: 1, character: null, entries: [] };
   }
-  const entries = await db
-    .select()
+  const rows = await db
+    .select({ entry: diaryEntries, comment: diaryComments.body })
     .from(diaryEntries)
+    .leftJoin(
+      diaryComments,
+      and(
+        eq(diaryComments.userId, diaryEntries.userId),
+        eq(diaryComments.date, diaryEntries.date),
+      ),
+    )
     .where(eq(diaryEntries.userId, userId))
     .orderBy(asc(diaryEntries.date));
   return {
     version: 1,
     character: toCharacter(character),
-    entries: entries.map(toEntry),
+    entries: rows.map((row) => toEntry(row.entry, row.comment)),
   };
 }
 
