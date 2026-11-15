@@ -60,6 +60,79 @@ export async function saveCompanionSetting(
   return row!;
 }
 
+/** What requestComment needs about one entry, or null when there is none. */
+export type EntryForComment = {
+  name: string;
+  body: string;
+  createdAt: Date;
+  comment: string | null;
+};
+
+export async function findEntryForComment(
+  db: Db,
+  userId: string,
+  date: string,
+): Promise<EntryForComment | null> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, userId, date];
+  throw new Error("not yet");
+}
+
+/**
+ * Counts one request for `day`, unless the person already made
+ * `limit` today. One statement, so parallel requests cannot pass the limit.
+ */
+export async function claimDailyUse(
+  db: Db,
+  userId: string,
+  day: string,
+  limit: number,
+): Promise<boolean> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, userId, day, limit];
+  throw new Error("not yet");
+}
+
+/** Gives back one counted request (when the monthly budget stops it). */
+export async function releaseDailyUse(
+  db: Db,
+  userId: string,
+  day: string,
+): Promise<void> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, userId, day];
+  throw new Error("not yet");
+}
+
+/** How many requests the person made on `day`. */
+export async function findDailyUse(
+  db: Db,
+  userId: string,
+  day: string,
+): Promise<number> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, userId, day];
+  throw new Error("not yet");
+}
+
+/** Adds to the whole app's spending for `month` (millionths of a dollar). */
+export async function addMonthlyCost(
+  db: Db,
+  month: string,
+  microUsd: number,
+): Promise<void> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, month, microUsd];
+  throw new Error("not yet");
+}
+
+/** The whole app's spending so far in `month`. */
+export async function findMonthlyCost(db: Db, month: string): Promise<number> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void [db, month];
+  throw new Error("not yet");
+}
+
 /**
  * Keeps the comment for one entry. "exists" when the entry already has one
  * (one per entry, AC-4/AC-11); "noEntry" when there is no such entry.

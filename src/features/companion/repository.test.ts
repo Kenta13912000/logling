@@ -17,7 +17,13 @@ import { createTestDb, type TestDb } from "@/lib/db/test-db";
 import {
   COMMENT_MAX_LENGTH,
   addComment,
+  addMonthlyCost,
+  claimDailyUse,
   findCompanionSetting,
+  findDailyUse,
+  findEntryForComment,
+  findMonthlyCost,
+  releaseDailyUse,
   saveCompanionSetting,
 } from "./repository";
 
@@ -181,5 +187,85 @@ describe("日記ごとのコメント", () => {
     await expect(
       addComment(testDb.db, A, "2026-11-15", "あ".repeat(201)),
     ).rejects.toThrow();
+  });
+});
+
+describe("コメントを作るための日記", () => {
+  test("AC-16: 名前・本文・保存した時刻・コメントだけを読む。日記がなければ null", async () => {
+    await createCharacter(testDb.db, A, PIYO);
+    await insertEntry(testDb.db, A, entry("2026-11-15", "きょう"), 10);
+
+    expect(await findEntryForComment(testDb.db, A, "2026-11-15")).toStrictEqual(
+      {
+        name: "ぴよ",
+        body: "きょう",
+        createdAt: new Date("2026-11-15T12:34:56.789Z"),
+        comment: null,
+      },
+    );
+    await addComment(testDb.db, A, "2026-11-15", "おつかれさま");
+    expect(
+      (await findEntryForComment(testDb.db, A, "2026-11-15"))?.comment,
+    ).toBe("おつかれさま");
+    expect(await findEntryForComment(testDb.db, A, "2026-11-14")).toBeNull();
+    expect(await findEntryForComment(testDb.db, B, "2026-11-15")).toBeNull();
+  });
+});
+
+describe("1 日の回数", () => {
+  const DAY = "2026-11-15";
+
+  test("AC-14: 3 回までは数え、4 回目は数えない。ほかの人・ほかの日は別に数える", async () => {
+    const results = [];
+    for (let i = 0; i < 4; i += 1) {
+      results.push(await claimDailyUse(testDb.db, A, DAY, 3));
+    }
+
+    expect(results).toStrictEqual([true, true, true, false]);
+    expect(await findDailyUse(testDb.db, A, DAY)).toBe(3);
+    expect(await claimDailyUse(testDb.db, B, DAY, 3)).toBe(true);
+    expect(await claimDailyUse(testDb.db, A, "2026-11-16", 3)).toBe(true);
+  });
+
+  test("AC-14: 同時に 4 回頼まれても、数えるのは 3 回まで", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 4 }, () => claimDailyUse(testDb.db, A, DAY, 3)),
+    );
+
+    expect(results.filter(Boolean)).toHaveLength(3);
+    expect(await findDailyUse(testDb.db, A, DAY)).toBe(3);
+  });
+
+  test("AC-15: 数えた 1 回を戻せる。0 より下にはならない", async () => {
+    await claimDailyUse(testDb.db, A, DAY, 3);
+
+    await releaseDailyUse(testDb.db, A, DAY);
+    await releaseDailyUse(testDb.db, A, DAY);
+
+    expect(await findDailyUse(testDb.db, A, DAY)).toBe(0);
+    expect(await findDailyUse(testDb.db, B, DAY)).toBe(0);
+  });
+
+  test("AC-12: 退会（user を消す）と、回数の行も消える", async () => {
+    await claimDailyUse(testDb.db, A, DAY, 3);
+
+    await testDb.db.delete(user).where(eq(user.id, A));
+
+    expect(await findDailyUse(testDb.db, A, DAY)).toBe(0);
+  });
+});
+
+describe("月の費用", () => {
+  test("AC-15: 月ごとに足していき、まだ使っていない月は 0", async () => {
+    expect(await findMonthlyCost(testDb.db, "2026-11")).toBe(0);
+
+    await addMonthlyCost(testDb.db, "2026-11", 150);
+    await Promise.all([
+      addMonthlyCost(testDb.db, "2026-11", 100),
+      addMonthlyCost(testDb.db, "2026-11", 50),
+    ]);
+
+    expect(await findMonthlyCost(testDb.db, "2026-11")).toBe(300);
+    expect(await findMonthlyCost(testDb.db, "2026-12")).toBe(0);
   });
 });

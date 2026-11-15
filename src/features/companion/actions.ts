@@ -35,6 +35,28 @@ async function asSignedIn(
   }
 }
 
+/** What asking for a comment on one entry led to (AC-5 to AC-18). */
+export type CommentResult =
+  | { status: "ok"; comment: string }
+  | {
+      status:
+        | "off"
+        | "noEntry"
+        | "beforeEnabled"
+        | "dailyLimit"
+        | "monthlyLimit"
+        | "failed"
+        | "invalid"
+        | "unauthorized";
+    };
+
+/** Makes (or returns the existing) comment on the entry for `date`. */
+export async function requestComment(date: string): Promise<CommentResult> {
+  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
+  void date;
+  return { status: "failed" };
+}
+
 export async function getCompanionSetting(): Promise<CompanionSettingResult> {
   return asSignedIn(async (db, userId) => ({
     ok: true,
