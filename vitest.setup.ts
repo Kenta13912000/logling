@@ -6,6 +6,7 @@ import {
   accountMock,
   authMock,
   cloudMock,
+  companionMock,
   migrationMock,
   reminderMock,
   resetMocks,
@@ -32,6 +33,7 @@ vi.mock("@/features/cloud/actions", () => cloudMock);
 vi.mock("@/features/migration/actions", () => migrationMock);
 vi.mock("@/features/account/actions", () => accountMock);
 vi.mock("@/features/reminder/actions", () => reminderMock);
+vi.mock("@/features/companion/actions", () => companionMock);
 
 beforeEach(() => {
   resetMocks();

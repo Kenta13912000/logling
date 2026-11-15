@@ -2,6 +2,7 @@ import { vi } from "vitest";
 
 import type * as accountActions from "@/features/account/actions";
 import type * as actions from "@/features/cloud/actions";
+import type * as companionActions from "@/features/companion/actions";
 import type * as migrationActions from "@/features/migration/actions";
 import type * as reminderActions from "@/features/reminder/actions";
 import type { CloudResult } from "@/features/cloud/actions";
@@ -48,6 +49,12 @@ export const accountMock = {
   })),
 };
 
+/** ai-companion: every companion action answers "signed out" by default. */
+export const companionMock = {
+  getCompanionSetting: vi.fn<typeof companionActions.getCompanionSetting>(),
+  setCompanionEnabled: vi.fn<typeof companionActions.setCompanionEnabled>(),
+};
+
 /** pwa-reminder: every reminder action answers "signed out" by default. */
 export const reminderMock = {
   getReminder: vi.fn<typeof reminderActions.getReminder>(),
@@ -56,6 +63,10 @@ export const reminderMock = {
 };
 
 export function resetMocks() {
+  for (const action of Object.values(companionMock)) {
+    action.mockReset();
+    action.mockResolvedValue({ ok: false, reason: "unauthorized" });
+  }
   for (const action of Object.values(reminderMock)) {
     action.mockReset();
     action.mockResolvedValue({ ok: false, reason: "unauthorized" });
