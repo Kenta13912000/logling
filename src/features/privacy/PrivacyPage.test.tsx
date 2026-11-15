@@ -74,6 +74,38 @@ test("pwa-reminder AC-19: 「お知らせ」の節に、使える人・預かる
   ).toBeTruthy();
 });
 
+test("ai-companion AC-19: 「キャラクターのコメント」の節に、使える人・送るもの・送り先・学習に使われないこと・消えるまでの期間と例外・コメントのしまい方・消し方が、「お知らせ」の次に書いてある", () => {
+  render(<PrivacyPage />);
+
+  const heading = screen.getByRole("heading", {
+    name: "キャラクターのコメント",
+  });
+  const section = heading.closest("section")!;
+  for (const words of [
+    "「キャラクターのコメント」をオンにした人（ログイン中の人）だけ",
+    "はじめはオフ",
+    "その日記の本文とキャラクターの名前を",
+    "アメリカの会社 Anthropic の「Claude」",
+    "メールアドレスや、ほかの日記は送りません",
+    "オンにする前に書いた日記も送りません",
+    "AI の学習に使いません",
+    "30 日以内に Anthropic のところから消えます",
+    "最長 2 年",
+    "法律で求められたとき",
+    "日記を消すとコメントも消え、退会するとすべて消えます",
+    "「設定」でいつでもオフにできます",
+  ]) {
+    expect(section, words).toHaveTextContent(words);
+  }
+
+  const reminder = screen.getByRole("heading", { name: "お知らせ" });
+  expect(
+    reminder.compareDocumentPosition(heading) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(screen.getByText(/最終更新日：2026年11月15日/)).toBeInTheDocument();
+});
+
 test("AC-30: 問い合わせは GitHub のページから", () => {
   render(<PrivacyPage />);
 

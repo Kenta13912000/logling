@@ -60,6 +60,56 @@ test("AC-2, AC-5, AC-10: 「設定」でオンにして日記を書くと、本�
   await expect(main(page).getByText(TEST_COMMENT)).toBeVisible();
 });
 
+async function expectNoHorizontalScroll(page: Page) {
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+}
+
+for (const scheme of ["light", "dark"] as const) {
+  test(`AC-20: 幅 375px（${scheme === "dark" ? "暗い色" : "明るい色"}）で、「設定」・確認の窓・ホームと振り返りの吹き出しに横スクロールが出ず、吹き出しの文字が見える`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await signUpAndName(page);
+
+    await page.goto("/settings");
+    const toggle = page.getByRole("switch", { name: "日記へのコメント" });
+    await expect(toggle).toBeEnabled();
+    await expectNoHorizontalScroll(page);
+    await toggle.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await page.getByRole("button", { name: "オンにする" }).click();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+
+    await page.goto("/");
+    await page
+      .getByRole("textbox", { name: "今日の日記" })
+      .fill("とても長い一日だった。".repeat(20));
+    await page.getByRole("button", { name: "日記をのこす" }).click();
+    const comment = main(page).getByText(TEST_COMMENT);
+    await expect(comment).toBeVisible();
+    await expectNoHorizontalScroll(page);
+
+    // The text color differs from the bubble's background.
+    const colors = await comment.evaluate((element) => {
+      const bubble = element.closest("div")!;
+      return {
+        text: getComputedStyle(element).color,
+        back: getComputedStyle(bubble).backgroundColor,
+      };
+    });
+    expect(colors.text).not.toBe(colors.back);
+
+    await page.goto("/history");
+    await expect(main(page).getByText(TEST_COMMENT)).toBeVisible();
+    await expectNoHorizontalScroll(page);
+  });
+}
+
 test("AC-9: オフのままなら、日記を書いても吹き出しは出ない", async ({
   page,
 }) => {
