@@ -33,15 +33,15 @@ const reply = (text: string, stop_reason = "end_turn"): Reply => ({
   usage: { input_tokens: 820, output_tokens: 64 },
 });
 
-const INPUT = { name: "ちびすけ", body: "今日は発表があった。" };
+const INPUT = { body: "今日は発表があった。" };
 
 describe("頼み方", () => {
-  test("AC-13, AC-16: Claude Haiku 5.5 に、指示文と名前・本文だけを、答えの上限と少ない考える量で頼む", async () => {
+  test("AC-13, AC-16: Claude Haiku 5.5 に、指示文と本文だけを（名前は送らず）、答えの上限と少ない考える量で頼む", async () => {
     const { client, create } = fakeClient(reply("おつかれさま！"));
 
     await createClaudeGenerator(client)(INPUT);
 
-    const { system, userText } = buildCommentRequest(INPUT.name, INPUT.body);
+    const { system, userText } = buildCommentRequest(INPUT.body);
     expect(COMMENT_MODEL).toBe("claude-haiku-5-5");
     expect(create).toHaveBeenCalledTimes(1);
     expect(create).toHaveBeenCalledWith({
