@@ -78,7 +78,7 @@ describe("頼む", () => {
     );
     const { result } = await enabledHook();
 
-    act(() => result.current.request("2026-11-15"));
+    await act(async () => result.current.request("2026-11-15"));
     expect(companionMock.requestComment).toHaveBeenCalledWith("2026-11-15");
     expect(result.current.stateOf(entry("2026-11-15"))).toStrictEqual({
       kind: "pending",
@@ -90,6 +90,28 @@ describe("頼む", () => {
       text: "いいね",
     });
     expect(result.current.stateOf(entry("2026-11-14"))).toBeNull();
+  });
+
+  test("AC-5: オンかどうかを読み終わる前に保存しても、読み終わってから頼む（すぐ書いた人にもコメントが届く）", async () => {
+    let answer: (value: { ok: true; enabled: boolean }) => void = () => {};
+    companionMock.getCompanionSetting.mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    const { result } = renderHook(() => useComments(true));
+
+    act(() => result.current.request("2026-11-15"));
+    expect(companionMock.requestComment).not.toHaveBeenCalled();
+    await act(async () => answer({ ok: true, enabled: true }));
+
+    expect(companionMock.requestComment).toHaveBeenCalledWith("2026-11-15");
+    await waitFor(() =>
+      expect(result.current.stateOf(entry("2026-11-15"))).toStrictEqual({
+        kind: "comment",
+        text: "いいね",
+      }),
+    );
   });
 
   test("AC-13〜AC-15: 作れなかった・今日はここまで・今月はお休みを、その日記の状態にする。通信の失敗も「作れなかった」", async () => {

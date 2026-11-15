@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { EXP_PER_LATE_ENTRY } from "@/features/character/character";
 import type { DiaryEntry } from "@/features/diary/diary";
@@ -24,6 +24,8 @@ type Props = {
   /** Saves an entry for a missed day. */
   onSaveLater: (date: string, body: string) => SaveResult;
   onRequestDelete: (date: string) => void;
+  /** ai-companion: the character's comment shown under an entry's body. */
+  renderComment?: (entry: DiaryEntry) => ReactNode;
 };
 
 function isOld(item: HistoryItem): boolean {
@@ -98,6 +100,7 @@ type EntryCardProps = {
   onSave: (body: string) => Promise<void>;
   onCancel: () => void;
   onDelete: () => void;
+  comment?: ReactNode;
 };
 
 function EntryCard({
@@ -108,6 +111,7 @@ function EntryCard({
   onSave,
   onCancel,
   onDelete,
+  comment,
 }: EntryCardProps) {
   return (
     <li className="rounded-xl border border-line bg-surface p-3">
@@ -132,6 +136,7 @@ function EntryCard({
       ) : (
         <>
           <p className="break-words whitespace-pre-wrap">{entry.body}</p>
+          {comment}
           {showActions && (
             <div className="mt-2 flex justify-end gap-2">
               <button type="button" onClick={onEdit} className={smallButton}>
@@ -158,6 +163,7 @@ export function HistoryList({
   onSaveEdit,
   onSaveLater,
   onRequestDelete,
+  renderComment,
 }: Props) {
   // Only one card takes input at a time, whether rewriting or writing later.
   const [activeDate, setActiveDate] = useState<string | null>(null);
@@ -200,6 +206,7 @@ export function HistoryList({
         onSave={saveWith(onSaveEdit, date)}
         onCancel={() => setActiveDate(null)}
         onDelete={() => onRequestDelete(date)}
+        comment={renderComment?.(item.entry)}
       />
     );
   }

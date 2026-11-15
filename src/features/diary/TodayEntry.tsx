@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { CharacterArt } from "@/features/evolution/CharacterArt";
 import type { Stage } from "@/features/evolution/stages";
 import { DAY_START_HOUR, formatDiaryDate } from "@/lib/diary-date";
@@ -8,9 +10,11 @@ type Props = {
   entry: DiaryEntry;
   /** The character's current stage, shown beside the thanks. */
   stage: Stage;
+  /** ai-companion: the character's comment, shown under the body. */
+  comment?: ReactNode;
 };
 
-export function TodayEntry({ entry, stage }: Props) {
+export function TodayEntry({ entry, stage, comment }: Props) {
   return (
     <section aria-label="今日の日記" className="flex flex-col p-4">
       <p className="font-bold">{formatDiaryDate(entry.date)}</p>
@@ -23,6 +27,7 @@ export function TodayEntry({ entry, stage }: Props) {
       <p className="rounded-xl border border-line bg-surface p-3 whitespace-pre-wrap">
         {entry.body}
       </p>
+      {comment}
       <p className="mt-3 text-sm text-ink-muted">
         {`次の日記は、明日の朝 ${DAY_START_HOUR} 時から書けるよ`}
       </p>
