@@ -110,6 +110,34 @@ export const diaryComments = pgTable(
 );
 
 /**
+ * ai-companion: comments each person asked for on each day (Japan time,
+ * split at 4 AM), retries included. Deleting the person deletes them.
+ */
+export const companionDailyUsage = pgTable(
+  "companion_daily_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    count: integer("count").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.day] }),
+    check("companion_daily_usage_count_check", sql`${table.count} >= 0`),
+  ],
+);
+
+/**
+ * ai-companion: the whole app's spending on comments per month (Japan
+ * time, "YYYY-MM"), in millionths of a dollar (ADR-0009).
+ */
+export const companionMonthlyCost = pgTable("companion_monthly_cost", {
+  month: text("month").primaryKey(),
+  microUsd: integer("micro_usd").notNull(),
+});
+
+/**
  * pwa-reminder (ADR-0007): one row per device that turned reminders on.
  * Turning them off deletes the row; deleting the person deletes them all.
  */

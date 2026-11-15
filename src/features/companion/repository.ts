@@ -1,6 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import {
+  characters,
+  companionDailyUsage,
+  companionMonthlyCost,
   companionSettings,
   diaryComments,
   diaryEntries,
@@ -73,9 +76,24 @@ export async function findEntryForComment(
   userId: string,
   date: string,
 ): Promise<EntryForComment | null> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, date];
-  throw new Error("not yet");
+  const [row] = await db
+    .select({
+      name: characters.name,
+      body: diaryEntries.body,
+      createdAt: diaryEntries.createdAt,
+      comment: diaryComments.body,
+    })
+    .from(diaryEntries)
+    .innerJoin(characters, eq(characters.userId, diaryEntries.userId))
+    .leftJoin(
+      diaryComments,
+      and(
+        eq(diaryComments.userId, diaryEntries.userId),
+        eq(diaryComments.date, diaryEntries.date),
+      ),
+    )
+    .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.date, date)));
+  return row ?? null;
 }
 
 /**
@@ -88,9 +106,16 @@ export async function claimDailyUse(
   day: string,
   limit: number,
 ): Promise<boolean> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, day, limit];
-  throw new Error("not yet");
+  const counted = await db
+    .insert(companionDailyUsage)
+    .values({ userId, day, count: 1 })
+    .onConflictDoUpdate({
+      target: [companionDailyUsage.userId, companionDailyUsage.day],
+      set: { count: sql`${companionDailyUsage.count} + 1` },
+      setWhere: sql`${companionDailyUsage.count} < ${limit}`,
+    })
+    .returning({ count: companionDailyUsage.count });
+  return counted.length > 0;
 }
 
 /** Gives back one counted request (when the monthly budget stops it). */
@@ -99,9 +124,15 @@ export async function releaseDailyUse(
   userId: string,
   day: string,
 ): Promise<void> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, day];
-  throw new Error("not yet");
+  await db
+    .update(companionDailyUsage)
+    .set({ count: sql`greatest(${companionDailyUsage.count} - 1, 0)` })
+    .where(
+      and(
+        eq(companionDailyUsage.userId, userId),
+        eq(companionDailyUsage.day, day),
+      ),
+    );
 }
 
 /** How many requests the person made on `day`. */
@@ -110,9 +141,16 @@ export async function findDailyUse(
   userId: string,
   day: string,
 ): Promise<number> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, userId, day];
-  throw new Error("not yet");
+  const [row] = await db
+    .select({ count: companionDailyUsage.count })
+    .from(companionDailyUsage)
+    .where(
+      and(
+        eq(companionDailyUsage.userId, userId),
+        eq(companionDailyUsage.day, day),
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 /** Adds to the whole app's spending for `month` (millionths of a dollar). */
@@ -121,16 +159,24 @@ export async function addMonthlyCost(
   month: string,
   microUsd: number,
 ): Promise<void> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, month, microUsd];
-  throw new Error("not yet");
+  await db
+    .insert(companionMonthlyCost)
+    .values({ month, microUsd })
+    .onConflictDoUpdate({
+      target: companionMonthlyCost.month,
+      set: {
+        microUsd: sql`${companionMonthlyCost.microUsd} + excluded.micro_usd`,
+      },
+    });
 }
 
 /** The whole app's spending so far in `month`. */
 export async function findMonthlyCost(db: Db, month: string): Promise<number> {
-  // Bolt-2 ⑥: placeholder until ⑦ fills it in.
-  void [db, month];
-  throw new Error("not yet");
+  const [row] = await db
+    .select({ microUsd: companionMonthlyCost.microUsd })
+    .from(companionMonthlyCost)
+    .where(eq(companionMonthlyCost.month, month));
+  return row?.microUsd ?? 0;
 }
 
 /**
