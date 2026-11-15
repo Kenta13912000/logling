@@ -23,6 +23,7 @@
 ### 送るものと、送り先での扱い（2026-11-15 に公式の情報で確認）
 
 - 送るのは、コメントを作る日記 1 件の本文と、キャラクターの名前だけ。メールアドレス・アカウントの番号・ほかの日記は送らない
+- （`fix/companion-name` で変更、2026-11-16）キャラクターの名前も送らず、本文だけを送る。本番で、AI がキャラクターの名前を利用者の名前と取りちがえ、その名前で利用者に呼びかけた（指示文で「利用者の名前ではない」と書いても起きた）。名前を知らなければ取りちがえは起きず、送るものも減る。だれのコメントかは、画面の「<名前>より」で示す
 - **学習に使われない**：Anthropic は、API などの商用のサービスに送られた内容を、初期の設定では AI の学習に使わない。例外は、利用者がフィードバックを送ったときや、使ってよいと自分で許したときだけで、logling はどちらもしない（[Is my data used for model training?](https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training)）
 - **30 日以内に消える**：API に送った内容と AI の答えは、受け取ってから 30 日以内に、Anthropic のサーバーから自動で消える。例外は、利用のルール（Usage Policy）に反すると自動で判定された場合（最長 2 年残る）と、法律で求められた場合（[How long do you store my organization's data?](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data)）
 - Claude Haiku 5.5 は、30 日の保管が必ず要るモデル（Covered Models）には入っていない。送った内容を残さない契約（ZDR）は、Anthropic との個別の契約が要るため使わない（[API and data retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)）

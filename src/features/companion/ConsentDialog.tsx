@@ -43,7 +43,7 @@ export function ConsentDialog({ name, onConfirm, onCancel }: Props) {
       </p>
       <dl className="mt-3">
         <dt className="font-bold">送るもの</dt>
-        <dd>その日の日記の本文と、キャラクターの名前だけ</dd>
+        <dd>その日の日記の本文だけ</dd>
         <dt className="mt-2 font-bold">送り先</dt>
         <dd>AI のサービス（Anthropic の Claude）</dd>
         <dt className="mt-2 font-bold">送ったものの扱い</dt>

@@ -155,7 +155,9 @@ export async function requestComment(date: string): Promise<CommentResult> {
 
       let result: GenerateResult;
       try {
-        result = await generate({ name: entry.name, body: entry.body });
+        // Only the body is sent: the AI took the character's name for the
+        // person's and called them by it (fix/companion-name).
+        result = await generate({ body: entry.body });
       } catch (error) {
         console.error("companion comment failed:", errorKind(error));
         return { status: "failed" };
