@@ -27,9 +27,8 @@ const server = vi.hoisted(() => ({
 
 // The comment generator is replaced, so nothing is sent to the AI service.
 const ai = vi.hoisted(() => ({
-  generate: null as
-    null | ((input: { name: string; body: string }) => Promise<unknown>),
-  calls: [] as { name: string; body: string }[],
+  generate: null as null | ((input: { body: string }) => Promise<unknown>),
+  calls: [] as { body: string }[],
 }));
 
 vi.mock("server-only", () => ({}));
@@ -37,7 +36,7 @@ vi.mock("./generator", () => ({
   getCommentGenerator: () =>
     ai.generate === null
       ? null
-      : (input: { name: string; body: string }) => {
+      : (input: { body: string }) => {
           ai.calls.push(input);
           return ai.generate!(input);
         },
@@ -188,14 +187,15 @@ describe("コメントを頼む（requestComment）", () => {
     vi.useRealTimers();
   });
 
-  test("AC-5, AC-10, AC-16: オンにしたあとの日記なら、名前と本文だけで頼み、コメントを残して返す", async () => {
+  test("AC-5, AC-10, AC-16: オンにしたあとの日記なら、本文だけで（名前は送らずに）頼み、コメントを残して返す", async () => {
     await write("2026-11-15", AFTER);
 
     expect(await requestComment("2026-11-15")).toStrictEqual({
       status: "ok",
       comment: "発表おつかれさま！",
     });
-    expect(ai.calls).toStrictEqual([{ name: "ちびすけ", body: BODY }]);
+    // fix/companion-name: only the body is sent, never the name.
+    expect(ai.calls).toStrictEqual([{ body: BODY }]);
     expect((await getSaveData(testDb.db, A)).entries[0]?.comment).toBe(
       "発表おつかれさま！",
     );
@@ -328,7 +328,7 @@ describe("コメントを頼む（requestComment）", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     await write("2026-11-15", AFTER);
     ai.generate = async (input) => {
-      throw new Error(`upstream said: ${input.body} ${input.name}`);
+      throw new Error(`upstream said: ${input.body}`);
     };
 
     expect(await requestComment("2026-11-15")).toStrictEqual({

@@ -32,7 +32,7 @@ describe("コメントを作る部品の選び方", () => {
     const generate = getCommentGenerator({ LOGLING_E2E_AUTH: "1" });
 
     expect(generate).not.toBeNull();
-    expect(await generate!({ name: "ぴよ", body: "日記" })).toStrictEqual({
+    expect(await generate!({ body: "日記" })).toStrictEqual({
       ok: true,
       text: TEST_COMMENT,
       usage: { inputTokens: 0, outputTokens: 0 },
@@ -48,7 +48,7 @@ describe("コメントを作る部品の選び方", () => {
       LOGLING_E2E_AUTH: "1",
     });
 
-    expect(await generate!({ name: "ぴよ", body: "日記" })).toMatchObject({
+    expect(await generate!({ body: "日記" })).toMatchObject({
       text: TEST_COMMENT,
     });
     expect(sdk.options).toStrictEqual([]);
@@ -60,7 +60,7 @@ describe("コメントを作る部品の選び方", () => {
       ANTHROPIC_API_KEY: "sk-ant-test",
     });
 
-    expect(await generate!({ name: "ぴよ", body: "日記" })).toMatchObject({
+    expect(await generate!({ body: "日記" })).toMatchObject({
       ok: true,
       text: "本物の答え",
     });

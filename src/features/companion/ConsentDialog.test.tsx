@@ -22,7 +22,8 @@ test("AC-2: 送るもの・送り先・送ったものの扱い（説明ペー�
   );
   expect(dialog).toHaveTextContent("送るもの");
   expect(dialog).toHaveTextContent(
-    "その日の日記の本文と、キャラクターの名前だけ",
+    // fix/companion-name: the name is no longer sent.
+    "その日の日記の本文だけ",
   );
   expect(dialog).toHaveTextContent("送り先");
   expect(dialog).toHaveTextContent("AI のサービス（Anthropic の Claude）");

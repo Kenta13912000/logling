@@ -18,9 +18,8 @@ export type GenerateResult =
   | { ok: true; text: string; usage: CommentUsage }
   | { ok: false; usage: CommentUsage };
 
-/** Makes one comment from the character's name and the entry's body. */
+/** Makes one comment from the entry's body (the name is not sent). */
 export type CommentGenerator = (input: {
-  name: string;
   body: string;
 }) => Promise<GenerateResult>;
 
@@ -31,10 +30,10 @@ export type CommentGenerator = (input: {
 export function createClaudeGenerator(
   client: Pick<Anthropic, "messages">,
 ): CommentGenerator {
-  return async ({ name, body }) => {
-    const { system, userText } = buildCommentRequest(name, body);
+  return async ({ body }) => {
+    const { system, userText } = buildCommentRequest(body);
     const usage = { inputTokens: 0, outputTokens: 0 };
-    // A finished reply that breaks the rules (e.g. says "ぼく") is asked
+    // A finished reply that cannot be used (empty or too long) is asked
     // for once more; both requests are counted in the cost.
     for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
       const response = await client.messages.create({
