@@ -43,10 +43,12 @@ test("AC-2: 「オンにする」で onConfirm、「やめる」で onCancel だ
   const user = userEvent.setup();
   const { dialog, onConfirm, onCancel } = setup();
 
+  await user.click(within(dialog).getByRole("button", { name: "オンにする" }));
+  expect(onConfirm).toHaveBeenCalledTimes(1);
+  expect(onCancel).not.toHaveBeenCalled();
+
+  // 「やめる」 closes the dialog, which reports a cancel.
   await user.click(within(dialog).getByRole("button", { name: "やめる" }));
   expect(onCancel).toHaveBeenCalledTimes(1);
-  expect(onConfirm).not.toHaveBeenCalled();
-
-  await user.click(within(dialog).getByRole("button", { name: "オンにする" }));
   expect(onConfirm).toHaveBeenCalledTimes(1);
 });
