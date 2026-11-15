@@ -53,6 +53,26 @@ test("settings AC-1: 「キャラクター」のまとまりが、「設定」�
   ).toBeTruthy();
 });
 
+test("ai-companion AC-1: 「キャラクター」の次、「お知らせ」の前に「キャラクターのコメント」があり、ログインしていなければ「ログインすると使えるよ」", async () => {
+  render(<SettingsPage />);
+
+  const titles = screen
+    .getAllByRole("region")
+    .map((region) => region.getAttribute("aria-labelledby"))
+    .map((id) => document.getElementById(id ?? "")?.textContent);
+  expect(titles.slice(0, 3)).toStrictEqual([
+    "キャラクター",
+    "キャラクターのコメント",
+    "お知らせ",
+  ]);
+  const companion = screen.getByRole("region", {
+    name: "キャラクターのコメント",
+  });
+  expect(
+    await within(companion).findByText(/ログインすると使えるよ/),
+  ).toBeInTheDocument();
+});
+
 test("pwa-reminder AC-6, AC-9: 「お知らせ」のまとまりが「ホーム画面に追加」の上にあり、ログインしていなければ「ログインすると使えるよ」", async () => {
   render(<SettingsPage />);
 
