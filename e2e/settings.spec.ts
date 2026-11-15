@@ -19,7 +19,8 @@ const tab = (page: Page, name: string) =>
 const main = (page: Page) => page.getByRole("main");
 
 const character = (page: Page) =>
-  main(page).getByRole("region", { name: "キャラクター" });
+  // exact: ai-companion added 「キャラクターのコメント」, which also matches.
+  main(page).getByRole("region", { name: "キャラクター", exact: true });
 
 async function expectNoHorizontalScroll(page: Page) {
   const { scrollWidth, clientWidth } = await page.evaluate(() => ({

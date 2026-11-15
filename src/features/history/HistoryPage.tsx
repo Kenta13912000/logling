@@ -16,6 +16,8 @@ import {
 } from "@/features/evolution/stages";
 import { UnsavedText } from "@/features/cloud/UnsavedText";
 import { useDiaryData, type SaveOutcome } from "@/features/cloud/useDiaryData";
+import { CommentBubble } from "@/features/companion/CommentBubble";
+import { useComments } from "@/features/companion/useComments";
 import {
   LoadErrorNotice,
   LoadingNotice,
@@ -87,6 +89,10 @@ export function HistoryPage() {
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
   const [gainedExp, setGainedExp] = useState<number | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
+  // ai-companion: comments only while the cloud data is shown (AC-9).
+  const comments = useComments(
+    state.status === "ok" && state.storage === "cloud",
+  );
 
   let content: ReactNode = null;
   let dialog: ReactNode = null;
@@ -158,6 +164,8 @@ export function HistoryPage() {
         );
         const close = afterSave(outcome, body);
         if (outcome === "saved") {
+          // ai-companion AC-6: a missed day written later gets one too.
+          comments.request(date);
           setGainedExp(result.gained);
           if (result.leveledUp) {
             setLevelUp(
@@ -180,6 +188,20 @@ export function HistoryPage() {
             onSaveEdit={handleSaveEdit}
             onSaveLater={handleSaveLater}
             onRequestDelete={setDeletingDate}
+            renderComment={(shown) => {
+              const commentState = comments.stateOf(shown);
+              return (
+                commentState && (
+                  <CommentBubble
+                    name={character.name}
+                    stage={stage}
+                    size={36}
+                    state={commentState}
+                    onRetry={() => comments.request(shown.date)}
+                  />
+                )
+              );
+            }}
           />
         </section>
       );

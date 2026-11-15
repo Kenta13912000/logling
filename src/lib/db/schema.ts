@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   date,
+  foreignKey,
   index,
   integer,
   pgTable,
@@ -66,6 +67,75 @@ export const diaryEntries = pgTable(
     ),
   ],
 );
+
+/**
+ * ai-companion (ADR-0009): whether the person turned character comments
+ * on. No row means off. Deleting the person deletes it.
+ */
+export const companionSettings = pgTable("companion_settings", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").notNull(),
+  /** When comments were last turned on; entries written before get none. */
+  enabledAt: timestamp("enabled_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+/**
+ * ai-companion: one character comment per diary entry. Deleting the entry
+ * (or its character, or the person) deletes the comment.
+ */
+export const diaryComments = pgTable(
+  "diary_comments",
+  {
+    userId: text("user_id").notNull(),
+    date: date("date", { mode: "string" }).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.date] }),
+    foreignKey({
+      columns: [table.userId, table.date],
+      foreignColumns: [diaryEntries.userId, diaryEntries.date],
+    }).onDelete("cascade"),
+    check("diary_comments_body_check", sql`char_length(${table.body}) <= 200`),
+  ],
+);
+
+/**
+ * ai-companion: comments each person asked for on each day (Japan time,
+ * split at 4 AM), retries included. Deleting the person deletes them.
+ */
+export const companionDailyUsage = pgTable(
+  "companion_daily_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    count: integer("count").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.day] }),
+    check("companion_daily_usage_count_check", sql`${table.count} >= 0`),
+  ],
+);
+
+/**
+ * ai-companion: the whole app's spending on comments per month (Japan
+ * time, "YYYY-MM"), in millionths of a dollar (ADR-0009).
+ */
+export const companionMonthlyCost = pgTable("companion_monthly_cost", {
+  month: text("month").primaryKey(),
+  microUsd: integer("micro_usd").notNull(),
+});
 
 /**
  * pwa-reminder (ADR-0007): one row per device that turned reminders on.

@@ -21,6 +21,7 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@better-auth/drizzle-adapter": "^1.7.20",
     "@neondatabase/serverless": "^1.2.0",
     "@vercel/functions": "^3.11.1",

@@ -14,6 +14,8 @@ import { ExpGainToast } from "@/features/character/ExpGainToast";
 import { LevelUpDialog } from "@/features/character/LevelUpDialog";
 import { NameForm } from "@/features/character/NameForm";
 import { UnsavedText } from "@/features/cloud/UnsavedText";
+import { CommentBubble } from "@/features/companion/CommentBubble";
+import { useComments } from "@/features/companion/useComments";
 import { useDiaryData } from "@/features/cloud/useDiaryData";
 import { DiaryEditor } from "@/features/diary/DiaryEditor";
 import { TodayEntry } from "@/features/diary/TodayEntry";
@@ -57,6 +59,10 @@ export function Home() {
   const [unsaved, setUnsaved] = useState<string | null>(null);
   const [gained, setGained] = useState<Gained | null>(null);
   const [levelUp, setLevelUp] = useState<LevelUp | null>(null);
+  // ai-companion: comments only while the cloud data is shown (AC-9).
+  const comments = useComments(
+    state.status === "ok" && state.storage === "cloud",
+  );
 
   const setSaveError = (failed: boolean) =>
     setNotice(failed ? "saveFailed" : null);
@@ -174,7 +180,11 @@ export function Home() {
         if (result.leveledUp) {
           setLevelUp(levelUpOf(level, result.level));
         }
+        // ai-companion AC-5: asked after saving, so nothing above waits.
+        comments.request(date);
       };
+
+      const commentState = todayEntry ? comments.stateOf(todayEntry) : null;
 
       content = (
         <>
@@ -182,7 +192,21 @@ export function Home() {
             <StreakBand status={getStreakStatus(data.entries, today)} />
           </CharacterStatus>
           {todayEntry ? (
-            <TodayEntry entry={todayEntry} stage={stage} />
+            <TodayEntry
+              entry={todayEntry}
+              stage={stage}
+              comment={
+                commentState && (
+                  <CommentBubble
+                    name={character.name}
+                    stage={stage}
+                    size={48}
+                    state={commentState}
+                    onRetry={() => comments.request(todayEntry.date)}
+                  />
+                )
+              }
+            />
           ) : (
             <DiaryEditor date={today} stage={stage} onSave={handleSave} />
           )}

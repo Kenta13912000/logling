@@ -15,6 +15,11 @@ export type DiaryEntry = {
   bonus?: number;
   /** Streak length that earned `bonus` (e.g. 7). Always set together. */
   bonusDays?: number;
+  /**
+   * ai-companion: the character's comment on this entry. Only in data read
+   * from the cloud; never saved in the browser.
+   */
+  comment?: string;
 };
 
 export const BODY_MAX_LENGTH = 2000;

@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>logling UI モック（ai-companion）</title>
+    <style>
+      .light {
+        --bg: #fff8ec;
+        --surface: #ffffff;
+        --text: #3f2d1c;
+        --muted: #7a6450;
+        --border: #ecdcc4;
+        --button: #c2410c;
+        --link: #c2410c;
+        --soft: #fde7d6;
+        --alert: #b42318;
+        --switch-off: #d8cbb8;
+        --scrim: rgb(63 45 28 / 0.45);
+        --art-bg: transparent;
+      }
+      .dark {
+        --bg: #1f1813;
+        --surface: #2a211b;
+        --text: #f3e8d8;
+        --muted: #c4b09a;
+        --border: #3d3027;
+        --button: #c2410c;
+        --link: #fb8c4a;
+        --soft: #4a2c1a;
+        --alert: #f87171;
+        --switch-off: #5a4a3d;
+        --scrim: rgb(0 0 0 / 0.6);
+        --art-bg: #fff8ec;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 48px;
+        background: #e9e2d6;
+        color: #3f2d1c;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Hiragino Sans",
+          "Yu Gothic UI",
+          "Meiryo",
+          sans-serif;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      h2.group {
+        font-size: 17px;
+        margin: 32px 0 12px;
+      }
+      .lead {
+        margin: 0 0 24px;
+        color: #7a6450;
+        font-size: 14px;
+      }
+      .screens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        align-items: flex-start;
+      }
+      .screen {
+        width: 375px;
+        max-width: 100%;
+      }
+      .screen > h3 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .screen > p {
+        font-size: 13px;
+        color: #7a6450;
+        margin: 0 0 8px;
+      }
+      .phone {
+        position: relative;
+        height: 640px;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid #cfc3b0;
+        border-radius: 24px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .phone.auto {
+        height: auto;
+      }
+      .appbar {
+        flex: none;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        text-align: center;
+        font-weight: 700;
+      }
+      .scroll {
+        flex: 1;
+        overflow: hidden;
+      }
+      .content {
+        padding: 16px;
+      }
+      .page-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+      }
+      .section-title {
+        margin: 18px 0 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 14px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .row-main {
+        flex: 1;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--soft);
+        font-size: 13px;
+      }
+      a {
+        color: var(--link);
+        font-weight: 700;
+      }
+      .switch {
+        flex: none;
+        width: 52px;
+        height: 32px;
+        border-radius: 999px;
+        background: var(--switch-off);
+        position: relative;
+      }
+      .switch.on {
+        background: var(--button);
+      }
+      .switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      .switch.on::after {
+        left: 23px;
+      }
+      .switch.disabled {
+        opacity: 0.45;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        margin-top: 12px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--button);
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+      }
+      .button.secondary {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+      .small-button {
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .alert {
+        color: var(--alert);
+      }
+      .date {
+        font-weight: 700;
+      }
+      .talk {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .talk img {
+        flex: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--art-bg);
+        object-fit: contain;
+      }
+      .talk.small img {
+        width: 36px;
+        height: 36px;
+      }
+      .bubble {
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+      .bubble.comment {
+        background: var(--soft);
+        border-color: transparent;
+      }
+      .bubble .from {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .entry {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+      .tabbar {
+        flex: none;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 10px 0 18px;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--muted);
+      }
+      .tabbar .active {
+        color: var(--link);
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: var(--scrim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .dialog {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        padding: 22px 20px;
+        font-size: 14px;
+      }
+      .dialog h4 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        text-align: center;
+      }
+      .dialog dl {
+        margin: 10px 0 0;
+      }
+      .dialog dt {
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .dialog dd {
+        margin: 2px 0 0;
+      }
+      .history-card {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 14px;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>logling UI モック（ai-companion）</h1>
+    <p class="lead">
+      スマホ（幅
+      375px）での見た目。「設定」でキャラクターのコメントをオンにする流れと、日記の下に出る吹き出し。ボタンなどは見た目だけで、押しても動かない。キャラクターの名前は「ちびすけ」。
+    </p>
+
+    <h2 class="group">オンにする（「設定」）</h2>
+    <div class="screens">
+      <section class="screen light">
+        <h3>画面 1：設定（オフ・ログイン中）</h3>
+        <p>「キャラクター」の下に「キャラクターのコメント」（AC-1）</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll">
+            <div class="content">
+              <p class="page-title">設定</p>
+              <p class="section-title">キャラクター</p>
+              <div class="card">
+                <div class="row">
+                  <div class="row-main">
+                    <div class="muted">名前</div>
+                    <strong>ちびすけ</strong>
+                  </div>
+                  <button class="small-button" type="button">
+                    名前を変える
+                  </button>
+                </div>
+              </div>
+              <p class="section-title">キャラクターのコメント</p>
+              <div class="card">
+                <div class="row">
+                  <div class="row-main">
+                    <strong>日記へのコメント</strong>
+                    <div class="muted">
+                      日記を書くと、ちびすけがひとことコメントするよ
+                    </div>
+                  </div>
+                  <span class="switch"></span>
+                </div>
+              </div>
+              <p class="section-title">お知らせ</p>
+              <div class="card">書き忘れのお知らせ …</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <span>ホーム</span><span>ふりかえる</span
+            ><span class="active">その他</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen light">
+        <h3>画面 2：オンにするときの確認</h3>
+        <p>送るもの・送り先・扱いを見てから決める（AC-2）</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll"></div>
+          <div class="tabbar">
+            <span>ホーム</span><span>ふりかえる</span
+            ><span class="active">その他</span>
+          </div>
+          <div class="overlay">
+            <div class="dialog">
+              <h4>コメントをオンにする？</h4>
+              <p style="margin: 0">
+                日記を書くたびに、その日記を AI
+                に読んでもらって、ちびすけのコメントを作るよ。
+              </p>
+              <dl>
+                <dt>送るもの</dt>
+                <dd>その日の日記の本文と、キャラクターの名前だけ</dd>
+                <dt>送り先</dt>
+                <dd>AI のサービス（Anthropic の Claude）</dd>
+                <dt>送ったものの扱い</dt>
+                <dd><a href="#">日記の保存のしかた ›</a> にくわしく書いたよ</dd>
+              </dl>
+              <p class="muted" style="margin: 10px 0 0">
+                いつでもオフにできるよ
+              </p>
+              <button class="button" type="button">オンにする</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen light">
+        <h3>画面 3：オン・ログインしていない</h3>
+        <p>オンのとき／ログインしていないとき（AC-1, AC-3, AC-4）</p>
+        <div class="phone auto">
+          <div class="content">
+            <p class="section-title" style="margin-top: 0">オンのとき</p>
+            <div class="card">
+              <div class="row">
+                <div class="row-main">
+                  <strong>日記へのコメント</strong>
+                  <div class="muted">
+                    日記を書くと、ちびすけがひとことコメントするよ
+                  </div>
+                </div>
+                <span class="switch on"></span>
+              </div>
+            </div>
+            <p class="section-title">ログインしていないとき</p>
+            <div class="card">
+              <div class="row">
+                <div class="row-main">
+                  <strong>日記へのコメント</strong>
+                  <div class="muted">
+                    日記を書くと、ちびすけがひとことコメントするよ
+                  </div>
+                </div>
+                <span class="switch disabled"></span>
+              </div>
+              <div class="note">
+                ログインすると使えるよ。<a href="#">ログインする ›</a>
+              </div>
+            </div>
+            <p class="section-title">保存に失敗したとき</p>
+            <div class="card">
+              <div class="row">
+                <div class="row-main"><strong>日記へのコメント</strong></div>
+                <span class="switch"></span>
+              </div>
+              <p class="alert" style="margin: 8px 0 0">
+                ⚠ 保存できなかった…通信できるところで、もう一度ためしてね
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="group">日記の下の吹き出し（ホーム）</h2>
+    <div class="screens">
+      <section class="screen light">
+        <h3>画面 4：案 A　お礼の吹き出しはそのまま、本文の下にコメント</h3>
+        <p>今の「今日も書いてくれてありがとう！」も残す（AC-5）</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll">
+            <div class="content">
+              <p class="date">2026年11月15日（日）</p>
+              <div class="talk">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+                <div class="bubble">
+                  今日も書いてくれてありがとう！また明日ね
+                </div>
+              </div>
+              <div class="entry">
+                仕事で大きな発表があって緊張したけど、なんとか終わった。帰りにケーキを買った。
+              </div>
+              <div class="talk">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+                <div class="bubble comment">
+                  <span class="from">ちびすけより</span>
+                  発表おつかれさま！緊張しながらもやりきったの、すごいね。ケーキでしっかりごほうびだね🍰
+                </div>
+              </div>
+              <p class="muted" style="margin-top: 12px">
+                次の日記は、明日の朝 4 時から書けるよ
+              </p>
+            </div>
+          </div>
+          <div class="tabbar">
+            <span class="active">ホーム</span><span>ふりかえる</span
+            ><span>その他</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen light">
+        <h3>画面 5：案 B　お礼の吹き出しをコメントに置きかえる</h3>
+        <p>
+          コメントがあるときは、本文の上の吹き出しがコメントになる。キャラクターの吹き出しは
+          1 つだけ
+        </p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll">
+            <div class="content">
+              <p class="date">2026年11月15日（日）</p>
+              <div class="talk">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+                <div class="bubble comment">
+                  <span class="from">ちびすけより</span>
+                  発表おつかれさま！緊張しながらもやりきったの、すごいね。ケーキでしっかりごほうびだね🍰
+                </div>
+              </div>
+              <div class="entry">
+                仕事で大きな発表があって緊張したけど、なんとか終わった。帰りにケーキを買った。
+              </div>
+              <p class="muted" style="margin-top: 12px">
+                次の日記は、明日の朝 4 時から書けるよ
+              </p>
+            </div>
+          </div>
+          <div class="tabbar">
+            <span class="active">ホーム</span><span>ふりかえる</span
+            ><span>その他</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen light">
+        <h3>画面 6：吹き出しのいろいろ</h3>
+        <p>
+          作っている間・作れなかった・回数の上限・月の上限（AC-5, AC-13〜AC-15）
+        </p>
+        <div class="phone auto">
+          <div class="content">
+            <p class="section-title" style="margin-top: 0">作っている間</p>
+            <div class="talk">
+              <img src="../../../public/characters/stage-2.svg" alt="" />
+              <div class="bubble comment" role="status">
+                ちびすけが読んでいるよ…
+              </div>
+            </div>
+            <p class="section-title">作れなかったとき</p>
+            <div class="talk">
+              <img src="../../../public/characters/stage-2.svg" alt="" />
+              <div class="bubble comment">
+                コメントを作れなかった…
+                <div style="margin-top: 6px">
+                  <button class="small-button" type="button">もう一度</button>
+                </div>
+              </div>
+            </div>
+            <p class="section-title">1 日の回数を使い切ったとき</p>
+            <div class="talk">
+              <img src="../../../public/characters/stage-2.svg" alt="" />
+              <div class="bubble comment">
+                今日のコメントはここまで。また明日ね
+              </div>
+            </div>
+            <p class="section-title">月の上限に届いたとき</p>
+            <div class="talk">
+              <img src="../../../public/characters/stage-2.svg" alt="" />
+              <div class="bubble comment">今月のコメントはお休み中だよ</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="group">振り返り</h2>
+    <div class="screens">
+      <section class="screen light">
+        <h3>画面 7：振り返りの日記とコメント</h3>
+        <p>
+          各日記の本文の下に、小さな絵と吹き出し。後から書いた日にも出る（AC-6,
+          AC-10）
+        </p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll">
+            <div class="content">
+              <p class="page-title">ふりかえり</p>
+              <div class="history-card">
+                <strong>11月15日（日）</strong>
+                <p style="margin: 6px 0 0">
+                  仕事で大きな発表があって緊張したけど、なんとか終わった。帰りにケーキを買った。
+                </p>
+                <div class="talk small">
+                  <img src="../../../public/characters/stage-2.svg" alt="" />
+                  <div class="bubble comment">
+                    <span class="from">ちびすけより</span>
+                    発表おつかれさま！緊張しながらもやりきったの、すごいね。
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="small-button" type="button">書き直す</button>
+                  <button class="small-button alert" type="button">消す</button>
+                </div>
+              </div>
+              <div class="history-card">
+                <strong>11月14日（土）</strong>
+                <p style="margin: 6px 0 0">雨で一日家にいた。本を読んだ。</p>
+                <p class="muted" style="margin: 6px 0 0">
+                  （コメントをオンにする前の日記には、吹き出しは出ない）
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <span>ホーム</span><span class="active">ふりかえる</span
+            ><span>その他</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <h2 class="group">暗い色</h2>
+    <div class="screens">
+      <section class="screen dark">
+        <h3>画面 8：ホーム（暗い色・案 A）</h3>
+        <p>
+          吹き出しは薄いオレンジ（暗い色では濃い茶色）の地で、お礼の吹き出しと見分ける
+        </p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll">
+            <div class="content">
+              <p class="date">2026年11月15日（日）</p>
+              <div class="talk">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+                <div class="bubble">
+                  今日も書いてくれてありがとう！また明日ね
+                </div>
+              </div>
+              <div class="entry">
+                仕事で大きな発表があって緊張したけど、なんとか終わった。帰りにケーキを買った。
+              </div>
+              <div class="talk">
+                <img src="../../../public/characters/stage-2.svg" alt="" />
+                <div class="bubble comment">
+                  <span class="from">ちびすけより</span>
+                  発表おつかれさま！緊張しながらもやりきったの、すごいね。ケーキでしっかりごほうびだね🍰
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <span class="active">ホーム</span><span>ふりかえる</span
+            ><span>その他</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen dark">
+        <h3>画面 9：確認（暗い色）</h3>
+        <p>画面 2 と同じ中身</p>
+        <div class="phone">
+          <div class="appbar">logling</div>
+          <div class="scroll"></div>
+          <div class="overlay">
+            <div class="dialog">
+              <h4>コメントをオンにする？</h4>
+              <p style="margin: 0">
+                日記を書くたびに、その日記を AI
+                に読んでもらって、ちびすけのコメントを作るよ。
+              </p>
+              <dl>
+                <dt>送るもの</dt>
+                <dd>その日の日記の本文と、キャラクターの名前だけ</dd>
+                <dt>送り先</dt>
+                <dd>AI のサービス（Anthropic の Claude）</dd>
+                <dt>送ったものの扱い</dt>
+                <dd><a href="#">日記の保存のしかた ›</a> にくわしく書いたよ</dd>
+              </dl>
+              <button class="button" type="button">オンにする</button>
+              <button class="button secondary" type="button">やめる</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

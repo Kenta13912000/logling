@@ -1,3 +1,4 @@
+import { CompanionSettings } from "@/features/companion/CompanionSettings";
 import { InstallGuide } from "@/features/pwa/InstallGuide";
 import { ReminderSettings } from "@/features/reminder/ReminderSettings";
 import { CharacterSettings } from "@/features/rename/CharacterSettings";
@@ -15,6 +16,10 @@ export function SettingsPage() {
       <h1 className="text-lg font-bold">設定</h1>
       <SettingsSection title="キャラクター">
         <CharacterSettings />
+      </SettingsSection>
+      {/* ai-companion AC-1: between the character and the reminders. */}
+      <SettingsSection title="キャラクターのコメント">
+        <CompanionSettings />
       </SettingsSection>
       <SettingsSection title="お知らせ">
         <ReminderSettings />
